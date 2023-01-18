@@ -12,6 +12,11 @@ sudo apt install -y --no-install-recommends software-properties-common dirmngr
 wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
 # add the R 4.0 repo from CRAN -- adjust 'focal' to 'groovy' or 'bionic' as needed
 sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
+# Install R
+sudo apt install -y r-base r-base-core r-recommended r-base-dev
+
+# Install R extension
+code-server --install-extension reditorsupport.r
 
 # Create variables
 WORK_DIR=/home/onyxia/work/PA_matching
