@@ -41,6 +41,8 @@ We install all R dependencies that might be required
 
 # Install from Github --------------------------------------------------------
 
+install.packages("remotes")
+
 # Some packages need to be installed from developper sources because there are
 # not available or official sources have some issues.
 # Installing version 1.3.5 which is the last working version apparently
