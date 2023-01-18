@@ -121,8 +121,34 @@ cat(readLines("PA_matching_asis/005 - covariate_matching.jl"), sep = "\n")
 :::
 
 ```{r}
+matching_script <- "PA_matching_asis/005 - covariate_matching.jl"
+my_wd <- paste0(getwd(), "/")
+# Change the working directory location
+replace_all(matching_script, # in the original script
+            "/home/chrisgraywolf/shared/analysis/PA_matching/",
+            my_wd) # keep the current working directory instead
+```
+
+
+
+```{r}
 library(JuliaCall)
+julia_setup(JULIA_HOME = "/usr/bin/julia")
+julia_console()
+julia_call("using", "ArchGDAL")
 julia_source("PA_matching_asis/005 - covariate_matching.jl")
+
+
+# using Pkg
+# Pkg.add("ArchGDAL")
+# Pkg.add("DataFrames")
+# Pkg.add("Discretizers")
+# Pkg.add("Shapefile")
+# Pkg.add("FreqTables")
+# Pkg.add("Plots")
+# Pkg.add("StatsBase")
+# Pkg.add("CSV")
+# Pkg.add("LibGEOS")
 ```
 
 
