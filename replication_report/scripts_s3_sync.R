@@ -1,6 +1,11 @@
-# sudo apt-get update
-# sudo apt-get install libcurl4-openssl-dev
-# sudo apt-get install libssl-dev
+install.packages(c("rmarkdown", "remotes"))
+
+
+system("sudo apt-get update")
+system("sudo apt-get install libcurl4-openssl-dev")
+system("sudo apt-get install libssl-dev")
+
+
 install.packages(c("dplyr", "stringr", "aws.s3", "purrr"))
 
 library(dplyr)
