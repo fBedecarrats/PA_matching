@@ -107,6 +107,27 @@ source("PA_matching_asis/004 - join_rasters.R")
 
 ### Match pixels on covariates
 
+This section is in Julia.
+
+Print section
+::: {.callout-code collapse="true"}
+```{r}
+#| echo: false
+#| warning: false
+#| class-output: "sourceCode julia"
+
+cat(readLines("PA_matching_asis/005 - covariate_matching.jl"), sep = "\n")
+```
+:::
+
+```{r}
+library(JuliaCall)
+julia_source("PA_matching_asis/005 - covariate_matching.jl")
+```
+
+
+
+
 ### Merge the results
 
 ### Perform country level analysis
