@@ -16,6 +16,11 @@ sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_
 sudo apt update
 # Install R
 sudo apt install -y r-base r-base-core r-recommended r-base-dev
+# Install spatial dependencies
+sudo apt install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev libv8-dev libnode-dev libcairo2-dev libnetcdf-dev
+
+# Install R packages
+R -e "install.packages('languageserver')"
 
 # Install R extension
 code-server --install-extension reditorsupport.r
@@ -28,3 +33,5 @@ REPO_URL=https://${GIT_PERSONAL_ACCESS_TOKEN}@github.com/fBedecarrats/PA_matchin
 # Git
 git clone $REPO_URL $WORK_DIR
 chown -R onyxia:users $WORK_DIR
+
+cd 
