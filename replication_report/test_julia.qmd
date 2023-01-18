@@ -1,0 +1,12 @@
+---
+title: "Wolf julia"
+jupyter: python3
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{julia}
+first(methodswith(Int64), 5)
+```
+
