@@ -7,7 +7,11 @@
 # sudo apt-get update && sudo apt-get install google-cloud-cli
 
 sudo apt update
-sudo apt remove -y tzdata # possiblement ce qui gèle l'installation sinon
+
+# Need to solve a problem with a repo that blocks the process
+sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
+sudo DEBIAN_FRONTEND=noninteractive apt install -y tzdata
+
 # Install R (from https://rtask.thinkr.fr/installation-of-r-4-2-on-ubuntu-22-04-lts-and-tips-for-spatial-packages/)
 sudo apt install -y --no-install-recommends software-properties-common dirmngr
 # Add the keys
