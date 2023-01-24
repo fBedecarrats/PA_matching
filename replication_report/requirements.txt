@@ -1,0 +1,8 @@
+earthengine-api
+pydrive
+fiona
+numpy
+rasterio
+ray-default
+dbfread
+pandas

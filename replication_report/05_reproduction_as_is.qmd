@@ -8,7 +8,14 @@ editor_options:
 
 We want to make all code modifications transparent, so we download a clean version of Wolf et al. source code.
 
+```{bash}
+conda create --name replication-wolf --file replication_report/requirements.txt
+
+```
+
+
 ```{r}
+setwd("/home/onyxia/work/PA_matching/replication_report")
 # URL pointing to the zip download of the Wolf et al. repository
 repo <- "https://codeload.github.com/wolfch2/PA_matching/zip/refs/heads/master"
 
