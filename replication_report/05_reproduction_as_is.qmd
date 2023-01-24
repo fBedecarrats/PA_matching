@@ -9,8 +9,9 @@ editor_options:
 We want to make all code modifications transparent, so we download a clean version of Wolf et al. source code.
 
 ```{bash}
-conda create --name replication-wolf --file replication_report/requirements.txt
-
+# to be tested with -y
+conda -y create --name replication-wolf --file replication_report/requirements.txt
+conda activate replication-wolf
 ```
 
 
