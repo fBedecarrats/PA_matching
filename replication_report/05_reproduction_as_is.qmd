@@ -6,29 +6,6 @@ editor_options:
 
 # Reproduction "as is" of the publised results
 
-We want to make all code modifications transparent, so we download a clean version of Wolf et al. source code.
-
-```{bash}
-# to be tested with -y
-conda -y create --name replication-wolf --file replication_report/requirements.txt
-conda activate replication-wolf
-```
-
-
-```{r}
-setwd("/home/onyxia/work/PA_matching/replication_report")
-# URL pointing to the zip download of the Wolf et al. repository
-repo <- "https://codeload.github.com/wolfch2/PA_matching/zip/refs/heads/master"
-
-# downloads locally
-download.file(repo, destfile = "original.zip", method = "curl")
-# unzips to a containing folder named PA_matching-master (github default)
-unzip("original.zip")
-# original folder will remain intact, we make a copy with required edits to run
-dir.create("PA_matching_asis")
-file.copy(list.files("PA_matching-master", full.names = TRUE), 
-          "PA_matching_asis")
-```
 
 ## Original source code execution
 
@@ -40,25 +17,228 @@ We will use the following function that explicitly declares which modification a
 
 library(tidyverse)
 
-# Not a good practice, only for debugging
-# setwd("replication_report")
-
 # A function to replace some parts of the code
-replace_all <- function(x, pattern, replacement) {
-  print(x)
-  readLines(x) %>%
+replace_all <- function(pattern, replacement, file) {
+  readLines(file) %>%
     str_replace_all(pattern, replacement) %>%
-    writeLines(x)
+    writeLines(file)
 }
 ```
 
-For each file, we will
+The following functions are a series of utilities to save the data to a datalake (based on S3)
+
+We also re-create the file arborescence
+
+
 
 ### Fetch data from Google Earth Engine
 
+Mofify the paths
+
+```{r}
+
+GEE_data_script <- "PA_matching_asis/001 - dl_GEE.py"
+wolf_path <- "/home/chrisgraywolf/shared/analysis/PA_matching/data_input/"
+my_data_input <- paste0(getwd(), "/data_input/")
+replace_all(pattern = wolf_path ,
+            replacement = my_data_input,
+            file = GEE_data_script)
+```
+
+Do-not re-execute this code: fetch existing data instead.
+
+```{r}
+#| eval: false
+GEE_data_script <- "PA_matching_asis/001 - dl_GEE.py"
+source_python(GEE_data_script)
+```
+```{r save_gee_output}
+#| eval: false
+
+# The code below saves the output data to a private data lake.
+gee_pattern <- "(land|elev|loss|gain|cover|mask|travel_time|pop_dens).*tif"
+# List the outputs of the GEE data fetching
+gee_local <- list.files(path = "data_input", full.names = TRUE,
+                  pattern = paste0("^", gee_pattern))
+# Transform to specify their location on S3
+gee_to_s3 <- paste0("Replication_wolf/", gee_local)
+# Send to S3
+map2(gee_local, gee_to_s3 , put_to_s3)
+```
+```{r fetch_gee_output}
+#| eval: false
+
+# fetch from S3 the data gathered from Google Earth Engine
+
+# The code below fetches the output data from a private data lake.
+# naming pattern of files fetched from Google Earth Engine
+gee_pattern <- "(land|elev|loss|gain|cover|mask|travel_time|pop_dens).*tif"
+# Filter those files from bucket content
+gee_in_s3 <- my_files %>%
+  filter(str_detect(Key, 
+                    paste0("Replication_wolf/data_input.", gee_pattern))) %>%
+  pluck("Key")
+# rename for local location
+gee_to_local <- str_remove(gee_in_s3, "Replication_wolf/")
+# Copy locally
+map2(gee_in_s3, gee_to_local, save_from_s3)
+```
+
+
 ### Fetch species data from IUCN
 
+Modify the script to enable it to run on another machine.
+
+The column names in the official BOTW database are now in lowercase. It was apparently in uppercase when Wolf et al. processed the data. We need to modify the reference to one column name in the script for it to run. 
+
+```{r}
+
+IUCN_data_script <- "PA_matching_asis/002 - dl_IUCN.R"
+my_wd <- paste0(getwd(), "/")
+wolf_path <- "/home/chrisgraywolf/analysis_desktop/PA_matching/"
+
+replace_all(pattern = wolf_path, replacement = my_wd, file = IUCN_data_script)
+replace_all(pattern = "put_your_token_here", replacement = my_key_api,
+            file = IUCN_data_script)
+# Column name to lowercase
+replace_all(pattern = "SISID", replacement = "sisid", file = IUCN_data_script)
+```
+
+Add the required input data
+
+
+Run the script
+
+```{r}
+#| eval: false
+
+source(IUCN_data_script)
+```
+```{r save_IUCN_output}
+#| eval: false
+
+# Save the output data to S3
+
+# Species data csv ------------------------------------------------------------
+put_to_s3(from = "data_processed/species_data.csv", 
+          to = "Replication_wolf/data_processed/species_data.csv")
+
+# Bird shapefiles -------------------------------------------------------------
+# List the bird shapefiles created by 002 - dl_IUCN.R
+bird_shps <- list.files(path = "data_input/range_maps",
+                        pattern = "BIRDS_.*", full.names = TRUE)
+# Bundle them in an encrypted zip locally
+system(paste0("zip -P ", my_key_zip, " birds_shps.zip ",
+       paste(bird_shps, collapse = " ")))
+# Send the local zip to S3
+put_to_s3(from = "birds_shps.zip", 
+          to = "Replication_wolf/data_input/range_maps/birds_shps.zip")
+# Delete the local zip
+file.remove("birds_shps.zip")
+
+# elev.tif --------------------------------------------------------------------
+# The main output of the script.
+put_to_s3(from = "data_processed/rasters/elev.tif", 
+          to = "Replication_wolf/data_processed/rasters/elev.tif")
+```
+```{r}
+
+# Load the data 
+save_from_s3(from = "Replication_wolf/data_processed/species_data.csv",
+             to = "data_processed/species_data.csv")
+
+# Fetch birds from S3
+save_from_s3(from = "Replication_wolf/data_input/range_maps/birds_shps.zip",
+             to = "birds_shps.zip")
+system(paste("unzip -P", my_key_zip, "birds_shp.zip", 
+             " -d data_input/range_maps/"))
+file.remove("birds_shps.zip")
+
+# species_data <- read_csv("data_processed/species_data.csv")
+save_from_s3(from = "Replication_wolf/data_processed/rasters/elev.tif",
+             to = "data_processed/rasters/elev.tif")
+
+```
+
 ### Compute species richness
+
+We need to replace the specific path used by Wolf et al with a more generic path.
+18 python packages and package modules are imported by the script but are not used in the analysis. We comment them to avoid dependency complications.
+The ray package is designed to work with some virtual memory that is not present on our configuration. We need to add a mention an option to enable ray to work with physical memory.
+We also need to modify the following command `richness = results[0]`, as it correspond to a method to assign an array that is not allowed in recent numpy versions and returns an error. We therefore add `.copy()` to this command, to have `richness = results[0].copy()`, which now correspond to the correct way of proceeding with this operation in python.
+
+```{r}
+
+# Set target
+species_richness_script <- "PA_matching_asis/003 - species_richness.py"
+# change path
+replace_all(pattern = "/home/chrisgraywolf/analysis_desktop/PA_matching/",
+            replacement = paste0(getwd(), "/"),
+            file = species_richness_script)
+
+# List unused packages and modules
+unused_packages <- c("affine", "ctypes", "functools", "geojson", "geopandas", 
+                     "glob", "math", "matplotlib", "multiprocessing", 
+                     "operator", "psutil", "random", "shapely")
+unused_package_modules <- c("collections", "fiona", "osgeo", "pyproj")
+
+# Comment the corresponding lines
+map(unused_packages, ~replace_all(pattern = paste0("^import ", .x, ".*$"), 
+                                  replacement = "\\# \\0",
+                                  file = species_richness_script))
+map(unused_package_modules, ~replace_all(pattern = paste0("^from ", .x, ".*$"), 
+                                         replacement = "\\# \\0",
+                                         file = species_richness_script))
+# Add option to enable ray to use physical memory
+ray_to_add <- paste("import os",
+                    "os.environ[\"RAY_OBJECT_STORE_ALLOW_SLOW_STORAGE\"] = \"1\"",
+                    "import ray",
+                    sep = "\n")
+replace_all(pattern = "import ray",
+            replacement = ray_to_add,
+            file = species_richness_script)
+# Ray current modules
+replace_all(pattern = "pool = ray.experimental.ActorPool(actors)",
+            replacement = "pool = ray.util.ActorPool(actors)",
+            file = species_richness_script)
+# Correct array assignment
+replace_all(pattern = "richness = results[0]$",
+            replacement = "richness = results[0].copy()$",
+            file = species_richness_script)
+
+```
+
+Run the file
+
+```{r}
+#| eval: false
+setwd("/home/onyxia/work/PA_matching/replication_report")
+library(reticulate)
+my_envname <- "replication-wolf2"
+use_condaenv(my_envname)
+species_richness_script <- "PA_matching_asis/003 - species_richness.py"
+source_python(species_richness_script)
+```
+```{r}
+#| eval: false
+
+# Save outputs
+put_to_s3(from = "data_processed/non-threatened.tif", 
+          to = "Replication_wolf/data_processed/non-threatened.tif")
+put_to_s3(from = "data_processed/threatened.tif", 
+          to = "Replication_wolf/data_processed/threatened.tif")
+```
+```{r}
+
+# Fetch outputs
+# Save outputs
+save_from_s3(from = "Replication_wolf/data_processed/non-threatened.tif", 
+             to = "data_processed/non-threatened.tif")
+save_from_s3(from = "Replication_wolf/data_processed/threatened.tif", 
+             to = "data_processed/threatened.tif")
+```
+
+
 
 ### Join rasters
 
@@ -80,59 +260,161 @@ There is a typo on line 136: an object called `PA_dists` is called but no object
 
 
 ```{r}
-join_script <- "PA_matching_asis/004 - join_rasters.R"
-# Change the working directory location
-replace_all(join_script, # in the original script
-            "\"/home/chrisgraywolf/shared/analysis/PA_matching/\"", 
-            "paste0(getwd(), \"/\")") # keep the current working directory instead
 
-replace_all(join_script, # Replace Science URL that has changed
-            "https://science.sciencemag.org/highwire/filestream/715492/field_highwire_adjunct_files/2/aau3445-Data-S3.tif", 
-             "https://www.science.org/action/downloadSupplement?doi=10.1126%2Fscience.aau3445&file=aau3445-data-s3.tif")
-# Replace Curtis et al filename: lowercased by Science portal admins
-replace_all(join_script, 
-            "data_input/aau3445-Data-S3.tif",
-            "data_input/aau3445-data-s3.tif")
-# We have not found a way to fetch a previous version of the WDPA database
-# January 2023 is the one we use.
-replace_all(join_script, 
-            "WDPA_Jan2020",
-            "WDPA_Jan2023")
-# Replace url to download WWF data
-replace_all(join_script, 
-            "https://c402277.ssl.cf1.rackcdn.com/publications/15/files/original/official_teow.zip?1349272619",
-            "https://files.worldwildlife.org/wwfcmsprod/files/Publication/file/6kcchn7e3u_official_teow.zip")
+join_script <- "PA_matching_asis/004 - join_rasters.R"
+my_wd <- paste0(getwd(), "/")
+# Change the working directory location
+replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_matching/", 
+            replacement = my_wd,
+            file = join_script)
+
 # Correct the typo in the code
-replace_all(join_script, 
-            "PAs_buffer = PA_dists <= 10e3",
-            "PAs_buffer = PAs_dist <= 10e3")
+replace_all(pattern = "PAs_buffer = PA_dists <= 10e3",
+            replacement = "PAs_buffer = PAs_dist <= 10e3",
+            file = join_script)
 ```
+
+Gather data
+
+```{r}
+
+# Listing files in bucket
+my_files <- get_bucket_df(bucket = "fbedecarrats",
+                          prefix = "Replication_wolf",
+                          region = "")
+# Select PA shp
+my_PAs <- my_files %>%
+  filter(str_detect(Key, "/PAs/WDPA")) %>%
+  pluck("Key")
+# Create paths in local machine
+my_PAs_dest <- my_PAs %>%
+  str_remove("Replication_wolf/")
+# Retrieve the data
+map2(my_PAs, my_PAs_dest, save_from_s3)
+
+# Select WWF shp
+my_biomes <- my_files %>%
+  filter(str_detect(Key, "/official/")) %>%
+  pluck("Key")
+# Create paths in local machine
+my_biomes_dest <- my_biomes %>%
+   str_remove("Replication_wolf/")
+# Retrieve the data
+map2(my_biomes, my_biomes_dest, save_from_s3)
+
+```
+
+Run script
+
+```{r run_join_script}
+join_script <- "PA_matching_asis/004 - join_rasters.R"
+source(join_script)
+```
+
+Save outputs
+
+```{r save_join_raster_output}
+
+# Save outputs
+# List present tifs
+# See which are not already in S3
+processed_local <- list.files(path = "data_processed",
+                              recursive = TRUE,
+                              full.names = TRUE) %>%
+  str_subset(., "vrt$", negate = TRUE)
+# Listing files in bucket
+my_files <- get_bucket_df(bucket = "fbedecarrats",
+                          prefix = "Replication_wolf",
+                          region = "")
+processed_s3 <- my_files %>%
+  filter(str_detect(Key, "/data_processed/")) %>%
+  mutate(path = str_remove(Key, "Replication_wolf/")) %>%
+  pluck("path")
+to_put_s3 <- processed_local[!processed_local %in% processed_s3]
+to_put_s3
+path_in_s3 <- paste0("Replication_wolf/", to_put_s3)
+# Put them in S3
+map2(to_put_s3, path_in_s3, put_to_s3)
+```
+```{r fetch_join_raster_output}
+
+# Listing files in bucket
+my_files <- get_bucket_df(bucket = "fbedecarrats",
+                          prefix = "Replication_wolf",
+                          region = "") %>%
+  filter(str_detect(Key, "keep$", negate = TRUE))
+
+processed_s3 <- my_files %>%
+  filter(str_detect(Key, "data_processed")) %>%
+  mutate(path = str_remove(Key, "Replication_wolf/")) %>%
+  pluck("path")
+processed_local <- list.files(path = "data_processed",
+                                   recursive = TRUE,
+                                   full.names = TRUE)
+to_save_local <- processed_s3[!processed_s3 %in% processed_local]
+to_save_local
+if (length(to_save_local) > 0) {
+  path_s3_to_local <- paste0("Replication_wolf/", to_save_local)
+  map2(path_s3_to_local, to_save_local, save_from_s3)
+}
+```
+
 
 Execute the code
 
 ```{r}
+#| eval: false
+
+join_script <- "PA_matching_asis/004 - join_rasters.R"
 source(join_script)
 ```
+
+Note : Message bizarre suite à lignes 78-93
+
+```
+ERROR 4: : No such file or directory
+Warning 1: Can't open . Skipping it
+ERROR 4: data_input/lossyear.vrt: No such file or directory
+Warning messages:
+1: In system(cmd, intern = TRUE) :
+  running command '"/usr/bin/gdalbuildvrt" "data_input/lossyear.vrt" ""' had status 1
+2: In system(cmd, intern = TRUE) :
+  running command '"/usr/bin/gdalwarp" -te -17367530.4451614 -7342769.86350132 17366469.5548386 7342230.13649868 -tr 1000 1000 -t_srs "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs" -of "VRT" "data_input/lossyear.vrt" "data_input/lossyear_proj.vrt"' had status 2
+```
+
+
+
 
 ### Match pixels on covariates
 
 
 ```{r}
+#| eval: false
+
 matching_script <- "PA_matching_asis/005 - covariate_matching.jl"
 
 my_wd <- paste0(getwd(), "/")
 
 # Change the working directory location
-replace_all(matching_script, # in the original script
-            "\"/home/chrisgraywolf/shared/analysis/PA_matching/\"", 
-            my_wd) # keep the current working directory instead
+replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_matching/", 
+            replacement = my_wd,
+            file = matching_script)
+
+# Need to specify the DataFrame in csv 
+replace_all(pattern = "PA_df = CSV.read(\"data_processed/PAs_tab.csv\")", 
+            replacement = "PA_df = CSV.read(\"data_processed/PAs_tab.csv\", DataFrame)",
+            file = matching_script)
+
+
 ```
 
 
 
 ```{r}
-#| eval: true
+#| eval: false
+
 library(JuliaCall)
+
 julia_source(matching_script)
 ```
 
