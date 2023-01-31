@@ -11,7 +11,7 @@ data_*/*
 >>>>>>> ed0a7e7d5d7acfa4ce66dce6d683faa62e24b200
 
 /.quarto/
-docs/*
+# docs/*
 *.zip
 replication_report/*/
 *secret*

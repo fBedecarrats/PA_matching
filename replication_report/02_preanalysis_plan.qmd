@@ -1,5 +1,5 @@
 
-## Pre-analysis plan for the replication of Wolf et al. (2021){#sec-preanalysis_plan}
+## Pre-analysis plan for the replication of Wolf et al. (2021) {#sec-preanalysis_plan}
 
 We intend to run a replication of the paper published by Wolf and colleagues in *Nature Ecology & Evolution* in 2021 [@wolf2021]. In this document, we lay out with the analysis steps we plan to carry out before starting any analysis. This has two main objectives:
 
@@ -18,5 +18,3 @@ Following scientific good practices, we pre-specify the replication procedure we
 -   Reproduce the analysis implemented by Wolf et al., replacing the 2001-2018 GFC by the JRC tropical moist forest dataset. The TMF dataset is allegedly more reliable: it was developed 8 years after the first disclosure of the GFC data and provides some enhancements: it covers a larger period of time (starting in 1990) and it differentiates, within forest cover loss, between deforestation and forest degradation.
 
 This document might be updated after its initial registry on Github. Every detail of any subsequent modification will be systematically and automatically recorded and time-stamped on Github, enabling anyone to access the detailed history of modification.
-
-## References

@@ -5,7 +5,7 @@ project:
 book:
   title: 'Replication of Wolf et al. (2021) "A forest loss report card for the world’s protected areas"'
   author: "Florent Bédécarrats, Marc Bouvier Marin Ferry et Jeanne de Montalembert"
-  date: "17/01/2023"
+  date: "2023-01-31"
   repo-url: https://github.com/fBedecarrats/PA_matching
   chapters:
     - index.qmd
