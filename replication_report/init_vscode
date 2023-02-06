@@ -17,5 +17,5 @@ chown -R onyxia:users $WORK_DIR
 
 
 # copy files from S3 
-mc cp -r s3/fbedecarrats/Replication_wolf/data_input $WORK_DIR/replication_report/data_input
-mc cp -r s3/fbedecarrats/Replication_wolf/data_processed $WORK_DIR/replication_report/data_processed
+# mc cp -r s3/fbedecarrats/Replication_wolf/data_input $WORK_DIR/replication_report/data_input
+# mc cp -r s3/fbedecarrats/Replication_wolf/data_processed $WORK_DIR/replication_report/data_processed
