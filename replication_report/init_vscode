@@ -8,6 +8,7 @@
 
 # Create variables
 WORK_DIR=/home/onyxia/work/PA_matching
+REPLI_DIR=/home/onyxia/work/PA_matching/replication_report
 REPO_URL=https://${GIT_PERSONAL_ACCESS_TOKEN}@github.com/fBedecarrats/PA_matching.git # As initial
 # curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
 
@@ -17,5 +18,5 @@ chown -R onyxia:users $WORK_DIR
 
 
 # copy files from S3 
-mc cp -r s3/fbedecarrats/Replication_wolf/data_input $WORK_DIR
-# mc cp -r s3/fbedecarrats/Replication_wolf/data_processed $WORK_DIR/replication_report/data_processed
+mc cp -r s3/fbedecarrats/Replication_wolf/data_input $REPLI_DIR
+mc cp -r s3/fbedecarrats/Replication_wolf/data_processed $REPLI_DIR
