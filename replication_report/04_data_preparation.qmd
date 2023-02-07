@@ -58,6 +58,7 @@ replace_all <- function(pattern, replacement, file) {
 }
 
 # Change the source paths ------------------------------------------------------
+join_script <- "PA_matching_asis/004 - join_rasters.R"
 # Replace Science URL that has changed
 old <- "https://science.sciencemag.org/highwire/filestream/715492/field_highwire_adjunct_files/2/aau3445-Data-S3.tif"
 new <- "https://www.science.org/action/downloadSupplement?doi=10.1126%2Fscience.aau3445&file=aau3445-data-s3.tif"
