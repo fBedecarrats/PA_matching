@@ -201,6 +201,9 @@ library(tidyverse)
 library(wdpar)
 library(sf)
 
+# Found the previous version of WDPA
+wdpa_Jan2020_url <- "https://pp-import-production.s3-eu-west-1.amazonaws.com/WDPA_Jan2020_Public.zip"
+
 save_from_s3(from = "Replication_wolf/WDPA_Jan2023_Public.gdb.zip",
              to = "data_input/WDPA_Jan2023_Public.gdb.zip")
 save_from_s3(from = "Replication_wolf/data_input/PAs/WDPA_Jan2023_poly.parquet",
