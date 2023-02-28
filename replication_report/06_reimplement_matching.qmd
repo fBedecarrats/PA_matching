@@ -1,0 +1,79 @@
+---
+title: "Reimplement matching"
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(aws.s3)
+library(terra)
+library(tictoc)
+library(stars)
+library(rgee)
+library(tmap)
+setwd("replication_report")
+```
+
+
+```{r}
+ee_install()
+```
+
+
+
+
+```{r}
+
+processed_rasters <- get_bucket_df(
+  bucket = "fbedecarrats",
+  prefix = "Replication_wolf/data_processed/rasters",
+  region = "") %>%
+  pluck("Key")
+
+# A function to iterate/vectorize copy
+save_from_s3 <- function(x, y) {
+  aws.s3::save_object(
+    object = x,
+    bucket = "fbedecarrats",
+    file = y,
+    overwrite = TRUE,
+    region = "")
+  }
+
+dest_processed <- str_remove(processed_rasters, "Replication_wolf/")
+name_layers <- str_remove(dest_processed, "data_processed/rasters/")
+name_layers <- str_remove(name_layers, ".tif")
+
+```
+
+Copy files
+```{r}
+map2(processed_rasters, dest_processed, save_from_s3)
+```
+
+Try with Terra
+
+```{r}
+gee_rast <- rast(dest_processed[1:8])
+names(gee_rast) <- name_layers[1:8]
+gee_rast
+
+tm_shape(gee_rast) +
+  tm_raster("PAs")
+  
+writeRaster(gee_rast, "temp/gee_rast.tif", overwrite = TRUE)
+```
+
+
+Try with stars
+
+```{r}
+gee_stars <- read_stars(dest_processed)
+str(gee_stars)
+
+write_stars(gee_stars, "temp/gee_stars.tif")
+class(gee_stars)
+```
+
