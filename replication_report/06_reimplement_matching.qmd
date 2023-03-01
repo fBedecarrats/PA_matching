@@ -13,16 +13,70 @@ library(tictoc)
 library(stars)
 library(rgee)
 library(tmap)
+library(geojsonio)
 setwd("replication_report")
 ```
 
+ee_install()
 
 ```{r}
-ee_install()
+# Authenticate if needed
+# ee_Authenticate()
+# ee_clean_user_credentials('ndef')
+
+ee_Initialize(user = 'ndef', drive = TRUE) # change ndef with 'toto'
+scale <- 0.008983153 # From Wolf et al. 2021
+
+# Hansen/GFC -------------------------------------------------------------
+
+gfc <- ee$Image("UMD/hansen/global_forest_change_2021_v1_9")
+
+## Lossyear ------------------------------------
+
+lossyear <- gfc$select("lossyear") 
+lossyear <- lossyear$updateMask(lossyear$neq(0)) # maskout 0
+lossyear <- lossyear$reduceResolution(
+  reducer = ee$Reducer$mode(), bestEffort = TRUE)
+
+# countries <- ee$FeatureCollection("USDOS/LSIB_SIMPLE/2017")
+# congo <- countries$filter(ee$Filter$eq('country_na', 'Rep of the Congo'))
+
+## Cover ----------------------------------------
+                          
+# On datamask, 0=no data, 1=land, 2=water. We keep land.
+
+cover_mask <- gfc$select("datamask")$eq(1)
+gfc <- gfc$updateMask(cover_mask)
+cover <- gfc$select("treecover2000")
+cover <- cover$reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)
+cover <- cover$toInt()
+
+## Elevation
+elev <- ee$Image("USGS/GTOPO30")
+travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")
+
+ee_print(elev)
+
+Map$addLayer(cover)
+
+combined <- cover$addBands(lossyear)
+export_combined <- ee$batch$Export$image$toDrive(
+  image = combined,
+  description = "cover and lossyer",
+  crsTransform = paste(scale, 0, -180, 0, -scale, 90, sep = ", "),
+  crs='EPSG:4326',
+  dimensions = paste(as.character(round(360/scale)), 'x', 
+                     as.character(round(360/scale))),
+  folder="rgee",
+  maxPixels=1e11)
+export_combined$start()
+ee_as_raster(image = combined, maxPixels = 1e12)
+# crsTransform, scale and dimensions are mutually exclusive!
+
+# Plot cover data
+Map$addLayer(cover)
+
 ```
-
-
-
 
 ```{r}
 
@@ -49,6 +103,7 @@ name_layers <- str_remove(name_layers, ".tif")
 ```
 
 Copy files
+
 ```{r}
 map2(processed_rasters, dest_processed, save_from_s3)
 ```
@@ -58,14 +113,13 @@ Try with Terra
 ```{r}
 gee_rast <- rast(dest_processed[1:8])
 names(gee_rast) <- name_layers[1:8]
-gee_rast
+
 
 tm_shape(gee_rast) +
   tm_raster("PAs")
   
 writeRaster(gee_rast, "temp/gee_rast.tif", overwrite = TRUE)
 ```
-
 
 Try with stars
 
@@ -76,4 +130,3 @@ str(gee_stars)
 write_stars(gee_stars, "temp/gee_stars.tif")
 class(gee_stars)
 ```
-
