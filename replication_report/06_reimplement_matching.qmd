@@ -37,9 +37,8 @@ lossyear <- gfc$select("lossyear")
 lossyear <- lossyear$updateMask(lossyear$neq(0)) # maskout 0
 lossyear <- lossyear$reduceResolution(
   reducer = ee$Reducer$mode(), bestEffort = TRUE)
-
-# countries <- ee$FeatureCollection("USDOS/LSIB_SIMPLE/2017")
-# congo <- countries$filter(ee$Filter$eq('country_na', 'Rep of the Congo'))
+lossyear <- lossyear$toInt()
+# ee_print(lossyear)
 
 ## Cover ----------------------------------------
                           
@@ -50,31 +49,28 @@ gfc <- gfc$updateMask(cover_mask)
 cover <- gfc$select("treecover2000")
 cover <- cover$reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)
 cover <- cover$toInt()
+# ee_print(cover)
 
+combined <- cover$addBands(lossyear)
+# ee_print(combined)
+
+ee_as_raster(image = combined, maxPixels = 1e12)
 ## Elevation
 elev <- ee$Image("USGS/GTOPO30")
 travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")
+gpw <- paste0("CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/",
+              "gpw_v4_population_density_adjusted_to_2015", 
+              "unwpp_country_totals_rev11_2000_30_sec")
+pop_dens <- ee$Image(gpw)$
+  select("unwpp-adjusted_population_density")$
+  focal_mean(radius = 20e3, kernelType = "circle", units = "meters")$
+  toInt()
 
-ee_print(elev)
 
-Map$addLayer(cover)
-
-combined <- cover$addBands(lossyear)
-export_combined <- ee$batch$Export$image$toDrive(
-  image = combined,
-  description = "cover and lossyer",
-  crsTransform = paste(scale, 0, -180, 0, -scale, 90, sep = ", "),
-  crs='EPSG:4326',
-  dimensions = paste(as.character(round(360/scale)), 'x', 
-                     as.character(round(360/scale))),
-  folder="rgee",
-  maxPixels=1e11)
-export_combined$start()
-ee_as_raster(image = combined, maxPixels = 1e12)
-# crsTransform, scale and dimensions are mutually exclusive!
-
-# Plot cover data
-Map$addLayer(cover)
+combined_bands <- cover$addBands(lossyear, elev, travel_time, pop_dens)
+combined_bands <- combined_bands$rename(c("cover", "lossyear", "elev",
+                                          "travel_time", "pop_dens"))
+ee_as_raster(image = combined_bands, maxPixels = 1e12)
 
 ```
 
