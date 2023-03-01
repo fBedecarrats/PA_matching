@@ -19,7 +19,6 @@ setwd("replication_report")
 
 
 We use the R package `rgee` as an interface to Google Earth engine API.
-Instead of separate rasters, we merge all the data as stacked bands of the same raster.
 
 ```{r}
 # Authenticate if needed
@@ -28,42 +27,54 @@ Instead of separate rasters, we merge all the data as stacked bands of the same 
 
 # Setup ------------------------------------------------------------------------
 ee_Initialize(user = "my_name", drive = TRUE) # change ndef with 'toto'
+```
+
+Instead of separate rasters, we merge all the data as stacked bands of the same raster.
+
+```{r}
 scale <- 0.008983153 # From Wolf et al. 2021
 
 # Hansen/GFC -------------------------------------------------------------------
-
-gfc <- ee$Image("UMD/hansen/global_forest_change_2021_v1_9")
+gfc <- ee$Image("UMD/hansen/global_forest_change_2018_v1_6")
 
 ## Lossyear ------------------------------------
-lossyear <- gfc$select("lossyear") 
-lossyear <- lossyear$updateMask(lossyear$neq(0)) # maskout 0
-lossyear <- lossyear$reduceResolution(
-  reducer = ee$Reducer$mode(), bestEffort = TRUE)
-lossyear <- lossyear$toInt()
+lossyear <- gfc$select("lossyear")$
+  updateMask(lossyear$neq(0))$ # maskout 0
+  reduceResolution(reducer = ee$Reducer$mode(), bestEffort = TRUE)$
+  toInt32()
 # ee_print(lossyear)
 
 ## Cover ----------------------------------------
 # On datamask, 0=no data, 1=land, 2=water. We keep land.
-cover_mask <- gfc$select("datamask")$eq(1)
-gfc <- gfc$updateMask(cover_mask)
-cover <- gfc$select("treecover2000")
-cover <- cover$reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)
-cover <- cover$toInt()
+cover_mask <- gfc$select("datamask")$eq(1)$
+  updateMask(cover_mask)$
+  select("treecover2000")$
+  reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
+  toInt32()
 # ee_print(cover)
 
+## Loss --------------------------------------------
+loss <- gfc$select("loss")$
+  reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
+  toInt32()
+
 # Other rasters fetched from GEE by wold et al. --------------------------------
-elev <- ee$Image("USGS/GTOPO30")
-travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")
+elev <- ee$Image("USGS/GTOPO30")$
+  toInt32()
+# ee_print(elev)
+travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")$
+  toInt32()
 gpw <- paste0("CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/",
-              "gpw_v4_population_density_adjusted_to_2015", 
+              "gpw_v4_population_density_adjusted_to_2015_", 
               "unwpp_country_totals_rev11_2000_30_sec")
 pop_dens <- ee$Image(gpw)$
   select("unwpp-adjusted_population_density")$
   focal_mean(radius = 20e3, kernelType = "circle", units = "meters")$
-  toInt()
+  toInt32()
 
-combined_bands <- cover$addBands(lossyear, elev, travel_time, pop_dens)
-combined_bands <- combined_bands$rename(c("cover", "lossyear", "elev",
+combined_bands <- cover$addBands(c(lossyear, loss, elev, travel_time, pop_dens))
+
+combined_bands <- combined_bands$rename(c("cover", "lossyear", "loss", "elev",
                                           "travel_time", "pop_dens"))
 
 # Launch the GEE task and transfer the output locally --------------------------
@@ -76,7 +87,7 @@ gee_task <- ee_as_raster(image = combined_bands,
                         container = "rgee_new",
                         maxPixels = 1e12)
 
-ee_drive_to_local(ee_id = gee_task, dsn = "data_input/combined.tif")
+gee_rast <- ee_drive_to_local(ee_id = gee_task, dsn = "data_input/combined.tif")
 
 ```
 
