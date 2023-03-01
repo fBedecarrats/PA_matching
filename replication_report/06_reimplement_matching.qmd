@@ -51,22 +51,6 @@ cover <- cover$reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)
 cover <- cover$toInt()
 # ee_print(cover)
 
-## TO DELETE ##################################################
-combined <- cover$addBands(lossyear)
-# ee_print(combined)
-ee_as_raster(image = combined, maxPixels = 1e12)
-
-gee_task <- ee_as_raster(image = combined, 
-                         crsTransform = paste(scale, 0, -180, 0, 
-                                              -scale, 90, sep = ", "),
-                         crs = "EPSG:4326",
-                         dimensions = paste(as.character(round(360/scale)), "x", 
-                                            as.character(round(360/scale))),
-                        container = "rgee_new",
-                        maxPixels = 1e12)
-
-################################################################
-
 # Other rasters fetched from GEE by wold et al. --------------------------------
 elev <- ee$Image("USGS/GTOPO30")
 travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")
@@ -94,24 +78,20 @@ gee_task <- ee_as_raster(image = combined_bands,
 
 ee_drive_to_local(ee_id = gee_task, dsn = "data_input/combined.tif")
 
-# Rasters fetched by Wolf et al. from other sources but present on GEE ---------
-
-## Used in matching ---------------------------------------------
-
-drivers
-ecoregion = ee$FeatureCollection("RESOLVE/ECOREGIONS/2017")
-country
-
-## Not used in matching -----------------------------------------
-carbon <- ee$image("NASA/ORNL/biomass_carbon_density/v1")$
-  select("agb")
-land <- ee$image()
-
 ```
 
 
 ```{r}
+# Fetch other data
 
+drivers
+ecoregions
+country
+
+# Stack as layers in the general raster
+
+
+# Convert the raster as dataframe
 ```
 
 
