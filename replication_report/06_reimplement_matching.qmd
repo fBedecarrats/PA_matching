@@ -17,22 +17,24 @@ library(geojsonio)
 setwd("replication_report")
 ```
 
-ee_install()
+
+We use the R package `rgee` as an interface to Google Earth engine API.
+Instead of separate rasters, we merge all the data as stacked bands of the same raster.
 
 ```{r}
 # Authenticate if needed
 # ee_Authenticate()
 # ee_clean_user_credentials('ndef')
 
-ee_Initialize(user = 'ndef', drive = TRUE) # change ndef with 'toto'
+# Setup ------------------------------------------------------------------------
+ee_Initialize(user = "my_name", drive = TRUE) # change ndef with 'toto'
 scale <- 0.008983153 # From Wolf et al. 2021
 
-# Hansen/GFC -------------------------------------------------------------
+# Hansen/GFC -------------------------------------------------------------------
 
 gfc <- ee$Image("UMD/hansen/global_forest_change_2021_v1_9")
 
 ## Lossyear ------------------------------------
-
 lossyear <- gfc$select("lossyear") 
 lossyear <- lossyear$updateMask(lossyear$neq(0)) # maskout 0
 lossyear <- lossyear$reduceResolution(
@@ -41,9 +43,7 @@ lossyear <- lossyear$toInt()
 # ee_print(lossyear)
 
 ## Cover ----------------------------------------
-                          
 # On datamask, 0=no data, 1=land, 2=water. We keep land.
-
 cover_mask <- gfc$select("datamask")$eq(1)
 gfc <- gfc$updateMask(cover_mask)
 cover <- gfc$select("treecover2000")
@@ -51,11 +51,23 @@ cover <- cover$reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)
 cover <- cover$toInt()
 # ee_print(cover)
 
+## TO DELETE ##################################################
 combined <- cover$addBands(lossyear)
 # ee_print(combined)
-
 ee_as_raster(image = combined, maxPixels = 1e12)
-## Elevation
+
+gee_task <- ee_as_raster(image = combined, 
+                         crsTransform = paste(scale, 0, -180, 0, 
+                                              -scale, 90, sep = ", "),
+                         crs = "EPSG:4326",
+                         dimensions = paste(as.character(round(360/scale)), "x", 
+                                            as.character(round(360/scale))),
+                        container = "rgee_new",
+                        maxPixels = 1e12)
+
+################################################################
+
+# Other rasters fetched from GEE by wold et al. --------------------------------
 elev <- ee$Image("USGS/GTOPO30")
 travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")
 gpw <- paste0("CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/",
@@ -66,13 +78,42 @@ pop_dens <- ee$Image(gpw)$
   focal_mean(radius = 20e3, kernelType = "circle", units = "meters")$
   toInt()
 
-
 combined_bands <- cover$addBands(lossyear, elev, travel_time, pop_dens)
 combined_bands <- combined_bands$rename(c("cover", "lossyear", "elev",
                                           "travel_time", "pop_dens"))
-ee_as_raster(image = combined_bands, maxPixels = 1e12)
+
+# Launch the GEE task and transfer the output locally --------------------------
+gee_task <- ee_as_raster(image = combined_bands, 
+                         crsTransform = paste(scale, 0, -180, 0, 
+                                              -scale, 90, sep = ", "),
+                         crs = "EPSG:4326",
+                         dimensions = paste(as.character(round(360/scale)), "x", 
+                                            as.character(round(360/scale))),
+                        container = "rgee_new",
+                        maxPixels = 1e12)
+
+ee_drive_to_local(ee_id = gee_task, dsn = "data_input/combined.tif")
+
+# Rasters fetched by Wolf et al. from other sources but present on GEE ---------
+
+## Used in matching ---------------------------------------------
+
+drivers
+ecoregion = ee$FeatureCollection("RESOLVE/ECOREGIONS/2017")
+country
+
+## Not used in matching -----------------------------------------
+carbon <- ee$image("NASA/ORNL/biomass_carbon_density/v1")$
+  select("agb")
+land <- ee$image()
 
 ```
+
+
+```{r}
+
+```
+
 
 ```{r}
 
