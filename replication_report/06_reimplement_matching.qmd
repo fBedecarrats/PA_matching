@@ -103,7 +103,16 @@ my_rast <- do.call(merge, c(my_rasts, filename = "data_input/gee/all.tif"))
 
 my_star <- read_stars("data_input/stacked-0001.tif")
 
+all <- read_stars("data_input/gee/all.tif")
+
+plot(all)
 my_star_df <- as.data.frame(my_star)
+str(my_star_df)
+
+my_star_df %>%
+  write_parquet("data_input.parquet")
+# A 2GB parquet file
+
 
 my_star_df %>%
   group_by(band) %>%
