@@ -111,7 +111,10 @@ aws.s3::put_object(file = "data_input/gee_all.tif",
                   bucket = "fbedecarrats",
                   region = "")
 
-
+aws.s3::save_object(file = "data_input/gee/all.tif",
+                    object = "data_input/gee/all.tif",
+                    bucket = "fbedecarrats",
+                    region = "")
 
 ```
 
