@@ -15,9 +15,9 @@ library(rgee)
 library(tmap)
 library(geojsonio)
 library(googledrive)
+library(arrow, warn.conflicts = FALSE)
 setwd("replication_report")
 ```
-
 
 We use the R package `rgee` as an interface to Google Earth engine API.
 
@@ -91,7 +91,6 @@ gfc_task <- ee_as_raster(image = combined,
                          dsn = "data_input/stacked.tif")
 ```
 
-
 Load GEE data
 
 ```{r}
@@ -103,6 +102,9 @@ my_rast <- do.call(merge, c(my_rasts, filename = "data_input/gee/all.tif"))
 
 
 my_star <- read_stars("data_input/stacked-0001.tif")
+
+arrow::write_parquet(as.data.frame(my_star), "data_input/gee1.parquet")
+
 rasterio <- list(nXOff = 6, nYOff = 6, nXSize = 3, nYSize = 3, bands = 3)
 my_star2 <- read_stars("data_input/stacked-0001.tif")
 
@@ -120,6 +122,7 @@ tm_shape(my_rast) +
   tm_raster()
 
 
+
 my_rast
 small_rast <- spatSample(my_rast)
 
@@ -135,12 +138,19 @@ aws.s3::save_object(file = "data_input/gee/all.tif",
                     region = "")
 
 
-test7 <- arrow::read_parquet("temp/test7.parquet")
 
-test7_star <- read_stars("data_input/stacked-0007.tif")
 
-test7_star %>%
-  summarise(min_cover = min(cover))
+dir.create("data_input")
+dir.create("data_input/gee")
+aws.s3::put_object(file = "data_input/stacked-0001.tif",
+                  object = "data_input/gee/stacked-0001.tif",
+                  bucket = "fbedecarrats",
+                  region = "",
+                  multipart = TRUE)
+aws.s3::save_object(file = "data_input/stacked-0001.tif",
+                    object = "data_input/gee/stacked-0001.tif",
+                    bucket = "fbedecarrats",
+                    region = "",
+                    multipart = TRUE)
 
 ```
-
