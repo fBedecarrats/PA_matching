@@ -96,88 +96,22 @@ Load GEE data
 
 ```{r}
 # Merge rasters received from GEE
-rast_files <- list.files(path = "data_input", pattern = "stacked.*", 
+rast_files <- list.files(path = "data_input/gee", pattern = "stacked.*", 
                          full.names = TRUE)
 my_rasts <- map(rast_files, rast)
-my_rast <- do.call(merge, c(my_rasts, filename = "data_input/gee_all.tif"))
+my_rast <- do.call(merge, c(my_rasts, filename = "data_input/gee/all.tif"))
+
 
 my_star <- read_stars("data_input/gee_all.tif")
 
-tic()
-my_df <- as.data.frame(my_star)
-toc()
-```
+small_star <- read_stars("data_input/stacked-0007.tif")
+
+aws.s3::put_object(file = "data_input/gee_all.tif",
+                  object = "data_input/gee/all.tif",
+                  bucket = "fbedecarrats",
+                  region = "")
 
 
-
-```{r}
-# Fetch other data
-
-
-
-drivers
-ecoregions
-country
-
-# Stack as layers in the general raster
-
-
-# Convert the raster as dataframe
-```
-
-
-```{r}
-
-processed_rasters <- get_bucket_df(
-  bucket = "fbedecarrats",
-  prefix = "Replication_wolf/data_processed/rasters",
-  region = "") %>%
-  pluck("Key")
-
-# A function to iterate/vectorize copy
-save_from_s3 <- function(x, y) {
-  aws.s3::save_object(
-    object = x,
-    bucket = "fbedecarrats",
-    file = y,
-    overwrite = TRUE,
-    region = "")
-  }
-
-dest_processed <- str_remove(processed_rasters, "Replication_wolf/")
-name_layers <- str_remove(dest_processed, "data_processed/rasters/")
-name_layers <- str_remove(name_layers, ".tif")
 
 ```
 
-Copy files
-
-```{r}
-map2(processed_rasters, dest_processed, save_from_s3)
-```
-
-Try with Terra
-
-```{r}
-gee_rast <- rast(dest_processed[1:8])
-names(gee_rast) <- name_layers[1:8]
-
-my_list <- list("a", "b", "c")
-
-do.call(paste, c(my_list, sep = "-"))
-
-tm_shape(gee_rast) +
-  tm_raster("PAs")
-  
-writeRaster(gee_rast, "temp/gee_rast.tif", overwrite = TRUE)
-```
-
-Try with stars
-
-```{r}
-gee_stars <- read_stars(dest_processed)
-str(gee_stars)
-
-write_stars(gee_stars, "temp/gee_stars.tif")
-class(gee_stars)
-```
