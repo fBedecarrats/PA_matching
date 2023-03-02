@@ -14,6 +14,7 @@ library(stars)
 library(rgee)
 library(tmap)
 library(geojsonio)
+library(googledrive)
 setwd("replication_report")
 ```
 
@@ -33,67 +34,86 @@ Instead of separate rasters, we merge all the data as stacked bands of the same 
 
 ```{r}
 scale <- 0.008983153 # From Wolf et al. 2021
+drive_folder <- "rgee"
+local_folder <- "temp"
 
 # Hansen/GFC -------------------------------------------------------------------
-gfc <- ee$Image("UMD/hansen/global_forest_change_2018_v1_6")
+gfc <- ee$Image("UMD/hansen/global_forest_change_2021_v1_9")
 
 ## Lossyear ------------------------------------
-lossyear <- gfc$select("lossyear")$
-  updateMask(lossyear$neq(0))$ # maskout 0
-  reduceResolution(reducer = ee$Reducer$mode(), bestEffort = TRUE)$
-  toInt32()
-# ee_print(lossyear)
+lossyear <- gfc$select("lossyear")
+lossyear <- lossyear$updateMask(lossyear$neq(0)) # maskout 0
+lossyear <- lossyear$reduceResolution(reducer = ee$Reducer$mode(), 
+                                      bestEffort = TRUE)
+lossyear <- lossyear$toInt()
 
 ## Cover ----------------------------------------
 # On datamask, 0=no data, 1=land, 2=water. We keep land.
-cover_mask <- gfc$select("datamask")$eq(1)$
-  updateMask(cover_mask)$
-  select("treecover2000")$
-  reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
-  toInt32()
-# ee_print(cover)
+mask_cover <- gfc$select("datamask")$eq(1)
+cover <-  gfc$updateMask(cover_mask)
+cover <- cover$select("treecover2000")
+cover <- cover$reduceResolution(reducer = ee$Reducer$mean(), 
+                                bestEffort = TRUE)
+cover <- cover$toInt()
 
 ## Loss --------------------------------------------
-loss <- gfc$select("loss")$
-  reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
-  toInt32()
+loss <- gfc$select("loss")
+loss <- loss$reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)
+loss <- loss$toInt32()
 
 # Other rasters fetched from GEE by wold et al. --------------------------------
-elev <- ee$Image("USGS/GTOPO30")$
-  toInt32()
+elev <- ee$Image("USGS/GTOPO30")
+elev <- elev$toInt()
 # ee_print(elev)
-travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")$
-  toInt32()
+travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")
+travel_time <- travel_time$toInt()
 gpw <- paste0("CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/",
               "gpw_v4_population_density_adjusted_to_2015_", 
               "unwpp_country_totals_rev11_2000_30_sec")
-pop_dens <- ee$Image(gpw)$
-  select("unwpp-adjusted_population_density")$
-  focal_mean(radius = 20e3, kernelType = "circle", units = "meters")$
-  toInt32()
+pop_dens <- ee$Image(gpw)
+pop_dens <- pop_dens$select("unwpp-adjusted_population_density")
+pop_dens <- pop_dens$focal_mean(radius = 20e3, kernelType = "circle", 
+                                units = "meters")
+pop_dens <- pop_dens$toInt()
 
-combined_bands <- cover$addBands(c(lossyear, loss, elev, travel_time, pop_dens))
-
-combined_bands <- combined_bands$rename(c("cover", "lossyear", "loss", "elev",
+# stack bands into a single raster and export ----------------------------------
+combined <- cover$addBands(c(lossyear, loss, elev, travel_time, pop_dens))
+combined <- combined$rename(c("cover", "lossyear", "loss", "elev",
                                           "travel_time", "pop_dens"))
-
-# Launch the GEE task and transfer the output locally --------------------------
-gee_task <- ee_as_raster(image = combined_bands, 
-                         crsTransform = paste(scale, 0, -180, 0, 
-                                              -scale, 90, sep = ", "),
+# Export with the same crsTransform and dimensions than Wolf et al. (2021)
+gfc_task <- ee_as_raster(image = combined,
+                         crsTransform = paste(scale, 0, -180, 0, -scale, 90, sep = ", "),
                          crs = "EPSG:4326",
-                         dimensions = paste(as.character(round(360/scale)), "x", 
+                         dimensions = paste(as.character(round(360/scale)), "x",
                                             as.character(round(360/scale))),
-                        container = "rgee_new",
-                        maxPixels = 1e12)
-
-gee_rast <- ee_drive_to_local(ee_id = gee_task, dsn = "data_input/combined.tif")
-
+                         container = "rgee3",
+                         maxPixels = 1e12,
+                         dsn = "data_input/stacked.tif")
 ```
+
+
+Load GEE data
+
+```{r}
+# Merge rasters received from GEE
+rast_files <- list.files(path = "data_input", pattern = "stacked.*", 
+                         full.names = TRUE)
+my_rasts <- map(rast_files, rast)
+my_rast <- do.call(merge, c(my_rasts, filename = "data_input/gee_all.tif"))
+
+my_star <- read_stars("data_input/gee_all.tif")
+
+tic()
+my_df <- as.data.frame(my_star)
+toc()
+```
+
 
 
 ```{r}
 # Fetch other data
+
+
 
 drivers
 ecoregions
@@ -142,6 +162,9 @@ Try with Terra
 gee_rast <- rast(dest_processed[1:8])
 names(gee_rast) <- name_layers[1:8]
 
+my_list <- list("a", "b", "c")
+
+do.call(paste, c(my_list, sep = "-"))
 
 tm_shape(gee_rast) +
   tm_raster("PAs")
