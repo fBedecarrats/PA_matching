@@ -103,7 +103,21 @@ my_rast <- do.call(merge, c(my_rasts, filename = "data_input/gee/all.tif"))
 
 my_star <- read_stars("data_input/stacked-0001.tif")
 
-arrow::write_parquet(as.data.frame(my_star), "data_input/gee1.parquet")
+my_star_df <- as.data.frame(my_star)
+
+my_star_df %>%
+  group_by(band) %>%
+  summarise(min = min(stacked.0001.tif, na.rm = TRUE),
+            max = max(stacked.0001.tif, na.rm = TRUE))
+# # A tibble: 6 × 3
+#   band          min   max
+#   <fct>       <dbl> <dbl>
+# 1 cover           0   100
+# 2 lossyear        0    21
+# 3 loss            0     1
+# 4 elev          -79  6710
+# 5 travel_time     0 41556
+# 6 pop_dens        0 25031
 
 rasterio <- list(nXOff = 6, nYOff = 6, nXSize = 3, nYSize = 3, bands = 3)
 my_star2 <- read_stars("data_input/stacked-0001.tif")
