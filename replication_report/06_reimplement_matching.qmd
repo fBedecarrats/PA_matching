@@ -9,6 +9,7 @@ editor_options:
 We use the R package `rgee` as an interface to Google Earth engine API.
 
 ```{r}
+setwd("replication_report")
 # Sometime rgee does not find the right python env, so we specify it
 reticulate::use_python("C:/Users/fbede/AppData/Local/r-miniconda/envs/rgee")
 library(rgee) # accesses GEE through its python API
@@ -45,8 +46,6 @@ First we will fetch the biome descriptions from the resolve ecoregions.
 
 ```{r}
 ecoregions <- ee$FeatureCollection("RESOLVE/ECOREGIONS/2017")
-Map$addLayer(ecoregions)
-
 biome_names <- ecoregions$
   reduceColumns(ee$Reducer$toList(), list("BIOME_NAME"))$
   get("list")$
@@ -95,41 +94,10 @@ Map$addLayer(select_ecoregs)
 
 ![selected ecoregions from google earth engine](img/selected_ecoregions.png)
 
+# Clip Hansen data with biome polygons
 
+Instead of downloading and processing all the GFC data like Wolf and al., we instead keep only the data located within the perimeter of the biomes of interest.
 
-
-
-```{r}
-library(tidyverse)
-library(aws.s3)
-library(tictoc)
-
-# library(rgeeExtra)
-library(tmap)
-
-library(arrow)
-library(sf)
-# library(terra)
-# library(stars)
-# library(geojsonio)
-setwd("replication_report")
-```
-
-
-
-```{r}
-# Authenticate if needed
-# ee_install()
-library(rgee)
-ee_Authenticate()
-ee_clean_user_credentials('ndef')
-
-
-# Setup ------------------------------------------------------------------------
-ee_Initialize(user = "ndef", drive = TRUE) # change ndef with 'toto'
-```
-
-Instead of separate rasters, we merge all the data as stacked bands of the same raster.
 
 ```{r}
 scale <- 0.008983153 # From Wolf et al. 2021
@@ -137,90 +105,87 @@ drive_folder <- "rgee"
 local_folder <- "temp"
 
 # Hansen/GFC -------------------------------------------------------------------
-gfc <- ee$Image("UMD/hansen/global_forest_change_2021_v1_9")
+gfc <- ee$Image("UMD/hansen/global_forest_change_2018_v1_6")
 
+# Cover other try
+gfc_mask <- gfc$select("datamask")$eq(1)
+cover <-  gfc$select("treecover2000")$
+  updateMask(gfc_mask)$
+  clipToCollection(select_ecoregs)
+Map$addLayer(cover)
+```
+![forest data from selected ecoregions](img/filtered_forest_data.png)
+
+
+# Stack information as bands in a single raster
+
+Wolf et al. downloaded each information source in a separate raster, that they later on joined. We find easier and less error-prone to stack all the information as bands of the same raster. The data might be downloaded in separate files for different regions, but for the same regions, all the complementary information is attached to the same pixels with the same resolution (alias, a "clean" table).
+
+```{r}
 ## Lossyear ------------------------------------
 lossyear <- gfc$select("lossyear")
-lossyear <- lossyear$updateMask(lossyear$neq(0)) # maskout 0
-lossyear <- lossyear$reduceResolution(reducer = ee$Reducer$mode(), 
-                                      bestEffort = TRUE)
-lossyear <- lossyear$toInt()
-
-## Cover ----------------------------------------
-# On datamask, 0=no data, 1=land, 2=water. We keep land.
-mask_cover <- gfc$select("datamask")$eq(1)
-cover <-  gfc$updateMask(cover_mask)
-cover <- cover$select("treecover2000")
-cover <- cover$reduceResolution(reducer = ee$Reducer$mean(), 
-                                bestEffort = TRUE)
-cover <- cover$toInt()
+lossyear <- lossyear$updateMask(lossyear$neq(0))$ # maskout 0
+  reduceResolution(reducer = ee$Reducer$mode(), 
+                                      bestEffort = TRUE)$
+  toInt()
 
 ## Loss --------------------------------------------
-loss <- gfc$select("loss")
-loss <- loss$reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)
-loss <- loss$toInt32()
+loss <- gfc$select("loss")$
+  reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
+  toInt() # or to Int32?
 
 # Other rasters fetched from GEE by wold et al. --------------------------------
-elev <- ee$Image("USGS/GTOPO30")
-elev <- elev$toInt()
+elev <- ee$Image("USGS/GTOPO30")$
+  toInt()
 # ee_print(elev)
-travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")
-travel_time <- travel_time$toInt()
+travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")$
+  toInt()
 gpw <- paste0("CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/",
               "gpw_v4_population_density_adjusted_to_2015_", 
               "unwpp_country_totals_rev11_2000_30_sec")
-pop_dens <- ee$Image(gpw)
-pop_dens <- pop_dens$select("unwpp-adjusted_population_density")
-pop_dens <- pop_dens$focal_mean(radius = 20e3, kernelType = "circle", 
-                                units = "meters")
-pop_dens <- pop_dens$toInt()
+
+pop_dens <- ee$Image(gpw)$
+  select("unwpp-adjusted_population_density")$
+  focal_mean(radius = 20e3, kernelType = "circle", 
+                                units = "meters")$
+  toInt()
 
 # stack bands into a single raster and export ----------------------------------
-combined <- cover$addBands(c(lossyear, loss, elev, travel_time, pop_dens))
-combined <- combined$rename(c("cover", "lossyear", "loss", "elev",
-                                          "travel_time", "pop_dens"))
-# Export with the same crsTransform and dimensions than Wolf et al. (2021)
-gfc_task <- ee_as_raster(image = combined,
-                         crsTransform = paste(scale, 0, -180, 0, -scale, 90, sep = ", "),
-                         crs = "EPSG:4326",
-                         dimensions = paste(as.character(round(360/scale)), "x",
-                                            as.character(round(360/scale))),
-                         container = "rgee3",
-                         maxPixels = 1e12,
-                         dsn = "data_input/stacked.tif")
+combined <- cover$addBands(c(lossyear, loss, elev, travel_time, pop_dens))$
+  rename(c("cover", "lossyear", "loss", "elev", "travel_time", "pop_dens"))
 ```
 
-# Load assets to GEE
+# Add countries and PAs
 
 ```{r}
+countries <- ee$FeatureCollection("FAO/GAUL/2015/level0")
 
-# Countries
+countries_img <- countries$
+  filter(ee$Filter$notNull(list("ADM0_CODE")))$
+  reduceToImage(properties = list("ADM0_CODE"), reducer = ee$Reducer$first())
+
+wdpa <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
+  set("PA", 1)
+
+wdpa_buffer <- wdpa.buffer(10000)$ # 10km buffer
+  set("PA_buffer", 1)
+
+wdpa <- wdpa$
+  filter(ee$Filter$notNull(list("PA")))$
+  reduceToImage(properties = list("PA"), reducer = ee$Reducer$first())
+wdpa_buffer <- wdpa_buffer$
+  filter(ee$Filter$notNull(list("PA_buffer")))$
+  reduceToImage(properties = list("PA_buffer"), reducer = ee$Reducer$first())
+
+combined <- combined$addBands(c(wdpa, wdpa_buffer))$
+  rename(c("cover", "lossyear", "loss", "elev", "travel_time", "pop_dens",
+           "wdpa", "wdpa_buffer"))
+```
 
 
+# Load deforestation drivers
 
-
-# Biomes
-
-
-
-# Compare with source used by Wolf et al. --------------------------------------
-
-## Download
-wwf_url <- paste0("https://files.worldwildlife.org/wwfcmsprod/files/",
-                  "Publication/file/6kcchn7e3u_official_teow.zip")
-wwf_destfile <- "temp/ecoregions_wwf.zip"
-download.file(url = wwf_url, destfile = wwf_destfile)
-unzip(zipfile = wwf_destfile, exdir = "data_input") 
-
-# Load
-wwf_ecoregions <- st_read("data_input/official/wwf_terr_ecos.shp") %>%
-  st_make_valid()
-
-tmap_mode("plot")
-wwf_ecoregions %>%
-  mutate(BIOME = factor(BIOME)) %>%
-  tm_shape() + 
-  tm_polygons(col = "BIOME")
+```{r}
 
 # Drivers
 
@@ -242,98 +207,6 @@ wwf_ecoregions %>%
 Load GEE data
 
 ```{r}
-# Merge rasters received from GEE
-rast_files <- list.files(path = "data_input", pattern = "stacked.*", 
-                         full.names = TRUE)
-rast_file_names <- list.files(path = "data_input", pattern = "stacked.*")
-rast_dest <- paste0("Replication_wolf/data_input/gee/", rast_file_names)
 
-map2(rast_files, rast_dest, ~put_object(file = .x, object = .y,
-                                        bucket = "fbedecarrats",
-                                        region = "",
-                                        multipart = TRUE))
-
-my_stars <- read_stars(rast_files[[1]])
-my_stars
-my_stars <- read_stars(c(rast_files[[1]], rast_files[[2]]), along = "band")
-
-my_rasts <- map(rast_files, rast)
-my_rast <- do.call(merge, c(my_rasts, filename = "data_input/gee/all.tif"))
-
-
-my_star <- read_stars("data_input/stacked-0001.tif")
-
-all <- read_stars("data_input/gee/all.tif")
-
-plot(all)
-my_star_df <- as.data.frame(my_star)
-str(my_star_df)
-
-my_star_df %>%
-  write_parquet("data_input.parquet")
-# A 2GB parquet file
-
-
-my_star_df %>%
-  group_by(band) %>%
-  summarise(min = min(stacked.0001.tif, na.rm = TRUE),
-            max = max(stacked.0001.tif, na.rm = TRUE))
-# # A tibble: 6 × 3
-#   band          min   max
-#   <fct>       <dbl> <dbl>
-# 1 cover           0   100
-# 2 lossyear        0    21
-# 3 loss            0     1
-# 4 elev          -79  6710
-# 5 travel_time     0 41556
-# 6 pop_dens        0 25031
-
-rasterio <- list(nXOff = 6, nYOff = 6, nXSize = 3, nYSize = 3, bands = 3)
-my_star2 <- read_stars("data_input/stacked-0001.tif")
-
-
-my_rast <- rast("data_input/stacked-0007.tif")
-# my_rast <- rast("data_processed/rasters/cover.tif")
-
-my_star
-
-tmap_options("max.raster")
-tmap_options(max.raster = c(plot = 100000, view = 100000))
-tmap_mode("plot")
-# raster.warp = FALSE
-tm_shape(my_rast) +
-  tm_raster()
-
-
-
-my_rast
-small_rast <- spatSample(my_rast)
-
-
-aws.s3::put_object(file = "data_input/gee_all.tif",
-                  object = "data_input/gee/all.tif",
-                  bucket = "fbedecarrats",
-                  region = "")
-
-aws.s3::save_object(file = "data_input/gee/all.tif",
-                    object = "data_input/gee/all.tif",
-                    bucket = "fbedecarrats",
-                    region = "")
-
-
-
-
-dir.create("data_input")
-dir.create("data_input/gee")
-aws.s3::put_object(file = "data_input/stacked-0001.tif",
-                  object = "data_input/gee/stacked-0001.tif",
-                  bucket = "fbedecarrats",
-                  region = "",
-                  multipart = TRUE)
-aws.s3::save_object(file = "data_input/stacked-0001.tif",
-                    object = "data_input/gee/stacked-0001.tif",
-                    bucket = "fbedecarrats",
-                    region = "",
-                    multipart = TRUE)
 
 ```
