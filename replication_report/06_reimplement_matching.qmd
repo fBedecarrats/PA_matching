@@ -5,29 +5,115 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r}
-library(tidyverse)
-library(aws.s3)
-library(terra)
-library(tictoc)
-library(stars)
-library(rgee)
-library(tmap)
-library(geojsonio)
-library(googledrive)
-library(arrow, warn.conflicts = FALSE)
-setwd("replication_report")
-```
 
 We use the R package `rgee` as an interface to Google Earth engine API.
 
 ```{r}
+# Sometime rgee does not find the right python env, so we specify it
+reticulate::use_python("C:/Users/fbede/AppData/Local/r-miniconda/envs/rgee")
+library(rgee) # accesses GEE through its python API
+# Install rgeeExtra if not present
+if (!("rgeeExtra" %in% installed.packages())) {
+  remotes::install_github("r-earthengine/rgeeExtra")
+}
+library(rgeeExtra) # additional funcitonnalities
+library(googledrive) # to download additional data from drive (facultative)
+library(tidyverse)
+ee_Initialize()
+```
+
+We want to use the same data as Wolf et al. but to implement a different strategy that:   
+
+- implies less manipulations steps that might be error prone;
+- relies on cloud data processing for very big datasets;
+- only relies on one language and configuration for local processing.
+
+Therefore we plan to leverage Google Earth engine to the maximum by: 
+
+- using the same data sources and processing than Wolf et al,;
+- add the other data that were obtained from different data sources;
+- better mask the data to reduce its size;
+- stack all the information in single multi-bands rasters;
+- slice the rasters by country and biome as these are matched separately;
+- download individual rasters to match them locally;
+- store the matched data into an efficient on-disk storage for later processing;
+- do the final regressions leveraging bigger than memory funcitonnalities of R.
+
+# Load Biomes on Google Earth Engine and use them as masks
+
+First we will fetch the biome descriptions from the resolve ecoregions.
+
+```{r}
+ecoregions <- ee$FeatureCollection("RESOLVE/ECOREGIONS/2017")
+Map$addLayer(ecoregions)
+
+biome_names <- ecoregions$
+  reduceColumns(ee$Reducer$toList(), list("BIOME_NAME"))$
+  get("list")$
+  getInfo()
+print(unique(biome_names))
+```
+```
+ [1] "Tropical & Subtropical Moist Broadleaf Forests"          
+ [2] "Tropical & Subtropical Grasslands, Savannas & Shrublands"
+ [3] "Flooded Grasslands & Savannas"                           
+ [4] "Montane Grasslands & Shrublands"                         
+ [5] "Deserts & Xeric Shrublands"                              
+ [6] "Mangroves"                                               
+ [7] "Mediterranean Forests, Woodlands & Scrub"                
+ [8] "Tropical & Subtropical Dry Broadleaf Forests"            
+ [9] "Tropical & Subtropical Coniferous Forests"               
+[10] "Temperate Broadleaf & Mixed Forests"                     
+[11] "Temperate Conifer Forests"                               
+[12] "Temperate Grasslands, Savannas & Shrublands"             
+[13] "N/A"                                                     
+[14] "Boreal Forests/Taiga"                                    
+[15] "Tundra"  
+```
+Wolf et al. specify that they focused on the following ones:   
+
+- Tropical & Subtropical Moist Broadleaf Forests
+- Tropical & Subtropical Dry Broadleaf Forests
+- Tropical & Subtropical Coniferous Forests
+- Temperate Broadleaf & 74 Mixed Forests
+- Temperate Conifer Forests
+- Boreal Forests/Taiga
+- Mangroves
+
+```{r}
+select_ecoregs <- 
+```
+
+
+
+```{r}
+library(tidyverse)
+library(aws.s3)
+library(tictoc)
+
+# library(rgeeExtra)
+library(tmap)
+
+library(arrow)
+library(sf)
+# library(terra)
+# library(stars)
+# library(geojsonio)
+setwd("replication_report")
+```
+
+
+
+```{r}
 # Authenticate if needed
-# ee_Authenticate()
-# ee_clean_user_credentials('ndef')
+# ee_install()
+library(rgee)
+ee_Authenticate()
+ee_clean_user_credentials('ndef')
+
 
 # Setup ------------------------------------------------------------------------
-ee_Initialize(user = "my_name", drive = TRUE) # change ndef with 'toto'
+ee_Initialize(user = "ndef", drive = TRUE) # change ndef with 'toto'
 ```
 
 Instead of separate rasters, we merge all the data as stacked bands of the same raster.
@@ -91,12 +177,73 @@ gfc_task <- ee_as_raster(image = combined,
                          dsn = "data_input/stacked.tif")
 ```
 
+# Load assets to GEE
+
+```{r}
+
+# Countries
+
+
+
+
+# Biomes
+
+
+
+# Compare with source used by Wolf et al. --------------------------------------
+
+## Download
+wwf_url <- paste0("https://files.worldwildlife.org/wwfcmsprod/files/",
+                  "Publication/file/6kcchn7e3u_official_teow.zip")
+wwf_destfile <- "temp/ecoregions_wwf.zip"
+download.file(url = wwf_url, destfile = wwf_destfile)
+unzip(zipfile = wwf_destfile, exdir = "data_input") 
+
+# Load
+wwf_ecoregions <- st_read("data_input/official/wwf_terr_ecos.shp") %>%
+  st_make_valid()
+
+tmap_mode("plot")
+wwf_ecoregions %>%
+  mutate(BIOME = factor(BIOME)) %>%
+  tm_shape() + 
+  tm_polygons(col = "BIOME")
+
+# Drivers
+
+wwf_ecoregions %>%
+  st_drop_geometry() %>%
+  group_by(BIOME) %>%
+  summarise(n_distinct = n_distinct(BIOME),
+            n = n())
+wwf_ecoregions %>%
+  st_drop_geometry() %>%
+  group_by(ECO_NAME) %>%
+  summarise(n_distinct = n_distinct(ECO_NAME),
+            n = n())
+
+```
+
+
+
 Load GEE data
 
 ```{r}
 # Merge rasters received from GEE
-rast_files <- list.files(path = "data_input/gee", pattern = "stacked.*", 
+rast_files <- list.files(path = "data_input", pattern = "stacked.*", 
                          full.names = TRUE)
+rast_file_names <- list.files(path = "data_input", pattern = "stacked.*")
+rast_dest <- paste0("Replication_wolf/data_input/gee/", rast_file_names)
+
+map2(rast_files, rast_dest, ~put_object(file = .x, object = .y,
+                                        bucket = "fbedecarrats",
+                                        region = "",
+                                        multipart = TRUE))
+
+my_stars <- read_stars(rast_files[[1]])
+my_stars
+my_stars <- read_stars(c(rast_files[[1]], rast_files[[2]]), along = "band")
+
 my_rasts <- map(rast_files, rast)
 my_rast <- do.call(merge, c(my_rasts, filename = "data_input/gee/all.tif"))
 
