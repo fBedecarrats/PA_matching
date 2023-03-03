@@ -75,14 +75,27 @@ Wolf et al. specify that they focused on the following ones:
 - Tropical & Subtropical Moist Broadleaf Forests
 - Tropical & Subtropical Dry Broadleaf Forests
 - Tropical & Subtropical Coniferous Forests
-- Temperate Broadleaf & 74 Mixed Forests
+- Temperate Broadleaf & Mixed Forests
 - Temperate Conifer Forests
 - Boreal Forests/Taiga
 - Mangroves
 
 ```{r}
-select_ecoregs <- 
+select_ecoregs <- ecoregions$
+  filter("BIOME_NAME == 'Tropical & Subtropical Moist Broadleaf Forests' ||
+          BIOME_NAME == 'Tropical & Subtropical Dry Broadleaf Forests' ||
+          BIOME_NAME == 'Tropical & Subtropical Coniferous Forests' ||
+          BIOME_NAME == 'Temperate Broadleaf & Mixed Forests' ||
+          BIOME_NAME == 'Temperate Conifer Forests' ||
+          BIOME_NAME == 'Boreal Forests/Taiga' ||
+          BIOME_NAME == 'Mangroves'")
+
+Map$addLayer(select_ecoregs)
 ```
+
+![selected ecoregions from google earth engine](img/selected_ecoregions.png)
+
+
 
 
 
