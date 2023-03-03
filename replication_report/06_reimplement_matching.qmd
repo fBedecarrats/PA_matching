@@ -5,8 +5,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-
-We use the R package `rgee` as an interface to Google Earth engine API.
+We use the R package `rgee` as an interface to Google Earth engine API [@aybar2020].
 
 ```{r}
 setwd("replication_report")
@@ -23,22 +22,22 @@ library(tidyverse)
 ee_Initialize()
 ```
 
-We want to use the same data as Wolf et al. but to implement a different strategy that:   
+We want to use the same data as Wolf et al. but to implement a different strategy that:
 
-- implies less manipulations steps that might be error prone;
-- relies on cloud data processing for very big datasets;
-- only relies on one language and configuration for local processing.
+-   implies less manipulations steps that might be error prone;
+-   relies on cloud data processing for very big datasets;
+-   only relies on one language and configuration for local processing.
 
-Therefore we plan to leverage Google Earth engine to the maximum by: 
+Therefore we plan to leverage Google Earth engine to the maximum by:
 
-- using the same data sources and processing than Wolf et al,;
-- add the other data that were obtained from different data sources;
-- better mask the data to reduce its size;
-- stack all the information in single multi-bands rasters;
-- slice the rasters by country and biome as these are matched separately;
-- download individual rasters to match them locally;
-- store the matched data into an efficient on-disk storage for later processing;
-- do the final regressions leveraging bigger than memory funcitonnalities of R.
+-   using the same data sources and processing than Wolf et al,;
+-   add the other data that were obtained from different data sources;
+-   better mask the data to reduce its size;
+-   stack all the information in single multi-bands rasters;
+-   slice the rasters by country and biome as these are matched separately;
+-   download individual rasters to match them locally;
+-   store the matched data into an efficient on-disk storage for later processing;
+-   do the final regressions leveraging bigger than memory funcitonnalities of R.
 
 # Load Biomes on Google Earth Engine and use them as masks
 
@@ -52,32 +51,32 @@ biome_names <- ecoregions$
   getInfo()
 print(unique(biome_names))
 ```
-```
- [1] "Tropical & Subtropical Moist Broadleaf Forests"          
- [2] "Tropical & Subtropical Grasslands, Savannas & Shrublands"
- [3] "Flooded Grasslands & Savannas"                           
- [4] "Montane Grasslands & Shrublands"                         
- [5] "Deserts & Xeric Shrublands"                              
- [6] "Mangroves"                                               
- [7] "Mediterranean Forests, Woodlands & Scrub"                
- [8] "Tropical & Subtropical Dry Broadleaf Forests"            
- [9] "Tropical & Subtropical Coniferous Forests"               
-[10] "Temperate Broadleaf & Mixed Forests"                     
-[11] "Temperate Conifer Forests"                               
-[12] "Temperate Grasslands, Savannas & Shrublands"             
-[13] "N/A"                                                     
-[14] "Boreal Forests/Taiga"                                    
-[15] "Tundra"  
-```
-Wolf et al. specify that they focused on the following ones:   
 
-- Tropical & Subtropical Moist Broadleaf Forests
-- Tropical & Subtropical Dry Broadleaf Forests
-- Tropical & Subtropical Coniferous Forests
-- Temperate Broadleaf & Mixed Forests
-- Temperate Conifer Forests
-- Boreal Forests/Taiga
-- Mangroves
+     [1] "Tropical & Subtropical Moist Broadleaf Forests"          
+     [2] "Tropical & Subtropical Grasslands, Savannas & Shrublands"
+     [3] "Flooded Grasslands & Savannas"                           
+     [4] "Montane Grasslands & Shrublands"                         
+     [5] "Deserts & Xeric Shrublands"                              
+     [6] "Mangroves"                                               
+     [7] "Mediterranean Forests, Woodlands & Scrub"                
+     [8] "Tropical & Subtropical Dry Broadleaf Forests"            
+     [9] "Tropical & Subtropical Coniferous Forests"               
+    [10] "Temperate Broadleaf & Mixed Forests"                     
+    [11] "Temperate Conifer Forests"                               
+    [12] "Temperate Grasslands, Savannas & Shrublands"             
+    [13] "N/A"                                                     
+    [14] "Boreal Forests/Taiga"                                    
+    [15] "Tundra"  
+
+Wolf et al. specify that they focused on the following ones:
+
+-   Tropical & Subtropical Moist Broadleaf Forests
+-   Tropical & Subtropical Dry Broadleaf Forests
+-   Tropical & Subtropical Coniferous Forests
+-   Temperate Broadleaf & Mixed Forests
+-   Temperate Conifer Forests
+-   Boreal Forests/Taiga
+-   Mangroves
 
 ```{r}
 select_ecoregs <- ecoregions$
@@ -98,7 +97,6 @@ Map$addLayer(select_ecoregs)
 
 Instead of downloading and processing all the GFC data like Wolf and al., we instead keep only the data located within the perimeter of the biomes of interest.
 
-
 ```{r}
 scale <- 0.008983153 # From Wolf et al. 2021
 drive_folder <- "rgee"
@@ -114,8 +112,8 @@ cover <-  gfc$select("treecover2000")$
   clipToCollection(select_ecoregs)
 Map$addLayer(cover)
 ```
-![forest data from selected ecoregions](img/filtered_forest_data.png)
 
+![forest data from selected ecoregions](img/filtered_forest_data.png)
 
 # Stack information as bands in a single raster
 
@@ -164,8 +162,6 @@ countries_img <- countries$
   filter(ee$Filter$notNull(list("ADM0_CODE")))$
   reduceToImage(properties = list("ADM0_CODE"), reducer = ee$Reducer$first())
 
-wdpa <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
-  set("PA", 1)
 
 wdpa_buffer <- wdpa.buffer(10000)$ # 10km buffer
   set("PA_buffer", 1)
@@ -181,7 +177,6 @@ combined <- combined$addBands(c(wdpa, wdpa_buffer))$
   rename(c("cover", "lossyear", "loss", "elev", "travel_time", "pop_dens",
            "wdpa", "wdpa_buffer"))
 ```
-
 
 # Load deforestation drivers
 
@@ -201,8 +196,6 @@ wwf_ecoregions %>%
             n = n())
 
 ```
-
-
 
 Load GEE data
 
