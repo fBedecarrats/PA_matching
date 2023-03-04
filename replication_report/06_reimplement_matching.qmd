@@ -104,23 +104,6 @@ select_ecoregs <- all_ecoregions$
           BIOME_NAME == 'Temperate Conifer Forests' ||
           BIOME_NAME == 'Boreal Forests/Taiga' ||
           BIOME_NAME == 'Mangroves'")
-# list names of selected biome
-my_biome_names <- ee$List(select_ecoregs$aggregate_array("BIOME_NAME"))$
-  distinct()
-my_biome_names$getInfo()
-# unite ecoregion polygons that belong to the same biome
-# From @Kirk, see: https://gis.stackexchange.com/questions/350435/...
-# dissolve-polygon-by-attribute-or-featurecollection-by-property-in-google-earth-e
-my_biomes <- ee$FeatureCollection(my_biome_names$map(function(biome){
-  out1 = select_ecoregs$filter(ee$Filter$eq("BIOME_NAME", biome))
-  out2 = out1$union(100) # 100m tolerance
-  return(ee$Feature(out2$first())$set("BIOME_NAME", biome))
-}))
-# Start processing of the selected biomes' polygons
-my_biomes_dwn <- ee_as_sf(my_biomes, 
-                          dsn = "gee/my_biomes.geojson", 
-                          container = "rgee", via = "drive", lazy = TRUE)
-ee_utils_future_value(my_biomes_dwn) # download when ready
 
 ```
 
