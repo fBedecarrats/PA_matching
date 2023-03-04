@@ -20,6 +20,7 @@ library(rgeeExtra) # additional funcitonnalities
 library(googledrive) # to download additional data from drive (facultative)
 library(tidyverse)
 ee_Initialize()
+dir.create("gee")
 ```
 
 We want to use the same data as Wolf et al. but to implement a different strategy that:
@@ -43,13 +44,27 @@ Therefore we plan to leverage Google Earth engine to the maximum by:
 
 First we will fetch the biome descriptions from the resolve ecoregions.
 
+```
+//// ---- Union using the property ---- \\\\
+
+// first get a list of all posible property values
+var propVals = ee.List(WDPA.aggregate_array(nameProperty)).distinct();
+// then make a feature the union of all features having the same propVal
+var unionByProp = ee.FeatureCollection(propVals.map(function(propVal){
+  var tempFC = WDPA.filter(ee.Filter.eq(nameProperty, propVal));
+  var unionFC = tempFC.union(maxError); // specifying a max error overcomes issues with features of diff projection
+  // cast the featureCollection (output union()) to a single feature
+  return ee.Feature(unionFC.first()).set(nameProperty, propVal);
+}));
+```
+
 ```{r}
-ecoregions <- ee$FeatureCollection("RESOLVE/ECOREGIONS/2017")
-biome_names <- ecoregions$
-  reduceColumns(ee$Reducer$toList(), list("BIOME_NAME"))$
-  get("list")$
-  getInfo()
-print(unique(biome_names))
+# Get ecoregions that include WWF biomes
+all_ecoregions <- ee$FeatureCollection("RESOLVE/ECOREGIONS/2017")
+# list biome names
+all_biome_names <- ee$List(all_ecoregions$aggregate_array("BIOME_NAME"))$
+  distinct() # keep only 1 per modality
+biome_names$getInfo() # print
 ```
 
      [1] "Tropical & Subtropical Moist Broadleaf Forests"          
@@ -68,6 +83,7 @@ print(unique(biome_names))
     [14] "Boreal Forests/Taiga"                                    
     [15] "Tundra"  
 
+
 Wolf et al. specify that they focused on the following ones:
 
 -   Tropical & Subtropical Moist Broadleaf Forests
@@ -79,7 +95,8 @@ Wolf et al. specify that they focused on the following ones:
 -   Mangroves
 
 ```{r}
-select_ecoregs <- ecoregions$
+# Filter selected biomes
+select_ecoregs <- all_ecoregions$
   filter("BIOME_NAME == 'Tropical & Subtropical Moist Broadleaf Forests' ||
           BIOME_NAME == 'Tropical & Subtropical Dry Broadleaf Forests' ||
           BIOME_NAME == 'Tropical & Subtropical Coniferous Forests' ||
@@ -87,8 +104,24 @@ select_ecoregs <- ecoregions$
           BIOME_NAME == 'Temperate Conifer Forests' ||
           BIOME_NAME == 'Boreal Forests/Taiga' ||
           BIOME_NAME == 'Mangroves'")
+# list names of selected biome
+my_biome_names <- ee$List(select_ecoregs$aggregate_array("BIOME_NAME"))$
+  distinct()
+my_biome_names$getInfo()
+# unite ecoregion polygons that belong to the same biome
+# From @Kirk, see: https://gis.stackexchange.com/questions/350435/...
+# dissolve-polygon-by-attribute-or-featurecollection-by-property-in-google-earth-e
+my_biomes <- ee$FeatureCollection(my_biome_names$map(function(biome){
+  out1 = select_ecoregs$filter(ee$Filter$eq("BIOME_NAME", biome))
+  out2 = out1$union(100) # 100m tolerance
+  return(ee$Feature(out2$first())$set("BIOME_NAME", biome))
+}))
+# Start processing of the selected biomes' polygons
+my_biomes_dwn <- ee_as_sf(my_biomes, 
+                          dsn = "gee/my_biomes.geojson", 
+                          container = "rgee", via = "drive", lazy = TRUE)
+ee_utils_future_value(my_biomes_dwn) # download when ready
 
-Map$addLayer(select_ecoregs)
 ```
 
 ![selected ecoregions from google earth engine](img/selected_ecoregions.png)
@@ -110,7 +143,7 @@ gfc_mask <- gfc$select("datamask")$eq(1)
 cover <-  gfc$select("treecover2000")$
   updateMask(gfc_mask)$
   clipToCollection(select_ecoregs)
-Map$addLayer(cover)
+Map$addLayer(cover, list(bands = "treecover2000"), "green")
 ```
 
 ![forest data from selected ecoregions](img/filtered_forest_data.png)
@@ -135,7 +168,9 @@ loss <- gfc$select("loss")$
 # Other rasters fetched from GEE by wold et al. --------------------------------
 elev <- ee$Image("USGS/GTOPO30")$
   toInt()
-# ee_print(elev)
+
+slope <- ee$Terrain$slope(elev)
+
 travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")$
   toInt()
 gpw <- paste0("CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/",
@@ -148,34 +183,77 @@ pop_dens <- ee$Image(gpw)$
                                 units = "meters")$
   toInt()
 
+countries <- ee$FeatureCollection("USDOS/LSIB_SIMPLE/2017")
+countries_img <- countries$
+  filter(ee$Filter$notNull(list("ADM0_CODE")))$
+  reduceToImage(properties = list("ADM0_CODE"), reducer = ee$Reducer$first())
+
+wdpa <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
+  set("PA", 1)
+
+wdpa_buffer <- wdpa.buffer(10000)$ # 10km buffer
+  set("PA_buffer", 1)
+
+wdpa_yr <- wdpa$
+  filter(ee$Filter$notNull(list("STATUS_YR")))$
+  reduceToImage(properties = list("STATUS_YR"), reducer = ee$Reducer$first())
+
 # stack bands into a single raster and export ----------------------------------
-combined <- cover$addBands(c(lossyear, loss, elev, travel_time, pop_dens))$
-  rename(c("cover", "lossyear", "loss", "elev", "travel_time", "pop_dens"))
+combined <- cover$addBands(c(lossyear, loss, elev, slope, travel_time, 
+                             pop_dens, countries_img, wdpa, wdpa_yr, 
+                             wdpa_buffer))$
+  rename(c("cover", "lossyear", "loss", "elev", "slope", "travel_time", 
+           "pop_dens", "country", "PA", "PA_status_yr", "PA_buffer"))
 ```
 
 # Add countries and PAs
 
 ```{r}
-countries <- ee$FeatureCollection("FAO/GAUL/2015/level0")
+library(sf)
+library(tmap)
 
-countries_img <- countries$
-  filter(ee$Filter$notNull(list("ADM0_CODE")))$
-  reduceToImage(properties = list("ADM0_CODE"), reducer = ee$Reducer$first())
+#select_countries <- countries$filterBounds(select_ecoregs$union())
+countries_download <- ee_as_sf(countries, 
+                               dsn = "gee/countries.geojson", 
+                               container = "rgee", via = "drive", lazy = TRUE)
+ecoregions_download <- ee_as_sf(select_ecoregs, 
+                                dsn = "gee/select_ecoregs.geojson", 
+                                container = "rgee", via = "drive", lazy = TRUE)
+ee_utils_future_value(countries_download)
+ee_utils_future_value(ecoregions_download)
+my_countries <- st_read("gee/countries.geojson")
+my_ecoregions <- st_read("gee/select_ecoregs.geojson")
 
 
-wdpa_buffer <- wdpa.buffer(10000)$ # 10km buffer
-  set("PA_buffer", 1)
+table_biomes <- my_ecoregions %>%
+  st_drop_geometry() %>%
+  select(BIOME_NAME, BIOME_NUM) %>%
+  unique()
 
-wdpa <- wdpa$
-  filter(ee$Filter$notNull(list("PA")))$
-  reduceToImage(properties = list("PA"), reducer = ee$Reducer$first())
-wdpa_buffer <- wdpa_buffer$
-  filter(ee$Filter$notNull(list("PA_buffer")))$
-  reduceToImage(properties = list("PA_buffer"), reducer = ee$Reducer$first())
 
-combined <- combined$addBands(c(wdpa, wdpa_buffer))$
-  rename(c("cover", "lossyear", "loss", "elev", "travel_time", "pop_dens",
-           "wdpa", "wdpa_buffer"))
+
+mdg <- my_countries %>%
+  filter(country_na == "Madagascar")
+mangroves <- my_ecoregions %>%
+  filter(BIOME_NAME == "Mangroves") %>%
+  st_make_valid()
+
+mdg %>%
+  tm_shape() +
+  tm_polygons()
+mangroves %>%
+  tm_shape() +
+  tm_polygons()
+
+mdg_part <- mdg %>%
+  st_intersection(mangroves)
+
+mdg_part %>%
+  tm_shape() +
+  tm_polygons()
+
+
+
 ```
 
 # Load deforestation drivers
