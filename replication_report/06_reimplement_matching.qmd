@@ -5,58 +5,159 @@ editor_options:
   chunk_output_type: console
 ---
 
-We use the R package `rgee` as an interface to Google Earth engine API [@aybar2020].
+## Trying a different computation strategy
+
+We have not yet been able to successfully replicate Wolf et al. (2021) as their code does not run successfully and generates errors. We identified the origin of some errors and corrected them, but we remained stuck with Julia errors. We tried different computing environment : local, cloud servers and with several different configurations (Windows, Linux, different R, python and Julia versions, etc.), and with large amounts of CPUs and memory.
+
+We believe that the computing sequence elaborated by this study authors is particularly complex because of the very large amount of data to be processed. We propose a different approach that seems more straight forward and use the same entry parameters as Wolf et al. (2021).
+
+Here we attempt to reproduce every analysis steps and parameters of Wolf et al. (2021) but to implement a different data processing strategy that:
+
+-   implies less manipulations steps to be less error prone;
+-   only relies on one language and configuration for local processing.
+-   relies on cloud data processing for very big datasets: we leverage the cloud computing platform used by the authors to download their source data (Google earth engine) to do more than only data acquisition: we use it also to preprocess and combine the source data before download;;
+-   takes advantage that the matching algorithm segments by country and biome to process the data in smaller batches that are easier to process on commonly accessible processing configurations.
+-   containerize and archive our computing environement to enable any future researcher to reproduce it in the future.
 
 ```{r}
 setwd("replication_report")
+library(tidyverse)
+library(sf)
+library(tmap)
+library(geoarrow)
+library(geodata)
+library(units)
+library(terra)
+library(stars)
+```
+
+## Fetch and prepare data from other sources than GEE
+
+We gather data for national boundaries and biomes and combine it.
+
+```{r}
+# Countries  using geodata (ie. GADM), rnaturalearth is broken
+dir.create("revamp")
+dir.create("revamp/countries")
+countries <- world(resolution=2, level=0, path = "revamp/countries") %>%
+  st_as_sf() %>%
+  st_make_valid() %>%
+  mutate(country_num = 1:nrow(.), .before = GID_0)
+
+# Fetch and consolidate biomes
+dir.create("revamp/biomes")
+if (!file.exists("revamp/biomes/wwf_biomes.zip")) {
+  wwf_url <- paste0("https://files.worldwildlife.org/wwfcmsprod/files/", 
+                    "Publication/file/6kcchn7e3u_official_teow.zip")
+  download.file(wwf_url, "revamp/biomes/wwf_biomes.zip")
+  unzip("revamp/biomes/wwf_biomes.zip", exdir = "revamp/biomes")
+}
+
+biomes <- st_read("revamp/biomes/official/wwf_terr_ecos.shp") %>%
+  st_make_valid() %>%
+  group_by(BIOME) %>%
+  summarise()
+
+# Rename according to documentation and filter
+biomes <- biomes %>%
+  rename(biome_num = BIOME) %>%
+  mutate(biome_name = case_when(
+    biome_num == 1 ~ "Tropical & Subtropical Moist Broadleaf Forests",
+    biome_num == 2 ~ "Tropical & Subtropical Dry Broadleaf Forests",
+    biome_num == 3 ~ "Tropical & Subtropical Coniferous Forests",
+    biome_num == 4 ~ "Temperate Broadleaf & Mixed Forests",
+    biome_num == 5 ~ "Temperate Conifer Forests",
+    biome_num == 6 ~ "Boreal Forests/Taiga",
+    biome_num == 7 ~ "Tropical & Subtropical Grasslands, Savannas & Shrublands",
+    biome_num == 8 ~ "Temperate Grasslands, Savannas & Shrublands",
+    biome_num == 9 ~ "Flooded Grasslands & Savannas",
+    biome_num == 10 ~ "Montane Grasslands & Shrublands",
+    biome_num == 11 ~ "Tundra",
+    biome_num == 12 ~ "Mediterranean Forests, Woodlands & Scrub",
+    biome_num == 13 ~ "Deserts & Xeric Shrublands",
+    biome_num == 14 ~ "Mangroves",
+    .default = "Unknown"), .before = geometry)
+my_biomes <- biomes %>%
+  filter(biome_num %in% c(1, 2, 3, 4, 5, 6, 14))
+
+# Areas of interest (AOIs) combine countries and biomes
+aois <- st_intersection(countries, my_biomes) %>%
+  mutate(area = st_area(.)) %>%
+  arrange(area) # to start with the smallest for testing
+
+tm_shape(aois) +
+  tm_polygons(col = "biome_name") + 
+  tm_borders() + 
+  tm_legend()
+```
+
+We obtain `r nrow(aois)` polygons of country/biomes combinations.
+
+We also download the data from [@curtis2018] on deforestation drivers, which is a raster data.
+
+```{r}
+if (!file.exists("revamp/drivers/curtis_et_al.tif")) {
+  science_url <- paste0("https://www.science.org/action/downloadSupplement?",
+                        "doi=10.1126%2Fscience.aau3445&file=aau3445-data-s3.tif")
+  download.file(url = science_url, destfile = "revamp/drivers/curtis_et_al.tif",
+                method = "curl")
+}
+```
+
+
+## Move external data to GEE and prepare all information there
+
+The first step of the data analysis workflow of Wolf et al. consisted in fetching data from Google Earth Engine. They downloaded each dataset (forest cover, forest loss, forest gain, elevation, slope, travel time and population density) as separate raster files to process them locally on their own computer. Because of the massive amount of such data, the subsequent steps in their analysis workflow are complex, rely from different languages, a large number of libraries (several of them now deprectated), fails to run and we are unable to debug it.
+
+The Google Earth Engine can be leveraged to do much more than only downloading data, and therefore we plan to re-implement on this cloud environment the data preparation steps, instead of doing it locally on individual machines.
+
+We use the R package `rgee` as an interface to Google Earth engine API [@aybar2020].
+
+```{r}
 # Sometime rgee does not find the right python env, so we specify it
 reticulate::use_python("C:/Users/fbede/AppData/Local/r-miniconda/envs/rgee")
 library(rgee) # accesses GEE through its python API
-# Install rgeeExtra if not present
-if (!("rgeeExtra" %in% installed.packages())) {
-  remotes::install_github("r-earthengine/rgeeExtra")
-}
-library(rgeeExtra) # additional funcitonnalities
-library(googledrive) # to download additional data from drive (facultative)
 library(tidyverse)
-ee_Initialize()
+ee_Initialize(gsc = TRUE)
 dir.create("gee")
 ```
 
-We want to use the same data as Wolf et al. but to implement a different strategy that:
+We start by uploading the country, biome and deforestation drivers' data prepared in the previous step. 
 
--   implies less manipulations steps that might be error prone;
--   relies on cloud data processing for very big datasets;
--   only relies on one language and configuration for local processing.
+```{r}
+# load country + biome data
+drivers <- rast("revamp/drivers/curtis_et_al.tif") %>%
+  project("epsg:4326") %>%
+  writeRaster("revamp/drivers/drivers_curtis.tif")
+# We add this manually, as we had issues with API auth. protocol for GSC
+drivers_curtis <- ee$Image("projects/ee-fbedecarrats/assets/drivers_curtis")
+# We also load the AOIs manually due to the same problem
+dir.create("revamp/aois")
+st_write(aois, "revamp/aois/aois.shp")
+aoi_files = list.files(path = "revamp/aois", pattern = "aois.*", 
+                       full.names = TRUE)
+zip(zipfile = "revamp/aois/aois_shp.zip", files = aoi_files)
 
-Therefore we plan to leverage Google Earth engine to the maximum by:
 
--   using the same data sources and processing than Wolf et al,;
--   add the other data that were obtained from different data sources;
--   better mask the data to reduce its size;
--   stack all the information in single multi-bands rasters;
--   slice the rasters by country and biome as these are matched separately;
--   download individual rasters to match them locally;
--   store the matched data into an efficient on-disk storage for later processing;
--   do the final regressions leveraging bigger than memory funcitonnalities of R.
+tif <- system.file("tif/L7_ETMs.tif", package = "stars")
+x <- read_stars(tif)
+assetId <- sprintf("%s/%s",ee_get_assethome(),'stars_l7')
+ee_raster_02 <- raster_as_ee(
+  x = x,
+  assetId = assetId,
+  overwrite = TRUE,
+  bucket = "rgee_dev"
+)
+
+
+```
+
+
 
 # Load Biomes on Google Earth Engine and use them as masks
 
 First we will fetch the biome descriptions from the resolve ecoregions.
 
-```
-//// ---- Union using the property ---- \\\\
-
-// first get a list of all posible property values
-var propVals = ee.List(WDPA.aggregate_array(nameProperty)).distinct();
-// then make a feature the union of all features having the same propVal
-var unionByProp = ee.FeatureCollection(propVals.map(function(propVal){
-  var tempFC = WDPA.filter(ee.Filter.eq(nameProperty, propVal));
-  var unionFC = tempFC.union(maxError); // specifying a max error overcomes issues with features of diff projection
-  // cast the featureCollection (output union()) to a single feature
-  return ee.Feature(unionFC.first()).set(nameProperty, propVal);
-}));
-```
 
 ```{r}
 # Get ecoregions that include WWF biomes
@@ -82,7 +183,6 @@ biome_names$getInfo() # print
     [13] "N/A"                                                     
     [14] "Boreal Forests/Taiga"                                    
     [15] "Tundra"  
-
 
 Wolf et al. specify that they focused on the following ones:
 
@@ -171,6 +271,10 @@ countries_img <- countries$
   filter(ee$Filter$notNull(list("ADM0_CODE")))$
   reduceToImage(properties = list("ADM0_CODE"), reducer = ee$Reducer$first())
 
+biome_img <- select_ecoregs$
+  filter(ee$Filter$notNull(list("BIOME_NUM")))$
+  reduceToImage(properties = list("BIOME_NUM"), reducer = ee$Reducer$first())
+
 wdpa <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
   set("PA", 1)
 
@@ -183,17 +287,19 @@ wdpa_yr <- wdpa$
 
 # stack bands into a single raster and export ----------------------------------
 combined <- cover$addBands(c(lossyear, loss, elev, slope, travel_time, 
-                             pop_dens, countries_img, wdpa, wdpa_yr, 
+                             pop_dens, countries_img, biomes_img, wdpa, wdpa_yr, 
                              wdpa_buffer))$
   rename(c("cover", "lossyear", "loss", "elev", "slope", "travel_time", 
-           "pop_dens", "country", "PA", "PA_status_yr", "PA_buffer"))
+           "pop_dens", "country", "biome", "PA", "PA_status_yr", "PA_buffer"))
 ```
 
 # Add countries and PAs
 
 ```{r}
-library(sf)
-library(tmap)
+
+
+
+
 
 #select_countries <- countries$filterBounds(select_ecoregs$union())
 countries_download <- ee_as_sf(countries, 
@@ -204,8 +310,16 @@ ecoregions_download <- ee_as_sf(select_ecoregs,
                                 container = "rgee", via = "drive", lazy = TRUE)
 ee_utils_future_value(countries_download)
 ee_utils_future_value(ecoregions_download)
-my_countries <- st_read("gee/countries.geojson")
+countries <- st_read("gee/countries.geojson")
 my_ecoregions <- st_read("gee/select_ecoregs.geojson")
+
+
+
+
+my_biomes <- my_ecoregions %>%
+  st_make_valid() %>%
+  group_by(BIOME_NAME, BIOME_NUM) %>%
+  summarise()
 
 
 table_biomes <- my_ecoregions %>%
@@ -213,30 +327,50 @@ table_biomes <- my_ecoregions %>%
   select(BIOME_NAME, BIOME_NUM) %>%
   unique()
 
+# define areas of interest my areas of interest
+aois <- countries %>%
+  st_intersection(my_ecoregions) 
 
+aois %>%
+  tm_shape() + 
+  tm_polygons(col = "BIOME_NAME")
 
-mdg <- my_countries %>%
-  filter(country_na == "Madagascar")
-mangroves <- my_ecoregions %>%
-  filter(BIOME_NAME == "Mangroves") %>%
-  st_make_valid()
-
-mdg %>%
-  tm_shape() +
-  tm_polygons()
-mangroves %>%
-  tm_shape() +
-  tm_polygons()
-
-mdg_part <- mdg %>%
-  st_intersection(mangroves)
-
-mdg_part %>%
-  tm_shape() +
-  tm_polygons()
+dir.create("gee/milestones")
+write_geoparquet(aois, "gee/milestones/aois.parquet")
 
 
 
+
+aois_tbl <-aois %>%
+  st_drop_geometry() %>%
+  select(id, country_co, country_na, BIOME_NUM, BIOME_NAME) %>%
+  mutate(id = as.numeric(id)) %>%
+  unique()
+
+
+clip_and_download <- function(aoi) {
+  focus <- combined$updateMask(country = country_id)$
+    updateMask(biome = biome_id)
+  print(paste("Process", aoi["BIOME_NAME"], "for", aoi["country_na"], 
+              paste(i, aois_num, sep = "/")))
+  ee_as_raster(focus, via = "drive", container = "rgee", lazy = TRUE,
+               dsn = paste0("rgee/", aoi["country_co"], "-", aoi["BIOME_NUM"], 
+                            ".tif"),
+               crsTransform = paste(scale, 0, -180, 0, -scale, 90, sep = ", "),
+               crs = "EPSG:4326",
+               dimensions = paste(as.character(round(360/scale)), "x",
+                                  as.character(round(360/scale))),
+               maxPixels = 1e13)
+}
+
+aois_num <- nrow(aois_tbl)
+all_runs <- list.dirs()
+for (i in 1:aois_num) {
+  aoi <- slice(aois)
+  print(paste(i, aois_num, sep = "/"))
+  this_run <- clip_and_down(aoi)
+  all_runs <- c(all_runs, this_run)
+}
 ```
 
 # Load deforestation drivers
