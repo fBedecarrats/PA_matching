@@ -20,17 +20,12 @@ Here we attempt to reproduce every analysis steps and parameters of Wolf et al. 
 -   containerize and archive our computing environement to enable any future researcher to reproduce it in the future.
 
 ```{r}
-# We need the latest version of rnaturalearth
-if (!"rnaturalearth" %in% installed.packages() | 
-    packageVersion("rnaturalearth") <= "0.3.2") {
-  remotes::install_github("https://github.com/ropensci/rnaturalearth")
-}
 setwd("replication_report")
 library(tidyverse)
 library(sf)
 library(tmap)
 library(geoarrow)
-library(rnaturalearth)
+library(geodata)
 library(units)
 library(terra)
 library(stars)
