@@ -20,12 +20,17 @@ Here we attempt to reproduce every analysis steps and parameters of Wolf et al. 
 -   containerize and archive our computing environement to enable any future researcher to reproduce it in the future.
 
 ```{r}
+# We need the latest version of rnaturalearth
+if (!"rnaturalearth" %in% installed.packages() | 
+    packageVersion("rnaturalearth") <= "0.3.2") {
+  remotes::install_github("https://github.com/ropensci/rnaturalearth")
+}
 setwd("replication_report")
 library(tidyverse)
 library(sf)
 library(tmap)
 library(geoarrow)
-library(geodata)
+library(rnaturalearth)
 library(units)
 library(terra)
 library(stars)
@@ -42,7 +47,18 @@ We gather data for national boundaries and biomes and combine it.
 dir.create("revamp")
 dir.create("revamp/countries")
 
-countries <- world(resolution=2, level=0, path = "revamp/countries") %>%
+if (!file.exists("revamp/countries/ne_10m_admin_0_countries.shp")) {
+  countries <- ne_download(scale = 10,
+                         type = "countries",
+                         category = "cultural",
+                         destdir = "revamp/countries",
+                         load = TRUE,
+                         returnclass = "sf")
+} else {
+  countries <- st_read("revamp/countries/ne_10m_admin_0_countries.shp")
+}
+
+countries <- countries %>%
   st_as_sf() %>%
   st_make_valid() %>%
   mutate(country_num = 1:nrow(.), .before = GID_0)
@@ -62,51 +78,53 @@ if (!file.exists("revamp/biomes/biomes.parquet")) {
     st_make_valid() %>%
     group_by(BIOME) %>%
     summarise()
-  write_geoparquet(biomes, "revamp/biomes/biomes.parquet")
-} else {
-  read_geoparquet("revamp/biomes/biomes.parquet")
-}
+
 
 # Rename according to documentation and filter
-biomes <- biomes %>%
-  rename(biome_num = BIOME) %>%
-  mutate(biome_name = case_when(
-    biome_num == 1 ~ "Tropical & Subtropical Moist Broadleaf Forests",
-    biome_num == 2 ~ "Tropical & Subtropical Dry Broadleaf Forests",
-    biome_num == 3 ~ "Tropical & Subtropical Coniferous Forests",
-    biome_num == 4 ~ "Temperate Broadleaf & Mixed Forests",
-    biome_num == 5 ~ "Temperate Conifer Forests",
-    biome_num == 6 ~ "Boreal Forests/Taiga",
-    biome_num == 7 ~ "Tropical & Subtropical Grasslands, Savannas & Shrublands",
-    biome_num == 8 ~ "Temperate Grasslands, Savannas & Shrublands",
-    biome_num == 9 ~ "Flooded Grasslands & Savannas",
-    biome_num == 10 ~ "Montane Grasslands & Shrublands",
-    biome_num == 11 ~ "Tundra",
-    biome_num == 12 ~ "Mediterranean Forests, Woodlands & Scrub",
-    biome_num == 13 ~ "Deserts & Xeric Shrublands",
-    biome_num == 14 ~ "Mangroves",
-    .default = "Unknown"), .before = geometry)
-my_biomes <- biomes %>%
-  filter(biome_name %in% c("Tropical & Subtropical Moist Broadleaf Forests",
-                          "Tropical & Subtropical Dry Broadleaf Forests",
-                          "Tropical & Subtropical Coniferous Forests",
-                          "Temperate Broadleaf & Mixed Forests",
-                          "Temperate Conifer Forests",
-                          "Boreal Forests/Taiga",
-                          "Mangroves")) %>%
-  mutate(biome_num = case_when(
-    biome_name == "Tropical & Subtropical Moist Broadleaf Forests" ~ 0,
-    biome_name == "Tropical & Subtropical Dry Broadleaf Forests" ~ 1,
-    biome_name == "Tropical & Subtropical Coniferous Forests" ~ 2,
-    biome_name == "Temperate Broadleaf & Mixed Forests" ~ 3,
-    biome_name == "Temperate Conifer Forests" ~ 4,
-    biome_name == "Boreal Forests/Taiga" ~ 5,
-    biome_name == "Mangroves" ~ 6))
-
-# Areas of interest (AOIs) combine countries and biomes
-aois <- st_intersection(countries, my_biomes) %>%
-  mutate(area = st_area(.)) %>%
-  arrange(area) # to start with the smallest for testing
+  biomes <- biomes %>%
+    rename(biome_num = BIOME) %>%
+    mutate(biome_name = case_when(
+      biome_num == 1 ~ "Tropical & Subtropical Moist Broadleaf Forests",
+      biome_num == 2 ~ "Tropical & Subtropical Dry Broadleaf Forests",
+      biome_num == 3 ~ "Tropical & Subtropical Coniferous Forests",
+      biome_num == 4 ~ "Temperate Broadleaf & Mixed Forests",
+      biome_num == 5 ~ "Temperate Conifer Forests",
+      biome_num == 6 ~ "Boreal Forests/Taiga",
+      biome_num == 7 ~ "Tropical & Subtropical Grasslands, Savannas & Shrublands",
+      biome_num == 8 ~ "Temperate Grasslands, Savannas & Shrublands",
+      biome_num == 9 ~ "Flooded Grasslands & Savannas",
+      biome_num == 10 ~ "Montane Grasslands & Shrublands",
+      biome_num == 11 ~ "Tundra",
+      biome_num == 12 ~ "Mediterranean Forests, Woodlands & Scrub",
+      biome_num == 13 ~ "Deserts & Xeric Shrublands",
+      biome_num == 14 ~ "Mangroves",
+      .default = "Unknown"), .before = geometry)
+  my_biomes <- biomes %>%
+    filter(biome_name %in% c("Tropical & Subtropical Moist Broadleaf Forests",
+                             "Tropical & Subtropical Dry Broadleaf Forests",
+                             "Tropical & Subtropical Coniferous Forests",
+                             "Temperate Broadleaf & Mixed Forests",
+                             "Temperate Conifer Forests",
+                             "Boreal Forests/Taiga",
+                             "Mangroves")) %>%
+    mutate(biome_num = case_when(
+      biome_name == "Tropical & Subtropical Moist Broadleaf Forests" ~ 0,
+      biome_name == "Tropical & Subtropical Dry Broadleaf Forests" ~ 1,
+      biome_name == "Tropical & Subtropical Coniferous Forests" ~ 2,
+      biome_name == "Temperate Broadleaf & Mixed Forests" ~ 3,
+      biome_name == "Temperate Conifer Forests" ~ 4,
+      biome_name == "Boreal Forests/Taiga" ~ 5,
+      biome_name == "Mangroves" ~ 6))
+  
+  # Areas of interest (AOIs) combine countries and biomes
+  aois <- st_intersection(countries, my_biomes) %>%
+    mutate(area = st_area(.)) %>%
+    arrange(area) # to start with the smallest for testing
+  # save as geoparquet
+  st_write(aois, "revamp/aois/aois.gpkg") 
+} else {
+  aois <- st_read("revamp/aois/aois.gpkg")
+}
 
 aois %>%
   rename(Biome = biome_name) %>%
@@ -148,7 +166,7 @@ We use the R package `rgee` as an interface to Google Earth engine API [@aybar20
 # Sometime rgee does not find the right python env, so we specify it
 reticulate::use_python("C:/Users/fbede/AppData/Local/r-miniconda/envs/rgee")
 library(rgee) # accesses GEE through its python API
-ee_Initialize(gsc = TRUE)
+ee_Initialize(user = 'ndef', drive = TRUE)
 dir.create("revamp/gee")
 ```
 
@@ -193,10 +211,6 @@ Map$addLayer(biome_fills, list(min = 0, max = 6, palette = r_map_palette)) +
 Instead of downloading and processing all the GFC data like Wolf and al., we instead keep only the data located within the perimeter of the biomes of interest.
 
 ```{r}
-scale <- 0.008983153 # From Wolf et al. 2021
-drive_folder <- "rgee"
-local_folder <- "temp"
-
 # Hansen/GFC -------------------------------------------------------------------
 gfc <- ee$Image("UMD/hansen/global_forest_change_2018_v1_6")
 
@@ -248,9 +262,9 @@ wdpa_yr <- wdpa$
   reduceToImage(properties = list("STATUS_YR"), reducer = ee$Reducer$first())
 
 # We add countries and biomes
-country_img <- countries$
+countries_img <- aois_ee$
   reduceToImage(properties = list("country_num"), reducer = ee$Reducer$first())
-biome_img <- select_ecoregs$
+biomes_img <- aois_ee$
   reduceToImage(properties = list("biome_num"), reducer = ee$Reducer$first())
 
 # stack bands into a single raster and export ----------------------------------
@@ -269,6 +283,39 @@ The previous code creates a raster with the following bands: cover, loss, lossye
 
 Now we will iterate to download this raster in separated file, with one file per national segment of each biome of interest.
 
+```{r}
+scale <- 0.008983153 # From Wolf et al. 2021
+
+aois_tbl <-aois %>%
+  st_drop_geometry()
+
+aoi_num <- nrow(aois_tbl)
+i <- 7
+for (i in 1:3) {
+  aoi <- slice(aois_tbl, i)
+  print(paste("Process", aoi["biome_name"], "for", aoi["NAME_0"], 
+              paste(i, aoi_num, sep = "/")))
+  
+  ee_region <- aois_ee$filter("GID_0 == 'URY'") #$geometry()
+  test_region <- ee_as_sf(ee_region, dsn = "temp/uruguay.geojson", 
+                          via = "drive", lazy = TRUE) 
+  uru <- ee_utils_future_value(test_region)
+  
+  tmap_mode("view")
+  uru <- mutate(uru, area = st_area(uru))
+  tm_shape(st_make_valid(countries)) + 
+    tm_borders()
+  
+  aois_tbl$task[i] <- ee_as_raster(
+    combined, via = "drive", container = "rgee_test1", lazy = TRUE,
+    region = ee_region, crs = "EPSG:4326", maxPixels = 1e13,
+    dsn = paste0("revamp/rgee/", aoi["GID_0"], "-", aoi["biome_num"], 
+                 ".tif"),
+    crsTransform = paste(scale, 0, -180, 0, -scale, 90, sep = ", "),
+    dimensions = paste(as.character(round(360/scale)), "x",
+                       as.character(round(360/scale))))
+}
+```
 
 
 
@@ -290,78 +337,6 @@ ee_print(wdpa_mdg_buffer)
 
 
 
-
-
-#select_countries <- countries$filterBounds(select_ecoregs$union())
-countries_download <- ee_as_sf(countries, 
-                               dsn = "gee/countries.geojson", 
-                               container = "rgee", via = "drive", lazy = TRUE)
-ecoregions_download <- ee_as_sf(select_ecoregs, 
-                                dsn = "gee/select_ecoregs.geojson", 
-                                container = "rgee", via = "drive", lazy = TRUE)
-ee_utils_future_value(countries_download)
-ee_utils_future_value(ecoregions_download)
-countries <- st_read("gee/countries.geojson")
-my_ecoregions <- st_read("gee/select_ecoregs.geojson")
-
-
-
-
-my_biomes <- my_ecoregions %>%
-  st_make_valid() %>%
-  group_by(BIOME_NAME, BIOME_NUM) %>%
-  summarise()
-
-
-table_biomes <- my_ecoregions %>%
-  st_drop_geometry() %>%
-  select(BIOME_NAME, BIOME_NUM) %>%
-  unique()
-
-# define areas of interest my areas of interest
-aois <- countries %>%
-  st_intersection(my_ecoregions) 
-
-aois %>%
-  tm_shape() + 
-  tm_polygons(col = "BIOME_NAME")
-
-dir.create("gee/milestones")
-write_geoparquet(aois, "gee/milestones/aois.parquet")
-
-
-
-
-aois_tbl <-aois %>%
-  st_drop_geometry() %>%
-  select(id, country_co, country_na, BIOME_NUM, BIOME_NAME) %>%
-  mutate(id = as.numeric(id)) %>%
-  unique()
-
-
-clip_and_download <- function(aoi) {
-  focus <- combined$updateMask(country = country_id)$
-    updateMask(biome = biome_id)
-  print(paste("Process", aoi["BIOME_NAME"], "for", aoi["country_na"], 
-              paste(i, aois_num, sep = "/")))
-  ee_as_raster(focus, via = "drive", container = "rgee", lazy = TRUE,
-               dsn = paste0("rgee/", aoi["country_co"], "-", aoi["BIOME_NUM"], 
-                            ".tif"),
-               crsTransform = paste(scale, 0, -180, 0, -scale, 90, sep = ", "),
-               crs = "EPSG:4326",
-               dimensions = paste(as.character(round(360/scale)), "x",
-                                  as.character(round(360/scale))),
-               maxPixels = 1e13)
-}
-
-aois_num <- nrow(aois_tbl)
-all_runs <- list.dirs()
-for (i in 1:aois_num) {
-  aoi <- slice(aois)
-  print(paste(i, aois_num, sep = "/"))
-  this_run <- clip_and_down(aoi)
-  all_runs <- c(all_runs, this_run)
-}
 ```
 
 # Load deforestation drivers
