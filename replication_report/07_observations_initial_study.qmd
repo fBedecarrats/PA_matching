@@ -1,0 +1,62 @@
+---
+title: "Discussion of processing choices"
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+Here we list a series of data processings that raised questions during the re-implementation.
+
+## Year of deforestation corresponds to mode for coarsened polygon
+
+### Difference in computation
+
+The authors describe the corresponding part of their data preparation as "We used the following layers from version 1.6 of Hansen et al.2: tree cover in the year 2000 (percentage of each pixel); forest loss between 2001 and 2018 (binary raster) forest gain between 2000 and 2012 (also binary); and *primary year associated with forest loss event*" (Wolf et al. 2021, suppl. mat. p. 2). In fact, the way this *pimary year associated with forest loss event* is computationnaly processed as follow.
+
+```{javascript}
+#| eval: false
+,
+lossyear = lossyear.updateMask(lossyear.neq(0)).reduceResolution(reducer=ee.Reducer.mode(maxRaw=20), bestEffort=True)
+```
+
+This means that while aggregating several (\~1000) pixels, the authors retained only one year, corresponding to the year in which the most of occurrence of deforestation occurred among all the aggregated polygons.
+
+This might alter the calculation, potentially masking the first years of deforestation and therefore delaying the impact of conservation (ie. deforestation that started before PA creation only appears after PA creation.
+
+### Incidence on results
+
+We try to follow the same data process, but changing this by calculating forest loss event for each year.
+
+\[to be done\]
+
+```{r}
+#| eval: false
+
+
+
+```
+
+## Coastal protected areas are removed
+
+### Issue in computation
+
+Wolf et al. (2021, suppl. mat. p.2) indicate that they excluded PAs that were exclusiverly marine, but this operation was coded as follows.
+
+```{julia}
+#| eval: false
+main_PAs = PA_df[(PA_df.MARINE .== 0) .& (PA_df.STATUS .!= "Proposed") .& (PA_df.GIS_AREA .>= 1),:]
+```
+
+The `MARINE` variable in WDPA is coded as follows:
+
+> "0 (predominantly or entirely terrestrial), 1 (Coastal: marine and terrestrial), and 2 (predominantly or entirely marine). The value '1' is only used for polygons." (WDPA Manual version 1.6, 2019).
+
+This means that in practice, coastal areas have been excluded from the analysis. This can be problematic, considering for instance that coastal areas can expand far inland, and that they include among other biomes the mangroves, that were one of the focus biome for the analysis.
+
+### Incidence on results
+
+We try to compute the same analysis, but including the areas that were both terrestial or coastal.
+
+## Reprojection *after* slope calculation and resolution reduction?
+
+The Google earth engine documentation warns against reprojecting after slope calculation or resolution reduction. It could be due to some internal processing contraints but my understanding is that it is a contraint from the area calculation.
