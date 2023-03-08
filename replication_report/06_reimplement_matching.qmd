@@ -226,300 +226,120 @@ Map$addLayer(gfc_aois, list(
 Wolf et al. downloaded each information source in a separate raster, that they later on joined. We find easier and less error-prone to stack all the information as bands of the same raster. The data might be downloaded in separate files for different national segment of each biome, but for the same regions, all the complementary information is attached to the same pixels with the same resolution (alias, a "clean" table).
 
 ```{r}
-# We reference other data sources that Wolf et al. fetched from GEE
-elev <- ee$Image("USGS/GTOPO30") # Elevation
-slope <- ee$Terrain$slope(elev)$toInt() # Slope
-# Travel time
-travel_time <- ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0")$
-  toInt()
-# Population density
-gpw <- paste0("CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/",
-              "gpw_v4_population_density_adjusted_to_2015_", 
-              "unwpp_country_totals_rev11_2000_30_sec")
-pop_dens <- ee$Image(gpw)$
-  select("unwpp-adjusted_population_density")$
-  focal_mean(radius = 20e3, kernelType = "circle", 
-                                units = "meters")$toInt()
-# We add information on protected areas
-pa_number <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
-  reduceToImage(properties = list("country_num"), reducer = ee$Reducer$first())
-  set("PA", 1)
-wdpa_buffer <- wdpa$geometry()$buffer(10000)
-wdpa_buffer <- ee$Feature(wdpa_buffer)$
-  set("PA_buffer", 1)
-wdpa_yr <- wdpa$
-  filter(ee$Filter$notNull(list("STATUS_YR")))$
-  reduceToImage(properties = list("STATUS_YR"), reducer = ee$Reducer$first())
-
-# We add countries and biomes
-countries_img <- aois_ee$
-  reduceToImage(properties = list("country_num"), reducer = ee$Reducer$first())
-biomes_img <- aois_ee$
-  reduceToImage(properties = list("biome_num"), reducer = ee$Reducer$first())
-
-# stack bands into a single raster and export ----------------------------------
-combined <- gfc_aois$select(c("treecover2000", "loss", "lossyear"))$
-  addBands(c(elev, slope, travel_time, pop_dens, # fetched from GEE by Wolf
-             wdpa, wdpa_yr, wdpa_buffer, # also from GEE
-             countries_img, biomes_img))$ # prepared in R and added to GEE
-  rename(c("cover", "loss", "lossyear", 
-           "elev", "slope", "travel_time", "pop_dens",
-           "PA", "PA_status_yr", "PA_buffer",
-           "country", "biome"))
+# This function takes as an enty a GEE FeatureCollections and returns an GEE
+# Image with 13 bands with forest cover, forest loss, year of forest loss, 
+# elevation, slope, travel time to a city, population density, country number,
+# biome number, a dummy if it is a PA, or in a 10km distance of a PA, and the 
+# WPDA ID number of the PA if it is a PA. 
+prepare_gee_data <- function(ee_region) {
+  gfc <- ee$Image("UMD/hansen/global_forest_change_2018_v1_6")
+  gfc_mask <- gfc$select("datamask")$eq(1)
+  gfc_masked <-  gfc$updateMask(gfc_mask)
+  
+  # GFC data
+  aoi_gfc <- gfc_masked$clip(ee_region$geometry())
+  aoi_cover <- aoi_gfc$select("treecover2000")$
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
+  aoi_loss <- aoi_gfc$select("loss")$
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
+  aoi_lossyear <- aoi_gfc$select("lossyear")
+  aoi_lossyear <- aoi_lossyear$updateMask(aoi_lossyear$neq(0))$
+    reduceResolution(reducer = ee$Reducer$mode(maxRaw = 20), bestEffort = TRUE)$
+    toInt()
+  aoi_image <- aoi_cover$addBands(c(aoi_loss, aoi_lossyear))
+  
+  # elevation # 28min
+  aoi_image <- aoi_image$addBands(ee$Image("USGS/GTOPO30")) # Elevation
+  aoi_image[[4]] <- aoi_image[[4]]$toInt32()
+  # slope
+  aoi_image <- aoi_image$addBands(ee$Terrain$slope(aoi_image[[4]]))
+  aoi_image[[5]] <- aoi_image[[5]]$toInt()
+  # travel_time
+  aoi_image <- aoi_image$addBands(
+    ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0"))
+  aoi_image[[6]] <- aoi_image[[6]]$toInt()
+  # Population density
+  gpw <- paste0("CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/",
+                "gpw_v4_population_density_adjusted_to_2015_",
+                "unwpp_country_totals_rev11_2000_30_sec")
+  aoi_image <- aoi_image$addBands(ee$Image(gpw)$
+                                    select("unwpp-adjusted_population_density"))
+  aoi_image[[7]] <- aoi_image[[7]]$focal_mean(radius = 20e3,
+                                              kernelType = "circle",
+                                              units = "meters")$toInt()
+  # We add countries and biomes
+  reg_country_img <- aois_ee$filterBounds(ee_region$geometry())$
+    reduceToImage(properties = list("cntry_n"), reducer = ee$Reducer$first())
+  aoi_image <- aoi_image$addBands(reg_country_img$toInt())
+  reg_biome_img <- aois_ee$filterBounds(ee_region$geometry())$
+    reduceToImage(properties = list("biome_num"), reducer = ee$Reducer$first())
+  aoi_image <- aoi_image$addBands(reg_biome_img$toInt())
+  
+  # We add information on protected areas
+  wdpa_reg <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
+    filterBounds(ee_region$geometry())
+  wdpa_reg <- wdpa_reg$map(function(pa) {
+    return(pa$set("PA", 1))
+  })
+  aoi_image <- aoi_image$addBands(
+    wdpa_reg$reduceToImage(properties = list("WDPAID"),
+                           reducer = ee$Reducer$first())$toInt())
+  aoi_image <- aoi_image$addBands(
+    wdpa_reg$reduceToImage(properties = list("PA"),
+                           reducer = ee$Reducer$first())$toInt())
+  aoi_image <- aoi_image$addBands(
+    wdpa_reg$reduceToImage(properties = list("STATUS_YR"),
+                           reducer = ee$Reducer$first())$toInt())
+  # Add a buffer around the protected areas
+  is_pa_buffer <- wdpa_reg$geometry()$buffer(10000)
+  is_pa_buffer <- ee$FeatureCollection(is_pa_buffer)$
+    map(function(pa) { return(pa$set("PA_buffer", 1)) })
+  aoi_image <- aoi_image$addBands(
+    is_pa_buffer$reduceToImage(properties = list("PA_buffer"),
+                               reducer = ee$Reducer$first())$toInt())
+  names(aoi_image) <- c("cover", "loss", "lossyear", "elev", "slope",
+                        "travel_time", "pop_dens", "country_num", "biome_num",
+                        "wdpa_id", "is_pa", "status_year", "is_pa_buffer")
+  # ADD CLIP /!\
+  aoi_image <- aoi_image$clip(ee_region$geometry())
+}
 ```
 
-The previous code creates a raster with the following bands: cover, loss, lossyear, elev, slope, travel_time, pop_dens, PA, PA_status_yr, PA_buffer, country, biome.
+The previous code creates for each area of interest a raster with the following bands: cover, loss, lossyear, elev, slope, travel_time, pop_dens, PA, WDPA ID number, PA_status_yr, PA_buffer, country, biome.
 
 
 Now we will iterate to download this raster in separated file, with one file per national segment of each biome of interest.
 
-
 ```{r}
-aois_tbl <-aois %>%
-  st_drop_geometry() %>%
+aois <-aois %>%
   mutate(row_num = 1:nrow(aois), .before = everything())
 
-aoi_num <- nrow(aois_tbl)
-i <- 146
-aoi <- slice(aois_tbl, i)
-print(paste("Process", aoi["biome_name"], "for", aoi["NAME_0"], 
-            paste(i, aoi_num, sep = "/")))
-# Select the region to reduce over
-ee_region <- aois_ee$filter(paste0("GID_0 == '", aoi["GID_0"],
-                                   "' && biome_num == ", aoi["biome_num"]))
-# GFC data
-aoi_gfc <- gfc_wolf$clip(ee_region$geometry())
-aoi_cover <- aoi_gfc$select("treecover2000")$
-  reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
-aoi_loss <- aoi_gfc$select("loss")$
-  reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
-aoi_lossyear <- aoi_gfc$select("lossyear")
-aoi_lossyear <- aoi_lossyear$updateMask(aoi_lossyear$neq(0))$
-  reduceResolution(reducer = ee$Reducer$mode(maxRaw = 20), bestEffort = TRUE)$
-  toInt()
-aoi_image3 <- aoi_cover$addBands(c(aoi_loss, aoi_lossyear))
-# elevation # 28min
-aoi_image4 <- aoi_image3$addBands(ee$Image("USGS/GTOPO30")) # Elevation
-aoi_image4[[4]] <- aoi_image4[[4]]$toInt32()
-# slope
-aoi_image5 <- aoi_image4$addBands(ee$Terrain$slope(aoi_image[[4]]))
-aoi_image5[[5]] <- aoi_image5[[5]]$toInt()
-# travel_time
-aoi_image6 <- aoi_image5$addBands(
-  ee$Image("Oxford/MAP/accessibility_to_cities_2015_v1_0"))
-aoi_image6[[6]] <- aoi_image6[[6]]$toInt()
-# Population density
-gpw <- paste0("CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/",
-              "gpw_v4_population_density_adjusted_to_2015_", 
-              "unwpp_country_totals_rev11_2000_30_sec")
-aoi_image7 <- aoi_image6$addBands(ee$Image(gpw)$
-                                    select("unwpp-adjusted_population_density"))
-aoi_image7[[7]] <- aoi_image7[[7]]$focal_mean(radius = 20e3, 
-                                              kernelType = "circle", 
-                                              units = "meters")$toInt()
-# We add information on protected areas
-wdpa_reg <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
-  filterBounds(ee_region$geometry())
-wdpa_reg <- wdpa_reg$map(function(pa) {
-  return(pa$set("is_pa", 1))
-})
+aoi_num <- nrow(aois) # 364 areas of interest
 
-
-task_reg <- ee_as_sf(
-    wdpa_reg, via = "drive", container = "rgee_test_wdpa4", lazy = TRUE,
-    dsn = "temp/wdpa_mdg6.geojson")
-wdpa_mdg6 <- ee_utils_future_value(task_reg)
-wdpa_mdg6 <- st_read("temp/wdpa_mdg6.geojson")
-tmap_mode("view")
-wdpa_mdg6 %>%
-  tm_shape() + 
-  tm_polygons()
-
-plot(wdpa_mdg6)
-wdpaid <- wdpa_reg$reduceToImage(properties = list("WDPAID"),
-                         reducer = ee$Reducer$first())$toInt()
-is_pa <- wdpa_reg$reduceToImage(properties = list("is_pa"),
-                         reducer = ee$Reducer$first())$toInt()
-status_yr <- wdpa_reg$reduceToImage(properties = list("STATUS_YR"),
-                         reducer = ee$Reducer$first())$toInt()
-wdpa_extract <- wdpaid$addBands(c(is_pa, status_yr))
-names(wdpa_extract) <-c("wdpaid", "is_pa", "status_yr")
-
-
-
-
-wdpa_prop <- c("WDPAID", "STATUS_YR", "PA")
-wdpa_extract <- ee$Image$constant(wdpa_reg$toDictionary(wdpa_prop)$values())
-aoi_image_wdpa4 <- aoi_image7$addBands(wdpa_extract)
-
-wdpa_extract <- wdpa_reg$reduceToImage(
-  properties = list("WDPAID", "STATUS_YR", "PA"), 
-  reducer = ee$Reducer$first())
-
-
+# Loop over each AOI to generate a GEE task to extract and prepare the data
+# over the corresponding geometry. The output are "future values" stored in
+# one field. Invoking theses future values when GEE is done processing will
+# fetch the corresponding rasters and store them locally
+for (i in 18:aoi_num) {
+  aoi <- slice(aois, i) %>%
+    st_drop_geometry()
+  print(paste("Process", aoi["biome_name"], "for", aoi["NAME_0"], 
+              paste(i, aoi_num, sep = "/")))
+  # Select the region to reduce over
   
-
-
-
-iswdpa <- wdpaid$expression("(wdpaid.select('first') > 0) ? 1"+ 
-                              ": 0")
-ee_print(iswdpa)
-aoi_image_wdpa1 <- aoi_image7$addBands(
-  wdpa_reg$reduceToImage(properties = list("WDPAID"),
-                         reducer = ee$Reducer$first())$toInt())
-is_pa <- wdpa_reg$set(list("PA" = 1))
-is_pa <- is_pa$reduceToImage(properties = list("PA"), 
-                reducer = ee$Reducer$first())$toInt()
-aoi_image_wdpa2 <- aoi_image_wdpa1$addBands(is_pa)
-
-is_pa_buffer <- wdpa_reg$geometry()$buffer(10000)
-is_pa_buffer <- ee$FeatureCollection(is_pa_buffer)$set("PA_buffer", 1)$
-  reduceToImage(properties = list("PA_buffer"), 
-                reducer = ee$Reducer$first())$toInt()
-aoi_image_wdpa3 <- aoi_image_wdpa2$addBands(is_pa_buffer)
-
-wdpa_yr <- wdpa$
-#   filter(ee$Filter$notNull(list("STATUS_YR")))$
-#   reduceToImage(properties = list("STATUS_YR"), reducer = ee$Reducer$first())
-
-
-ee_print(aoi_image_wdpa)
-
-# With a clip: it works well
-task_reg_wdpa1 <- ee_as_raster(
-    aoi_image_wdpa1, via = "drive", container = "rgee_test_wdpa1", lazy = TRUE,
-    dsn = "temp/MDG-6_wdpa1.tif", skipEmptyTiles = TRUE, scale = 1000,
-    region = ee_region$geometry())
-ee_utils_future_value(task_reg_wdpa1)
-
-# With boolean for PAs
-task_reg_wdpa2 <- ee_as_raster(
-    aoi_image_wdpa2, via = "drive", container = "rgee_test_wdpa2", lazy = TRUE,
-    dsn = "temp/MDG-6_wdpa2.tif", skipEmptyTiles = TRUE, scale = 1000,
-    region = ee_region$geometry())
-ee_utils_future_value(task_reg_wdpa2)
-mdg_wdpa2 <- rast("temp/MDG-6_wdpa2.tif")
-mdg_wdpa2_df <- as.data.frame(mdg_wdpa2)
-# Test with buffer
-task_reg_wdpa3 <- ee_as_raster(
-    aoi_image_wdpa3, via = "drive", container = "rgee_test_wdpa3", lazy = TRUE,
-    dsn = "temp/MDG-6_wdpa3.tif", skipEmptyTiles = TRUE, scale = 1000,
-    region = ee_region$geometry())
-ee_utils_future_value(task_reg_wdpa3)
-mdg_wdpa3 <- rast("temp/MDG-6_wdpa3.tif")
-mdg_wdpa3_df <- as.data.frame(mdg_wdpa3)
-
-# Different approach
-task_reg_wdpa4 <- ee_as_raster(
-    aoi_image_wdpa4, via = "drive", container = "rgee_test_wdpa4", lazy = TRUE,
-    dsn = "temp/MDG-6_wdpa4.tif", skipEmptyTiles = TRUE, scale = 1000,
-    region = ee_region$geometry())
-ee_utils_future_value(task_reg_wdpa4)
-mdg_wdpa4 <- rast("temp/MDG-6_wdpa4.tif")
-mdg_wdpa4_df <- as.data.frame(mdg_wdpa4)
-
-
-# Different approach
-task_wdpa_extract <- ee_as_raster(
-    wdpa_extract, via = "drive", container = "rgee_wdpa_extract", lazy = TRUE,
-    dsn = "temp/wdpa_extract.tif", skipEmptyTiles = TRUE, scale = 1000,
-    region = ee_region$geometry())
-ee_utils_future_value(task_wdpa_extract)
-wdpa_extract <- rast("temp/wdpa_extract.tif")
-wdpa_extract_df <- as.data.frame(wdpa_extract)
-
-# We add countries and biomes
-reg_country_img <- aois_ee$filterBounds(ee_region$geometry())$
-  reduceToImage(properties = list("cntry_n"), reducer = ee$Reducer$first())
-aoi_image8 <- aoi_image7$addBands(reg_country_img)$to_int()
-reg_biome_img <- aois_ee$filterBounds(ee_region$geometry())$
-  reduceToImage(properties = list("biome_num"), reducer = ee$Reducer$first())
-aoi_image9 <- aoi_image8$addBands(reg_biome_img)$toInt()
-aoi_image9_clip <- aoi_image9$clip(ee_region$geometry())
-
-# With a clip: it works well
-task_reg_9_clip <- ee_as_raster(
-    aoi_image9_clip, via = "drive", container = "rgee_test5", lazy = TRUE,
-    dsn = "temp/MDG-6_9bf_clip.tif", skipEmptyTiles = TRUE, scale = 1000,
-    region = ee_region$geometry())
-ee_utils_future_value(task_reg_9_clip)
-
-
-
-
-
-mdg_files <- list.files(path = "temp", pattern = "MDG-6_9bf_clip.*", 
-                        full.names = TRUE)
-MDG_6 <- rast(mdg_files)
-
-test <- cellSize(MDG_6)
-test
-
-
-
-tmap_mode("view")
-MDG_6 %>%
-  tm_shape() + 
-  tm_raster()
-
-mdg6_df <- as.data.frame(MDG_6)
-
-
-MDG_6_star <- read_stars(mdg_files[1])
-mdg6_stars_df <- as.data.frame(MDG_6_star)
-mdg6_stars_df2 <- mdg6_stars_df %>%
-  pivot_wider(names_from = band, values_from = MDG.6.0001.tif)
-
-aoi_image2 <- aoi_image$addBands(ee$Image("USGS/GTOPO30")) # Elevation
-aoi_image2[[4]] <- aoi_image2[[4]]$toInt32()
-
-task_reg_cover3 <- ee_as_raster(
-    aoi_image2, via = "drive", container = "rgee_test1", lazy = TRUE,
-    dsn = "temp/MDG-6-test3.tif", skipEmpty_tiles = TRUE, scale = 1000)
-
-
-
-
-task_reg_ <- ee_as_raster(
-    reg_cover, via = "drive", container = "rgee_test1", lazy = TRUE)
+  aoi_region <- aois_ee$filter(paste0("GID_0 == '", aoi["GID_0"],
+                                      "' && biome_num == ", aoi["biome_num"]))
+  aoi_extract <- prepare_gee_data(aoi_region)
   
-  reduceRegion(reducer = ee$Reducer$mean(), bestEffort = TRUE)
-
-  reduceResolution(reducer = ee$Reducer$mean())
-
-reg_cover <- gfc$select("treecover2000")$
-  reduceResoluton(
-    reducer = ee$Reducer$mean(),
-    geometry = ee_region$geometry(),
-    scale = 1000,
-    maxPixels = 1e13)
-
-print(reg_cover$getInfo())
-task_reg_cover <- ee_as_raster(reg_cover, via = "drive", 
-                               container = "rgee_test1", lazy = TRUE)
-
-reg_reg <- ee$ImageCollection("UMD/hansen/global_forest_change_2018_v1_6")$
-  select(c("treecover2000", "loss", "lossyear"))$
-  filterBounds(ee_region$geometry())
-
-task_reg_cover <- ee_as_raster(
-    reg_cover, via = "drive", container = "rgee_test1", lazy = TRUE)
-
-task_reg_gfc_filter <- ee_as_raster(
-    reg_gfc_filter, via = "drive", container = "rgee_test1", lazy = TRUE,
-    region = ee_region$geometry(), crs = "EPSG:4326", maxPixels = 1e13,
-    dsn = paste0("revamp/rgee/", aoi["GID_0"], "-", aoi["biome_num"], "-filter",
-                 ".tif"),
-    crsTransform = paste(scale, 0, -180, 0, -scale, 90, sep = ", "),
-    dimensions = paste(as.character(round(360/scale)), "x",
-                       as.character(round(360/scale))))
+  aois$gee_task[[i]] <- ee_as_raster(
+    aoi_extract, via = "drive", container = "rgee_batch", lazy = TRUE,
+    dsn = paste0("revamp/rgee/", aoi["GID_0"], "-", aoi["biome_num"], ".tif"),
+    skipEmptyTiles = TRUE, scale = 1000,
+    region = aoi_region$geometry())
+}
 
 
-gfc_mask <- gfc$select("datamask")$eq(1)
-gfc_wolf <-  gfc$updateMask(gfc_mask)
-Map$addLayer(gfc_wolf, list(
-  bands = c("loss", "treecover2000", "gain"),
-  max = c(1, 255, 1)))
+ee_utils_future_value(task_reg_beta[[17]])
 
 ```
 
