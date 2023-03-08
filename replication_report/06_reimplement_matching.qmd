@@ -20,10 +20,16 @@ Here we attempt to reproduce every analysis steps and parameters of Wolf et al. 
 -   containerize and archive our computing environement to enable any future researcher to reproduce it in the future.
 
 ```{r}
+# We need the latest version of rnaturalearth
+if (!"rnaturalearth" %in% installed.packages() | 
+    packageVersion("rnaturalearth") <= "0.3.2") {
+  remotes::install_github("https://github.com/ropensci/rnaturalearth")
+}
 library(tidyverse)
 library(sf)
 library(tmap)
 library(geodata)
+library(rnaturalearth)
 library(units)
 library(terra)
 library(stars)
@@ -43,16 +49,41 @@ We gather data for national boundaries and biomes and combine it.
 dir.create("revamp")
 dir.create("revamp/countries")
 
-
+# This data is from GADM which seems more complete and accurate
 countries <- world(resolution=2, level=0, path = "revamp/countries")
 countries <- countries %>%
   st_as_sf() %>%
   st_make_valid() %>%
   mutate(country_num = 1:nrow(.), .before = GID_0)
-
+# Fetch data from rnaturalearth for continents
+countries2 <- ne_download(scale = 10,
+                         type = "countries",
+                         category = "cultural",
+                         destdir = "revamp/countries",
+                         load = TRUE,
+                         returnclass = "sf")
+country_continent <- countries2 %>%
+  st_drop_geometry() %>%
+  select(ADM0_A3, continent = CONTINENT)
+countries <- countries %>%
+  left_join(country_continent, join_by(GID_0 == ADM0_A3)) %>%
+  mutate(continent = case_when(
+    NAME_0 == "Åland" ~ "Europe", # some territories are missing
+    NAME_0 == "Bonaire, Saint Eustatius and Saba" ~ "North America",
+    NAME_0 == "Caspian Sea" ~ "Europe",
+    NAME_0 == "Christmas Island" ~ "Oceania",
+    NAME_0 == "French Guiana" ~ "South America",
+    NAME_0 == "Guadeloupe" ~ "North America",
+    NAME_0 == "Kosovo" ~ "Europe",
+    NAME_0 == "Martinique" ~ "North America",
+    NAME_0 == "Mayotte" ~ "Africa",
+    NAME_0 == "Paracel Islands" ~ "Asia",
+    NAME_0 == "Réunion" ~ "Africa",
+    NAME_0 == "South Sudan" ~ "Africa",
+    .default = continent))
 
 # We prepare biome polygons (only at first run, if not already done)
-if (!file.exists("revamp/biomes/biomes.parquet")) {
+if (!file.exists("revamp/aois/aois.gpkg")) {
   # Fetch biomes
   dir.create("revamp/biomes")
   if (!file.exists("revamp/biomes/wwf_biomes.zip")) {
@@ -66,8 +97,6 @@ if (!file.exists("revamp/biomes/biomes.parquet")) {
     st_make_valid() %>%
     group_by(BIOME) %>%
     summarise()
-
-
 # Rename according to documentation and filter
   biomes <- biomes %>%
     rename(biome_num = BIOME) %>%
@@ -237,7 +266,7 @@ prepare_gee_data <- function(ee_region) {
   gfc_masked <-  gfc$updateMask(gfc_mask)
   
   # GFC data
-  aoi_gfc <- gfc_masked$clip(ee_region$geometry())
+  aoi_gfc <- gfc_masked$clipToCollection(ee_region)
   aoi_cover <- aoi_gfc$select("treecover2000")$
     reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
   aoi_loss <- aoi_gfc$select("loss")$
@@ -277,7 +306,8 @@ prepare_gee_data <- function(ee_region) {
   
   # We add information on protected areas
   wdpa_reg <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
-    filterBounds(ee_region$geometry())
+    filterBounds(ee_region$geometry())$
+    select("MARINE == 0 $$ STATUS != 'Proposed' && GIS_AREA >= 1")
   wdpa_reg <- wdpa_reg$map(function(pa) {
     return(pa$set("PA", 1))
   })
@@ -301,7 +331,7 @@ prepare_gee_data <- function(ee_region) {
                         "travel_time", "pop_dens", "country_num", "biome_num",
                         "wdpa_id", "is_pa", "status_year", "is_pa_buffer")
   # ADD CLIP /!\
-  aoi_image <- aoi_image$clip(ee_region$geometry())
+  aoi_image <- aoi_image$clipToCollection(ee_region)
 }
 ```
 
@@ -309,6 +339,22 @@ The previous code creates for each area of interest a raster with the following 
 
 
 Now we will iterate to download this raster in separated file, with one file per national segment of each biome of interest.
+
+
+```{r}
+my_countries <- unique(aois$GID_0)
+gee_tasks <- tibble(country = my_countries)
+for (i in 1:length(my_countries)) {
+  print(continents[i])
+  aoi_region <- aois_ee$filter(paste0("contnnt == '", continents[i],"'"))
+  aoi_extract <- prepare_gee_data(aoi_region)
+  gee_tasks$task[[i]] <- ee_as_raster(
+    aoi_extract, via = "drive", container = "rgee_batch", lazy = TRUE,
+    dsn = paste0("revamp/rgee/continent_", i, ".tif"),
+    skipEmptyTiles = TRUE, scale = 1000,
+    region = aoi_region$geometry())
+}
+```
 
 ```{r}
 aois <-aois %>%
@@ -320,7 +366,7 @@ aoi_num <- nrow(aois) # 364 areas of interest
 # over the corresponding geometry. The output are "future values" stored in
 # one field. Invoking theses future values when GEE is done processing will
 # fetch the corresponding rasters and store them locally
-for (i in 18:aoi_num) {
+for (i in 1:aoi_num) {
   aoi <- slice(aois, i) %>%
     st_drop_geometry()
   print(paste("Process", aoi["biome_name"], "for", aoi["NAME_0"], 
@@ -337,10 +383,6 @@ for (i in 18:aoi_num) {
     skipEmptyTiles = TRUE, scale = 1000,
     region = aoi_region$geometry())
 }
-
-
-ee_utils_future_value(task_reg_beta[[17]])
-
 ```
 
 
