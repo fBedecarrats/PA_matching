@@ -318,16 +318,115 @@ aoi_image7[[7]] <- aoi_image7[[7]]$focal_mean(radius = 20e3,
                                               kernelType = "circle", 
                                               units = "meters")$toInt()
 # We add information on protected areas
-# wdpa_reg <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
-#   filterBounds(ee_region$geometry())
-# aoi_image8 <- aoi_image7$addBands(
-#   wdpa_reg$reduceToImage(properties = list("WDPAID"),
-#                          reducer = ee$Reducer$first()))$toInt()
-# wdpa_buffer <- wdpa_reg$geometry()$buffer(10000)
-# wdpa_buffer <- ee$Feature(wdpa_buffer)$set("PA_buffer", 1)
-# wdpa_yr <- wdpa$
+wdpa_reg <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
+  filterBounds(ee_region$geometry())
+wdpa_reg <- wdpa_reg$map(function(pa) {
+  return(pa$set("is_pa", 1))
+})
+
+
+task_reg <- ee_as_sf(
+    wdpa_reg, via = "drive", container = "rgee_test_wdpa4", lazy = TRUE,
+    dsn = "temp/wdpa_mdg6.geojson")
+wdpa_mdg6 <- ee_utils_future_value(task_reg)
+wdpa_mdg6 <- st_read("temp/wdpa_mdg6.geojson")
+tmap_mode("view")
+wdpa_mdg6 %>%
+  tm_shape() + 
+  tm_polygons()
+
+plot(wdpa_mdg6)
+wdpaid <- wdpa_reg$reduceToImage(properties = list("WDPAID"),
+                         reducer = ee$Reducer$first())$toInt()
+is_pa <- wdpa_reg$reduceToImage(properties = list("is_pa"),
+                         reducer = ee$Reducer$first())$toInt()
+status_yr <- wdpa_reg$reduceToImage(properties = list("STATUS_YR"),
+                         reducer = ee$Reducer$first())$toInt()
+wdpa_extract <- wdpaid$addBands(c(is_pa, status_yr))
+names(wdpa_extract) <-c("wdpaid", "is_pa", "status_yr")
+
+
+
+
+wdpa_prop <- c("WDPAID", "STATUS_YR", "PA")
+wdpa_extract <- ee$Image$constant(wdpa_reg$toDictionary(wdpa_prop)$values())
+aoi_image_wdpa4 <- aoi_image7$addBands(wdpa_extract)
+
+wdpa_extract <- wdpa_reg$reduceToImage(
+  properties = list("WDPAID", "STATUS_YR", "PA"), 
+  reducer = ee$Reducer$first())
+
+
+  
+
+
+
+iswdpa <- wdpaid$expression("(wdpaid.select('first') > 0) ? 1"+ 
+                              ": 0")
+ee_print(iswdpa)
+aoi_image_wdpa1 <- aoi_image7$addBands(
+  wdpa_reg$reduceToImage(properties = list("WDPAID"),
+                         reducer = ee$Reducer$first())$toInt())
+is_pa <- wdpa_reg$set(list("PA" = 1))
+is_pa <- is_pa$reduceToImage(properties = list("PA"), 
+                reducer = ee$Reducer$first())$toInt()
+aoi_image_wdpa2 <- aoi_image_wdpa1$addBands(is_pa)
+
+is_pa_buffer <- wdpa_reg$geometry()$buffer(10000)
+is_pa_buffer <- ee$FeatureCollection(is_pa_buffer)$set("PA_buffer", 1)$
+  reduceToImage(properties = list("PA_buffer"), 
+                reducer = ee$Reducer$first())$toInt()
+aoi_image_wdpa3 <- aoi_image_wdpa2$addBands(is_pa_buffer)
+
+wdpa_yr <- wdpa$
 #   filter(ee$Filter$notNull(list("STATUS_YR")))$
 #   reduceToImage(properties = list("STATUS_YR"), reducer = ee$Reducer$first())
+
+
+ee_print(aoi_image_wdpa)
+
+# With a clip: it works well
+task_reg_wdpa1 <- ee_as_raster(
+    aoi_image_wdpa1, via = "drive", container = "rgee_test_wdpa1", lazy = TRUE,
+    dsn = "temp/MDG-6_wdpa1.tif", skipEmptyTiles = TRUE, scale = 1000,
+    region = ee_region$geometry())
+ee_utils_future_value(task_reg_wdpa1)
+
+# With boolean for PAs
+task_reg_wdpa2 <- ee_as_raster(
+    aoi_image_wdpa2, via = "drive", container = "rgee_test_wdpa2", lazy = TRUE,
+    dsn = "temp/MDG-6_wdpa2.tif", skipEmptyTiles = TRUE, scale = 1000,
+    region = ee_region$geometry())
+ee_utils_future_value(task_reg_wdpa2)
+mdg_wdpa2 <- rast("temp/MDG-6_wdpa2.tif")
+mdg_wdpa2_df <- as.data.frame(mdg_wdpa2)
+# Test with buffer
+task_reg_wdpa3 <- ee_as_raster(
+    aoi_image_wdpa3, via = "drive", container = "rgee_test_wdpa3", lazy = TRUE,
+    dsn = "temp/MDG-6_wdpa3.tif", skipEmptyTiles = TRUE, scale = 1000,
+    region = ee_region$geometry())
+ee_utils_future_value(task_reg_wdpa3)
+mdg_wdpa3 <- rast("temp/MDG-6_wdpa3.tif")
+mdg_wdpa3_df <- as.data.frame(mdg_wdpa3)
+
+# Different approach
+task_reg_wdpa4 <- ee_as_raster(
+    aoi_image_wdpa4, via = "drive", container = "rgee_test_wdpa4", lazy = TRUE,
+    dsn = "temp/MDG-6_wdpa4.tif", skipEmptyTiles = TRUE, scale = 1000,
+    region = ee_region$geometry())
+ee_utils_future_value(task_reg_wdpa4)
+mdg_wdpa4 <- rast("temp/MDG-6_wdpa4.tif")
+mdg_wdpa4_df <- as.data.frame(mdg_wdpa4)
+
+
+# Different approach
+task_wdpa_extract <- ee_as_raster(
+    wdpa_extract, via = "drive", container = "rgee_wdpa_extract", lazy = TRUE,
+    dsn = "temp/wdpa_extract.tif", skipEmptyTiles = TRUE, scale = 1000,
+    region = ee_region$geometry())
+ee_utils_future_value(task_wdpa_extract)
+wdpa_extract <- rast("temp/wdpa_extract.tif")
+wdpa_extract_df <- as.data.frame(wdpa_extract)
 
 # We add countries and biomes
 reg_country_img <- aois_ee$filterBounds(ee_region$geometry())$
@@ -338,44 +437,16 @@ reg_biome_img <- aois_ee$filterBounds(ee_region$geometry())$
 aoi_image9 <- aoi_image8$addBands(reg_biome_img)$toInt()
 aoi_image9_clip <- aoi_image9$clip(ee_region$geometry())
 
-# Alltogether (without WDPA)
-task_reg_9 <- ee_as_raster(
-    aoi_image9, via = "drive", container = "rgee_test3", lazy = TRUE,
-    dsn = "temp/MDG-6_9b_focus.tif", skipEmptyTiles = TRUE, scale = 1000,
-    region = ee_region$geometry())
-ee_utils_future_value(task_reg_9)
-
-task_reg_9_proj <- ee_as_raster(
-    aoi_image9, via = "drive", container = "rgee_test4", lazy = TRUE,
-    dsn = "temp/MDG-6_9b_focus_proj.tif", skipEmptyTiles = TRUE, scale = 1000,
-    region = ee_region$geometry(), crs = "EPSG:54017")
-ee_utils_future_value(task_reg_9_proj)
-
-# With a clip
+# With a clip: it works well
 task_reg_9_clip <- ee_as_raster(
     aoi_image9_clip, via = "drive", container = "rgee_test5", lazy = TRUE,
     dsn = "temp/MDG-6_9bf_clip.tif", skipEmptyTiles = TRUE, scale = 1000,
     region = ee_region$geometry())
 ee_utils_future_value(task_reg_9_clip)
 
-# With elevation
-task_reg_cover <- ee_as_raster(
-    aoi_image, via = "drive", container = "rgee_test1", lazy = TRUE,
-    dsn = "temp/MDG-6_cover.tif", skipEmptyTiles = TRUE, scale = 1000)
-ee_utils_future_value(task_reg_cover)
-# Really with cover
-task_reg_coverOK <- ee_as_raster(
-    aoi_cover, via = "drive", container = "rgee_test1", lazy = TRUE,
-    dsn = "temp/MDG-6_cover.tif", skipEmptyTiles = TRUE, scale = 1000)
-ee_utils_future_value(task_reg_coverOK)
-# With slope 
-task_reg_slope<- ee_as_raster(
-    aoi_image, via = "drive", container = "rgee_test1", lazy = TRUE,
-    dsn = "temp/MDG-6_w_terrain.tif", skipEmptyTiles = TRUE, scale = 1000)
-ee_utils_future_value(task_reg_cover)
 
 
-ee_print(aoi_image)
+
 
 mdg_files <- list.files(path = "temp", pattern = "MDG-6_9bf_clip.*", 
                         full.names = TRUE)
