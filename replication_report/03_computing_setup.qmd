@@ -5,7 +5,7 @@ editor_options:
 ---
 # Computing environment setup {#sec-computing_setup}
 
-The source [code published on Github](https://github.com/wolfch2/PA_matching) alongside their article by Wolf and colleagues combines three different coding languages: python, R and Julia. Although the code is generally clearly written and includes some explanatory comments, several adjustments in the code are required to enable it to run on a different machine. This chapter focuses on the configuration (operating system, statistical software and specific libraries) required to run the program. 
+The source [code published on Github](https://github.com/wolfch2/PA_matching) alongside the original study combines three different coding languages: python, R and Julia. Although the code is generally clearly written and includes some explanatory comments, several adjustments in the code are required to enable it to run on a different machine. This chapter focuses on the configuration (operating system, statistical software and specific libraries) required to run the program. 
 
 ## Procedure
 

@@ -6,7 +6,7 @@ editor_options:
 
 # Data gathering and preparation {#sec-data_preparation}
 
-The replication of this study requires a careful data management. The input data only represents a volume of 16.35 GB (without accounting for the data fetched through IUCN API) and it has to be transformed once or twice before the statistical analysis. First, a folder structure must be created before running Wolf et al. source code.
+The replication of this study requires a careful data management. The input data only represents a volume of 16.35 GB (without accounting for the data fetched through IUCN API) and it has to be transformed once or twice before the statistical analysis. First, a folder structure must be created before running the original study source code.
 
 ```{r create_dirs}
 setwd("replication_report")

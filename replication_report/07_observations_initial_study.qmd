@@ -5,6 +5,8 @@ editor_options:
   chunk_output_type: console
 ---
 
+# Discussion of possible issues with the original study {#sec-observations}
+
 Here we list a series of data processings that raised questions during the re-implementation.
 
 ## Year of deforestation corresponds to mode for coarsened polygon
