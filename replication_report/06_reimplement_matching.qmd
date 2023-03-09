@@ -80,8 +80,9 @@ countries <- countries %>%
     NAME_0 == "Paracel Islands" ~ "Asia",
     NAME_0 == "Réunion" ~ "Africa",
     NAME_0 == "South Sudan" ~ "Africa",
-    .default = continent))
-
+    .default = continent),
+    continent = ifelse(continent == "Seven seas (open ocean)",
+                       "Open ocean", continent))
 # We prepare biome polygons (only at first run, if not already done)
 if (!file.exists("revamp/aois/aois.gpkg")) {
   # Fetch biomes
@@ -125,13 +126,13 @@ if (!file.exists("revamp/aois/aois.gpkg")) {
                              "Boreal Forests/Taiga",
                              "Mangroves")) %>%
     mutate(biome_num = case_when(
-      biome_name == "Tropical & Subtropical Moist Broadleaf Forests" ~ 0,
-      biome_name == "Tropical & Subtropical Dry Broadleaf Forests" ~ 1,
-      biome_name == "Tropical & Subtropical Coniferous Forests" ~ 2,
-      biome_name == "Temperate Broadleaf & Mixed Forests" ~ 3,
-      biome_name == "Temperate Conifer Forests" ~ 4,
-      biome_name == "Boreal Forests/Taiga" ~ 5,
-      biome_name == "Mangroves" ~ 6))
+      biome_name == "Tropical & Subtropical Moist Broadleaf Forests" ~ 1,
+      biome_name == "Tropical & Subtropical Dry Broadleaf Forests" ~ 2,
+      biome_name == "Tropical & Subtropical Coniferous Forests" ~ 3,
+      biome_name == "Temperate Broadleaf & Mixed Forests" ~ 4,
+      biome_name == "Temperate Conifer Forests" ~ 5,
+      biome_name == "Boreal Forests/Taiga" ~ 6,
+      biome_name == "Mangroves" ~ 7))
   
   # Areas of interest (AOIs) combine countries and biomes
   aois <- st_intersection(countries, my_biomes) %>%
@@ -328,6 +329,7 @@ prepare_gee_data <- function(ee_region) {
   # ADD CLIP /!\
   aoi_image <- aoi_image$clipToCollection(ee_region)
 }
+
 ```
 
 The previous code creates for each area of interest a raster with the following bands: cover, loss, lossyear, elev, slope, travel_time, pop_dens, PA, WDPA ID number, PA_status_yr, PA_buffer, country, biome.
@@ -335,36 +337,56 @@ The previous code creates for each area of interest a raster with the following 
 
 Now we will iterate to download this raster in separated file, with one file per national segment of each biome of interest.
 
-
+By continent
 ```{r}
-dir.create("revamp/countries/coarse")
-# simpler geometries for countries
-countries_coarse <- world(resolution=5, level=0, 
-                          path = "revamp/countries/coarse")
-countries_coarse_buff <- countries_coarse %>%
-  st_as_sf() %>%
-  st_make_valid() %>%
-  st_buffer(dist = 1) %>%
-  st_make_valid()
-gee_tasks <- list()
-
-i = 157
-for (i in 157:157) {
-  country_name <- countries_coarse_buff$NAME_0[i]
-  GID <- countries_coarse_buff$GID_0[i]
-  print(country_name)
-  
-  aoi_region <- aois_ee$filter(paste0("GID_0 == '", GID,"'"))
+# This loops over continents, but the data is only extracted for areas that
+# are within a biome of study.
+continents <- unique(aois$continent)
+gee_tasks <- tibble(continent = continents)
+# each continent takes 12 to 50 minutes to process. They do it in parallel.
+for (i in 1:length(continents)) {
+  print(continents[i])
+  filename_continent <- str_replace(continents[i], " ", "_")
+  aoi_region <- aois_ee$filter(paste0("contnnt == '", continents[i],"'"))
   aoi_extract <- prepare_gee_data(aoi_region)
   gee_tasks$task[[i]] <- ee_as_raster(
     aoi_extract, via = "drive", container = "rgee_batch", lazy = TRUE,
-    dsn = paste0("revamp/rgee/", GID, "_4.tif"),
+    dsn = paste0("revamp/rgee/", filename_continent, ".tif"),
     skipEmptyTiles = TRUE, scale = 1000,
     region = aoi_region$geometry())
 }
-# Failing at:
-# "Process Tropical & Subtropical Moist Broadleaf Forests for New Zealand 18/364"
+# We fetch the data once it is ready
+ee_utils_future_value(gee_tasks$task[[5]])
+for (j in 1:length(continents)) {
 
+}
+
+```
+
+
+```{r}
+# This loops over countries, but the data is only extracted for areas that
+# are within a biome of study.
+my_countries <- unique(aois$GID_0)
+country_tasks <- tibble(country = my_countries)
+# each continent takes between less than 1 and XX minutes to process. 
+# The computation runs in parallel.
+for (i in 1:length(my_countries)) {
+  GID <- my_countries[i]
+  print(paste0(GID, " ", i, "/", length(my_countries)))
+  aoi_country <- aois_ee$filter(paste0("GID_0 == '", GID,"'"))
+  aoi_extract <- prepare_gee_data(aoi_country)
+  country_tasks$task[[i]] <- ee_as_raster(
+    aoi_extract, via = "drive", container = "rgee_country", lazy = TRUE,
+    dsn = paste0("revamp/gee/", GID, ".tif"),
+    skipEmptyTiles = TRUE, scale = 1000,
+    region = aoi_country$geometry())
+}
+
+# We fetch the data once it is ready
+for (j in 1:length(my_countries)) {
+  ee_utils_future_value(country_tasks$task[[j]])
+}
 ```
 
 ```{r}
@@ -377,7 +399,7 @@ aoi_num <- nrow(aois) # 364 areas of interest
 # over the corresponding geometry. The output are "future values" stored in
 # one field. Invoking theses future values when GEE is done processing will
 # fetch the corresponding rasters and store them locally
-for (i in 1:aoi_num) {
+for (i in 26:aoi_num) {
   aoi <- slice(aois, i) %>%
     st_drop_geometry()
   print(paste("Process", aoi["biome_name"], "for", aoi["NAME_0"], 
@@ -394,6 +416,19 @@ for (i in 1:aoi_num) {
     skipEmptyTiles = TRUE, scale = 1000,
     region = aoi_region$geometry())
 }
+# write_rds(aois, "aois_milestone.rds")
+dir.create("revamp/rgee")
+j <- 3
+
+for (j in 26:aoi_num) {
+  get_aoi <- slice(aois, j) %>%
+    st_drop_geometry()
+ my_raster <- ee_utils_future_value(unlist(aois$gee_task[[j]]))
+ my_df <- as.data.frame(my_raster) %>%
+   filter(country)
+}
+
+
 ```
 
 
