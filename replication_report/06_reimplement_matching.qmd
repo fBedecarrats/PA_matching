@@ -303,7 +303,7 @@ prepare_gee_data <- function(ee_region) {
   reg_biome_img <- aois_ee$filterBounds(ee_region$geometry())$
     reduceToImage(properties = list("biome_num"), reducer = ee$Reducer$first())
   aoi_image <- aoi_image$addBands(reg_biome_img$toInt())
-  
+
   # We add information on protected areas
   wdpa_reg <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
     filterBounds(ee_region$geometry())$
@@ -311,25 +311,20 @@ prepare_gee_data <- function(ee_region) {
   wdpa_reg <- wdpa_reg$map(function(pa) {
     return(pa$set("PA", 1))
   })
+  
+  pa_footprint <-wdpa_reg$reduceToImage(properties = list("PA"),
+                           reducer = ee$Reducer$first())$toInt()
+  pa_buffer <- pa_footprint$focal_max(10000, "circle", "meters")
+  aoi_image <- aoi_image$addBands(c(pa_footprint, pa_buffer))
   aoi_image <- aoi_image$addBands(
     wdpa_reg$reduceToImage(properties = list("WDPAID"),
                            reducer = ee$Reducer$first())$toInt())
   aoi_image <- aoi_image$addBands(
-    wdpa_reg$reduceToImage(properties = list("PA"),
-                           reducer = ee$Reducer$first())$toInt())
-  aoi_image <- aoi_image$addBands(
     wdpa_reg$reduceToImage(properties = list("STATUS_YR"),
                            reducer = ee$Reducer$first())$toInt())
-  # Add a buffer around the protected areas
-  is_pa_buffer <- wdpa_reg$geometry()$buffer(10000)
-  is_pa_buffer <- ee$FeatureCollection(is_pa_buffer)$
-    map(function(pa) { return(pa$set("PA_buffer", 1)) })
-  aoi_image <- aoi_image$addBands(
-    is_pa_buffer$reduceToImage(properties = list("PA_buffer"),
-                               reducer = ee$Reducer$first())$toInt())
   names(aoi_image) <- c("cover", "loss", "lossyear", "elev", "slope",
                         "travel_time", "pop_dens", "country_num", "biome_num",
-                        "wdpa_id", "is_pa", "status_year", "is_pa_buffer")
+                        "is_pa", "is_pa_buffer", "wdpa_id", "status_year")
   # ADD CLIP /!\
   aoi_image <- aoi_image$clipToCollection(ee_region)
 }
@@ -342,15 +337,28 @@ Now we will iterate to download this raster in separated file, with one file per
 
 
 ```{r}
-my_countries <- unique(aois$GID_0)
-gee_tasks <- tibble(country = my_countries)
-for (i in 18:length(my_countries)) {
-  print(continents[i])
-  aoi_region <- aois_ee$filter(paste0("contnnt == '", continents[i],"'"))
+dir.create("revamp/countries/coarse")
+# simpler geometries for countries
+countries_coarse <- world(resolution=5, level=0, 
+                          path = "revamp/countries/coarse")
+countries_coarse_buff <- countries_coarse %>%
+  st_as_sf() %>%
+  st_make_valid() %>%
+  st_buffer(dist = 1) %>%
+  st_make_valid()
+gee_tasks <- list()
+
+i = 157
+for (i in 157:157) {
+  country_name <- countries_coarse_buff$NAME_0[i]
+  GID <- countries_coarse_buff$GID_0[i]
+  print(country_name)
+  
+  aoi_region <- aois_ee$filter(paste0("GID_0 == '", GID,"'"))
   aoi_extract <- prepare_gee_data(aoi_region)
   gee_tasks$task[[i]] <- ee_as_raster(
     aoi_extract, via = "drive", container = "rgee_batch", lazy = TRUE,
-    dsn = paste0("revamp/rgee/continent_", i, ".tif"),
+    dsn = paste0("revamp/rgee/", GID, "_4.tif"),
     skipEmptyTiles = TRUE, scale = 1000,
     region = aoi_region$geometry())
 }
@@ -369,7 +377,7 @@ aoi_num <- nrow(aois) # 364 areas of interest
 # over the corresponding geometry. The output are "future values" stored in
 # one field. Invoking theses future values when GEE is done processing will
 # fetch the corresponding rasters and store them locally
-for (i in 18:aoi_num) {
+for (i in 1:aoi_num) {
   aoi <- slice(aois, i) %>%
     st_drop_geometry()
   print(paste("Process", aoi["biome_name"], "for", aoi["NAME_0"], 
