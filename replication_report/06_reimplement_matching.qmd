@@ -221,7 +221,7 @@ r_map_palette <- c("b3de69", # light green: Tropical & Subtropical Moist Broadle
                    "fb8072", # dark orange: Temperate Conifer Forests
                    "8dd3c7", # turquois: Boreal Forests/Taiga
                    "ffffb3") # yellow: Mangroves
-Map$addLayer(biome_fills, list(min = 0, max = 6, palette = r_map_palette)) +
+Map$addLayer(biome_fills, list(min = 1, max = 7, palette = r_map_palette)) +
   Map$addLayer(biome_nation_borders, list(palette = "000000"))
 ```
 
@@ -337,40 +337,14 @@ The previous code creates for each area of interest a raster with the following 
 
 Now we will iterate to download this raster in separated file, with one file per national segment of each biome of interest.
 
-By continent
-```{r}
-# This loops over continents, but the data is only extracted for areas that
-# are within a biome of study.
-continents <- unique(aois$continent)
-gee_tasks <- tibble(continent = continents)
-# each continent takes 12 to 50 minutes to process. They do it in parallel.
-for (i in 1:length(continents)) {
-  print(continents[i])
-  filename_continent <- str_replace(continents[i], " ", "_")
-  aoi_region <- aois_ee$filter(paste0("contnnt == '", continents[i],"'"))
-  aoi_extract <- prepare_gee_data(aoi_region)
-  gee_tasks$task[[i]] <- ee_as_raster(
-    aoi_extract, via = "drive", container = "rgee_batch", lazy = TRUE,
-    dsn = paste0("revamp/rgee/", filename_continent, ".tif"),
-    skipEmptyTiles = TRUE, scale = 1000,
-    region = aoi_region$geometry())
-}
-# We fetch the data once it is ready
-ee_utils_future_value(gee_tasks$task[[5]])
-for (j in 1:length(continents)) {
-
-}
-
-```
-
 
 ```{r}
 # This loops over countries, but the data is only extracted for areas that
 # are within a biome of study.
 my_countries <- unique(aois$GID_0)
 country_tasks <- tibble(country = my_countries)
-# each continent takes between less than 1 and XX minutes to process. 
-# The computation runs in parallel.
+# each country takes between less than 1 and 32 minutes to process. 
+# The computations run in parallel.
 for (i in 1:length(my_countries)) {
   GID <- my_countries[i]
   print(paste0(GID, " ", i, "/", length(my_countries)))
@@ -387,132 +361,8 @@ for (i in 1:length(my_countries)) {
 for (j in 1:length(my_countries)) {
   ee_utils_future_value(country_tasks$task[[j]])
 }
-```
-
-```{r}
-aois <-aois %>%
-  mutate(row_num = 1:nrow(aois), .before = everything())
-
-aoi_num <- nrow(aois) # 364 areas of interest
-
-# Loop over each AOI to generate a GEE task to extract and prepare the data
-# over the corresponding geometry. The output are "future values" stored in
-# one field. Invoking theses future values when GEE is done processing will
-# fetch the corresponding rasters and store them locally
-for (i in 26:aoi_num) {
-  aoi <- slice(aois, i) %>%
-    st_drop_geometry()
-  print(paste("Process", aoi["biome_name"], "for", aoi["NAME_0"], 
-              paste(i, aoi_num, sep = "/")))
-  # Select the region to reduce over
-  
-  aoi_region <- aois_ee$filter(paste0("GID_0 == '", aoi["GID_0"],
-                                      "' && biome_num == ", aoi["biome_num"]))
-  aoi_extract <- prepare_gee_data(aoi_region)
-  
-  aois$gee_task[[i]] <- ee_as_raster(
-    aoi_extract, via = "drive", container = "rgee_batch", lazy = TRUE,
-    dsn = paste0("revamp/rgee/", aoi["GID_0"], "-", aoi["biome_num"], ".tif"),
-    skipEmptyTiles = TRUE, scale = 1000,
-    region = aoi_region$geometry())
-}
-# write_rds(aois, "aois_milestone.rds")
-dir.create("revamp/rgee")
-j <- 3
-
-for (j in 26:aoi_num) {
-  get_aoi <- slice(aois, j) %>%
-    st_drop_geometry()
- my_raster <- ee_utils_future_value(unlist(aois$gee_task[[j]]))
- my_df <- as.data.frame(my_raster) %>%
-   filter(country)
-}
-
+# This downloads the tifs for 201 national territories. Now we open them and store them to 
 
 ```
 
-
-
-
-```{r}
-aois_tbl <- aois %>%
-  st_drop_geometry() %>%
-  mutate(row_num = 1:nrow(aois), .before = everything())
-
-aoi_num <- nrow(aois_tbl)
-i <- 162
-aoi <- slice(aois_tbl, i)
-print(paste("Process", aoi["biome_name"], "for", aoi["NAME_0"], 
-            paste(i, aoi_num, sep = "/")))
-# Select the region to reduce over
-ee_region <- aois_ee$filter(paste0("GID_0 == '", aoi["GID_0"],
-                                   "' && biome_num == ", aoi["biome_num"]))
-
-
-
-for (i in 1:3) {
-  aoi <- slice(aois_tbl, i)
-  print(paste("Process", aoi["biome_name"], "for", aoi["NAME_0"], 
-              paste(i, aoi_num, sep = "/")))
-  # Select the region to reduce over
-  ee_region <- aois_ee$filter(paste0("GID_0 == '", aoi["GID_0"],
-                                     "' && biome_num == ", aoi["biome_num"]))
-  aois_tbl$task[i] <- ee_as_raster(
-    gfc_aois, via = "drive", container = "rgee_test1", lazy = TRUE,
-    region = ee_region$geometry(), crs = "EPSG:4326", maxPixels = 1e13,
-    dsn = paste0("revamp/rgee/", aoi["GID_0"], "-", aoi["biome_num"], 
-                 ".tif"),
-    crsTransform = paste(scale, 0, -180, 0, -scale, 90, sep = ", "),
-    dimensions = paste(as.character(round(360/scale)), "x",
-                       as.character(round(360/scale))))
-}
-
-```
-
-
-
-```{r}
-# Test
-wdpa_mdg <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
-  filter("ISO3 == 'MDG'")
-wdpa_mdg_buffer <- wdpa_mdg$geometry()$buffer(10000)
-wdpa_mdg_buffer <- ee$Feature(wdpa_mdg_buffer)$
-  set("PA_buffer", 1)
-ee_print(wdpa_mdg_buffer)
-
-```
-
-
-# Add countries and PAs
-
-```{r}
-
-
-
-```
-
-# Load deforestation drivers
-
-```{r}
-
-# Drivers
-
-wwf_ecoregions %>%
-  st_drop_geometry() %>%
-  group_by(BIOME) %>%
-  summarise(n_distinct = n_distinct(BIOME),
-            n = n())
-wwf_ecoregions %>%
-  st_drop_geometry() %>%
-  group_by(ECO_NAME) %>%
-  summarise(n_distinct = n_distinct(ECO_NAME),
-            n = n())
-
-```
-
-Load GEE data
-
-```{r}
-
-
-```
+Ultimately, we have 201 national territories for which we download data.
