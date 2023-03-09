@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.313">
+<meta name="generator" content="quarto-1.2.335">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -186,6 +186,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../replication_report/06_reimplement_matching.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reimplement matching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/07_observations_initial_study.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Discussion of processing choices</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../replication_report/references.html" class="sidebar-item-text sidebar-link">References</a>
   </div>
 </li>
@@ -227,7 +237,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p>The source <a href="https://github.com/wolfch2/PA_matching">code published on Github</a> alongside their article by Wolf and colleagues combines three different coding languages: python, R and Julia. Although the code is generally clearly written and includes some explanatory comments, several adjustments in the code are required to enable it to run on a different machine. This chapter focuses on the configuration (operating system, statistical software and specific libraries) required to run the program.</p>
+<p>The source <a href="https://github.com/wolfch2/PA_matching">code published on Github</a> alongside the original study combines three different coding languages: python, R and Julia. Although the code is generally clearly written and includes some explanatory comments, several adjustments in the code are required to enable it to run on a different machine. This chapter focuses on the configuration (operating system, statistical software and specific libraries) required to run the program.</p>
 <section id="procedure" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="procedure"><span class="header-section-number">3.1</span> Procedure</h2>
 <p>Guidelines by scientific journals to promote the reproducibility of published scientific articles recommend the authors to publish their code including a file named README that specifies the configuration of the computing environment and the procedure to follow to obtain the same results (for guidance on code publications, see <a href="https://social-science-data-editors.github.io/guidance/">here for social science journals</a> or <a href="https://www.nature.com/articles/d41586-021-02887-8">here for Nature journals</a>. This source code only includes an empty README file, so we made several attempts to guess a working configuration. We tested the code on the following platforms:</p>

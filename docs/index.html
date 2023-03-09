@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.313">
+<meta name="generator" content="quarto-1.2.335">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -143,6 +143,16 @@ div.csl-indent {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./replication_report/06_reimplement_matching.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reimplement matching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./replication_report/07_observations_initial_study.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Discussion of processing choices</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./replication_report/references.html" class="sidebar-item-text sidebar-link">References</a>
   </div>
 </li>
@@ -193,7 +203,7 @@ div.csl-indent {
 
 <section id="summary" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Summary</h1>
-<p>This document provides a technical description of the process we are following to reproduce and replicate the work titled “A forest loss report card for the world’s protected areas” published in <em>Nature Ecology &amp; Evolution</em> by Wolf, Levi, Ripple, Zárrate-Charry and Betts <span class="citation" data-cites="wolf2021">(<a href="replication_report/references.html#ref-wolf2021" role="doc-biblioref">2021</a>)</span>. Before starting any analysis, we specified the objectives of this exercises and the different steps we intend to follow in <a href="replication_report/02_preanalysis_plan.html"><span>Chapter&nbsp;2</span></a>. Our intents to create a computing environment able to run wolf and al.&nbsp;code is presented in <a href="replication_report/03_computing_setup.html"><span>Chapter&nbsp;3</span></a>. The code published by Wolf and al.&nbsp;automatically fetches a subset of the data required by the statistical computation, but some sources links need to be updated. <a href="replication_report/04_data_preparation.html"><span>Chapter&nbsp;4</span></a> describes these updates and how to obtain the data that is missing when using only the published code. <a href="replication_report/05_reproduction_as_is.html"><span>Chapter&nbsp;5</span></a> describes the subsequent steps followed to execute the code, including some coding errors that we found. At this stage, we failed to execute the whole code published by the authors and to reproduce their results. We plan to contact directly the authors to inform them of our attempts and ask for their help to debug the code execution.</p>
+<p>This document (hereafter refered to as “the replication study”) provides a technical description of the process we are following to reproduce and replicate the work titled “A forest loss report card for the world’s protected areas” published in <em>Nature Ecology &amp; Evolution</em> by Wolf, Levi, Ripple, Zárrate-Charry and Betts <span class="citation" data-cites="wolf2021">(<a href="replication_report/references.html#ref-wolf2021" role="doc-biblioref">2021</a>, hereafter referred to as “the original study”)</span>. Before starting any analysis, we specified the objectives of this exercises and the different steps we intend to follow in <a href="replication_report/02_preanalysis_plan.html"><span>Chapter&nbsp;2</span></a>. Our intents to create a computing environment able to run the original study’s code is presented in <a href="replication_report/03_computing_setup.html"><span>Chapter&nbsp;3</span></a>. The code published alongside the original study automatically fetches a subset of the data required by the statistical computation, but some sources links need to be updated. <a href="replication_report/04_data_preparation.html"><span>Chapter&nbsp;4</span></a> describes these updates and how to obtain the data that is missing when using only the published code. <a href="replication_report/05_reproduction_as_is.html"><span>Chapter&nbsp;5</span></a> describes the subsequent steps followed to execute the code, including the first coding errors that we found. The code for the matching algorithm fails to run, we are not able to debug it and the corresponding author of the original study is not available to debug it. We therefore decided to re-implement the data analysis process described in the original study but in a way that could be more straightforward, less error-prone and reproducible. We describe these intents in <a href="replication_report/06_reimplement_matching.html"><span>Chapter&nbsp;7</span></a>. We describe some issues we identified in the analysis process of the original study in <a href="replication_report/07_observations_initial_study.html"><span>Chapter&nbsp;8</span></a>.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography" style="display: none">

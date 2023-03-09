@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.313">
+<meta name="generator" content="quarto-1.2.335">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -93,7 +93,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../replication_report/references.html" rel="next">
+<link href="../replication_report/06_reimplement_matching.html" rel="next">
 <link href="../replication_report/04_data_preparation.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -182,6 +182,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../replication_report/05_reproduction_as_is.html" class="sidebar-item-text sidebar-link active"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Reproduction “as is” of the publised results</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/06_reimplement_matching.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reimplement matching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/07_observations_initial_study.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Discussion of processing choices</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -619,9 +629,10 @@ Warning messages:
 <span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
 <span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Need to specify the DataFrame in csv </span></span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"PA_df = CSV.read(</span><span class="sc">\"</span><span class="st">data_processed/PAs_tab.csv</span><span class="sc">\"</span><span class="st">)"</span>, </span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"PA_df = CSV.read(</span><span class="sc">\"</span><span class="st">data_processed/PAs_tab.csv</span><span class="sc">\"</span><span class="st">, DataFrame)"</span>,</span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"CSV</span><span class="sc">\\</span><span class="st">.read</span><span class="sc">\\</span><span class="st">(</span><span class="sc">\"</span><span class="st">data_processed/PAs_tab</span><span class="sc">\\</span><span class="st">.csv</span><span class="sc">\"\\</span><span class="st">)"</span>, </span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> </span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>              <span class="st">"CSV</span><span class="sc">\\</span><span class="st">.read</span><span class="sc">\\</span><span class="st">(</span><span class="sc">\"</span><span class="st">data_processed/PAs_tab</span><span class="sc">\\</span><span class="st">.csv</span><span class="sc">\"</span><span class="st">, DataFrame</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
@@ -793,8 +804,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../replication_report/references.html" class="pagination-link">
-        <span class="nav-page-text">References</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../replication_report/06_reimplement_matching.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reimplement matching</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

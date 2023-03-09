@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.313">
+<meta name="generator" content="quarto-1.2.335">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -205,6 +205,16 @@ div.csl-indent {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../replication_report/06_reimplement_matching.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reimplement matching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/07_observations_initial_study.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Discussion of processing choices</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../replication_report/references.html" class="sidebar-item-text sidebar-link">References</a>
   </div>
 </li>
@@ -249,17 +259,18 @@ div.csl-indent {
 
 </header>
 
-<p>The replication of this study requires a careful data management. The input data only represents a volume of 16.35 GB (without accounting for the data fetched through IUCN API) and it has to be transformed once or twice before the statistical analysis. First, a folder structure must be created before running Wolf et al.&nbsp;source code.</p>
+<p>The replication of this study requires a careful data management. The input data only represents a volume of 16.35 GB (without accounting for the data fetched through IUCN API) and it has to be transformed once or twice before the statistical analysis. First, a folder structure must be created before running the original study source code.</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create arborescence needed for code from Wolf et al. to run</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"data_input"</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"data_input/PAs"</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"data_input/range_maps"</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"temp"</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"data_processed"</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"data_processed/rasters"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"replication_report"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Create arborescence needed for code from Wolf et al. to run</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"data_input"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"data_input/PAs"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"data_input/range_maps"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"temp"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"data_processed"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"data_processed/rasters"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <section id="code-updates-to-fix-automatic-downloads" class="level2" data-number="4.1">
@@ -301,25 +312,26 @@ div.csl-indent {
 <span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Change the source paths ------------------------------------------------------</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace Science URL that has changed</span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>old <span class="ot">&lt;-</span> <span class="st">"https://science.sciencemag.org/highwire/filestream/715492/field_highwire_adjunct_files/2/aau3445-Data-S3.tif"</span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>new <span class="ot">&lt;-</span> <span class="st">"https://www.science.org/action/downloadSupplement?doi=10.1126%2Fscience.aau3445&amp;file=aau3445-data-s3.tif"</span></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> old,</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> new,</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace Curtis et al filename: lowercased by Science portal admins</span></span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"data_input/aau3445-Data-S3.tif"</span>,</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"data_input/aau3445-data-s3.tif"</span>,</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace url to download WWF data</span></span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>old <span class="ot">&lt;-</span> <span class="st">"https://c402277.ssl.cf1.rackcdn.com/publications/15/files/original/official_teow.zip</span><span class="sc">\\</span><span class="st">?1349272619"</span></span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>new <span class="ot">&lt;-</span> <span class="st">"https://files.worldwildlife.org/wwfcmsprod/files/Publication/file/6kcchn7e3u_official_teow.zip"</span></span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> old,</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> new,</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"data_input/official_teow.zip</span><span class="sc">\\</span><span class="st">?1349272619"</span>,</span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"data_input/6kcchn7e3u_official_teow.zip"</span>,</span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>join_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/004 - join_rasters.R"</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace Science URL that has changed</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>old <span class="ot">&lt;-</span> <span class="st">"https://science.sciencemag.org/highwire/filestream/715492/field_highwire_adjunct_files/2/aau3445-Data-S3.tif"</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>new <span class="ot">&lt;-</span> <span class="st">"https://www.science.org/action/downloadSupplement?doi=10.1126%2Fscience.aau3445&amp;file=aau3445-data-s3.tif"</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> old,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> new,</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace Curtis et al filename: lowercased by Science portal admins</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"data_input/aau3445-Data-S3.tif"</span>,</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"data_input/aau3445-data-s3.tif"</span>,</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace url to download WWF data</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>old <span class="ot">&lt;-</span> <span class="st">"https://c402277.ssl.cf1.rackcdn.com/publications/15/files/original/official_teow.zip</span><span class="sc">\\</span><span class="st">?1349272619"</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>new <span class="ot">&lt;-</span> <span class="st">"https://files.worldwildlife.org/wwfcmsprod/files/Publication/file/6kcchn7e3u_official_teow.zip"</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> old,</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> new,</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"data_input/official_teow.zip</span><span class="sc">\\</span><span class="st">?1349272619"</span>,</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"data_input/6kcchn7e3u_official_teow.zip"</span>,</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -442,39 +454,42 @@ div.csl-indent {
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(wdpar)</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">save_from_s3</span>(<span class="at">from =</span> <span class="st">"Replication_wolf/WDPA_Jan2023_Public.gdb.zip"</span>,</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">to =</span> <span class="st">"data_input/WDPA_Jan2023_Public.gdb.zip"</span>)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">save_from_s3</span>(<span class="at">from =</span> <span class="st">"Replication_wolf/data_input/PAs/WDPA_Jan2023_poly.parquet"</span>,</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">to =</span> <span class="st">"data_input/PAs/WDPA_Jan2023_poly.parquet"</span>)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Get the data from protectedplanet</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="st">"data_input/WDPA_Jan2023_Public.gdb.zip"</span>)) {</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  wdpa_global <span class="ot">&lt;-</span> <span class="fu">wdpa_read</span>(<span class="st">"data_input/WDPA_Jan2023_Public.gdb.zip"</span>)</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  wdpa_global <span class="ot">&lt;-</span> <span class="fu">wdpa_fetch</span>(<span class="st">"global"</span>, <span class="at">download_dir =</span> <span class="st">"data_input"</span>)</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Build a name with same structure than Wolf et al.</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>wdpa_file_name <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">"data_input"</span>, <span class="at">pattern =</span> <span class="st">".gdb.zip"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_remove</span>(<span class="st">"_Public.gdb.zip"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">"data_input/PAs/"</span>, ., <span class="st">"-shapefile-polygons.shp"</span>)</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter for polygons (filtering out points to be sure not to exclude something</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="co"># by mistake) and write locally.</span></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>wdpa_global <span class="sc">%&gt;%</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="co">#"We excluded PAs from our primary analysis that: </span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">#[1] had point (centroid) information only, </span></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">st_geometry_type</span>(.) <span class="sc">!=</span> <span class="st">"MULTIPOINT"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">#[2] were exclusively marine, </span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(MARINE <span class="sc">!=</span> <span class="st">"2"</span>) <span class="sc">%&gt;%</span> <span class="co">#0: 100% terrestrial, 1: both, 2: 100% marine</span></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="co">#[3] were established after 2000 since the forest loss data range from 2001 to 2018,</span></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(STATUS_YR <span class="sc">&gt;</span> <span class="dv">2000</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  <span class="co">#[4] had area less than 1 km2 since forest change in small PAs can be hard to</span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># estimate accurately, </span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(REP_AREA <span class="sc">-</span> REP_M_AREA <span class="sc">&gt;=</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_write</span>(<span class="at">dsn =</span> wdpa_file_name)</span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a><span class="co"># 48066 PAs filtered. Check as this seems quite low compared to 286356 in the </span></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="co"># WDPA global database.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Found the previous version of WDPA</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>wdpa_Jan2020_url <span class="ot">&lt;-</span> <span class="st">"https://pp-import-production.s3-eu-west-1.amazonaws.com/WDPA_Jan2020_Public.zip"</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">save_from_s3</span>(<span class="at">from =</span> <span class="st">"Replication_wolf/WDPA_Jan2023_Public.gdb.zip"</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">to =</span> <span class="st">"data_input/WDPA_Jan2023_Public.gdb.zip"</span>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">save_from_s3</span>(<span class="at">from =</span> <span class="st">"Replication_wolf/data_input/PAs/WDPA_Jan2023_poly.parquet"</span>,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>             <span class="at">to =</span> <span class="st">"data_input/PAs/WDPA_Jan2023_poly.parquet"</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Get the data from protectedplanet</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="st">"data_input/WDPA_Jan2023_Public.gdb.zip"</span>)) {</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  wdpa_global <span class="ot">&lt;-</span> <span class="fu">wdpa_read</span>(<span class="st">"data_input/WDPA_Jan2023_Public.gdb.zip"</span>)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  wdpa_global <span class="ot">&lt;-</span> <span class="fu">wdpa_fetch</span>(<span class="st">"global"</span>, <span class="at">download_dir =</span> <span class="st">"data_input"</span>)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Build a name with same structure than Wolf et al.</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>wdpa_file_name <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="st">"data_input"</span>, <span class="at">pattern =</span> <span class="st">".gdb.zip"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_remove</span>(<span class="st">"_Public.gdb.zip"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">"data_input/PAs/"</span>, ., <span class="st">"-shapefile-polygons.shp"</span>)</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter for polygons (filtering out points to be sure not to exclude something</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="co"># by mistake) and write locally.</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>wdpa_global <span class="sc">%&gt;%</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">#"We excluded PAs from our primary analysis that: </span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="co">#[1] had point (centroid) information only, </span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">st_geometry_type</span>(.) <span class="sc">!=</span> <span class="st">"MULTIPOINT"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">#[2] were exclusively marine, </span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(MARINE <span class="sc">!=</span> <span class="st">"2"</span>) <span class="sc">%&gt;%</span> <span class="co">#0: 100% terrestrial, 1: both, 2: 100% marine</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  <span class="co">#[3] were established after 2000 since the forest loss data range from 2001 to 2018,</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(STATUS_YR <span class="sc">&gt;</span> <span class="dv">2000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  <span class="co">#[4] had area less than 1 km2 since forest change in small PAs can be hard to</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  <span class="co"># estimate accurately, </span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(REP_AREA <span class="sc">-</span> REP_M_AREA <span class="sc">&gt;=</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_write</span>(<span class="at">dsn =</span> wdpa_file_name)</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="co"># 48066 PAs filtered. Check as this seems quite low compared to 286356 in the </span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="co"># WDPA global database.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>We then downloaded the data as zipped shapefiles from <a href="https://www.protectedplanet.net/">protectedplanet.net</a> and placed it in the folder <code>replication_report/temp</code>. We executed the following script to store it in the same format than referred to in Wolf et al.&nbsp;source code. However, the WDPA polygons include some topological errors and the code failed. We finally chose to store the data in geoparquet format, which is more performant and more lenient regarding topological validity.</p>

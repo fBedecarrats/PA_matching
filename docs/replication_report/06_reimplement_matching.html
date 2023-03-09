@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.335">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Replication of Wolf et al.&nbsp;(2021) “A forest loss report card for the world’s protected areas” - 6&nbsp; Reimplement matching</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../replication_report/07_observations_initial_study.html" rel="next">
+<link href="../replication_report/05_reproduction_as_is.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reimplement matching</span></h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Replication of Wolf et al.&nbsp;(2021) “A forest loss report card for the world’s protected areas”</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/fBedecarrats/PA_matching" title="Source Code" class="sidebar-tool px-1"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+      <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Summary</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/02_preanalysis_plan.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Pre-analysis plan for the replication of Wolf et al.&nbsp;(2021)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/03_computing_setup.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Computing environment setup</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/04_data_preparation.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Data gathering and preparation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/05_reproduction_as_is.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Reproduction “as is” of the publised results</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/06_reimplement_matching.html" class="sidebar-item-text sidebar-link active"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reimplement matching</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/07_observations_initial_study.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Discussion of processing choices</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../replication_report/references.html" class="sidebar-item-text sidebar-link">References</a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-reimplement" id="toc-sec-reimplement" class="nav-link active" data-scroll-target="#sec-reimplement"><span class="toc-section-number">7</span>  Re-implementing the logic of original study with a new code</a>
+  <ul class="collapse">
+  <li><a href="#fetch-and-prepare-data-from-other-sources-than-gee" id="toc-fetch-and-prepare-data-from-other-sources-than-gee" class="nav-link" data-scroll-target="#fetch-and-prepare-data-from-other-sources-than-gee"><span class="toc-section-number">7.1</span>  Fetch and prepare data from other sources than GEE</a></li>
+  <li><a href="#move-external-data-to-gee-and-prepare-all-information-there" id="toc-move-external-data-to-gee-and-prepare-all-information-there" class="nav-link" data-scroll-target="#move-external-data-to-gee-and-prepare-all-information-there"><span class="toc-section-number">7.2</span>  Move external data to GEE and prepare all information there</a></li>
+  </ul></li>
+  <li><a href="#clip-hansen-data-with-biome-polygons" id="toc-clip-hansen-data-with-biome-polygons" class="nav-link" data-scroll-target="#clip-hansen-data-with-biome-polygons"><span class="toc-section-number">8</span>  Clip Hansen data with biome polygons</a></li>
+  <li><a href="#stack-information-as-bands-in-a-single-raster" id="toc-stack-information-as-bands-in-a-single-raster" class="nav-link" data-scroll-target="#stack-information-as-bands-in-a-single-raster"><span class="toc-section-number">9</span>  Stack information as bands in a single raster</a></li>
+  <li><a href="#recode-data" id="toc-recode-data" class="nav-link" data-scroll-target="#recode-data"><span class="toc-section-number">10</span>  Recode data</a></li>
+  <li><a href="#perform-matching" id="toc-perform-matching" class="nav-link" data-scroll-target="#perform-matching"><span class="toc-section-number">11</span>  Perform matching</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reimplement matching</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="sec-reimplement" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Re-implementing the logic of original study with a new code</h1>
+<p>We have not yet been able to successfully replicate the original study as their code does not run successfully and generates errors. We identified the origin of some errors and corrected them, but we remained stuck with Julia errors. We tried different computing environment : local, cloud servers and with several different configurations (Windows, Linux, different R, python and Julia versions, etc.), and with large amounts of CPUs and memory.</p>
+<p>We believe that the computing sequence elaborated by this study authors is particularly complex because of the very large amount of data to be processed. We propose a different approach that seems more straight forward and use the same entry parameters as the original study.</p>
+<p>Here we attempt to reproduce every analysis steps and parameters of the original study but to implement a different data processing strategy that:</p>
+<ul>
+<li>implies less manipulations steps to be less error prone;</li>
+<li>only relies on one language and configuration for local processing.</li>
+<li>relies on cloud data processing for very big datasets: we leverage the cloud computing platform used by the authors to download their source data (Google earth engine) to do more than only data acquisition: we use it also to preprocess and combine the source data before download;;</li>
+<li>takes advantage that the matching algorithm segments by country and biome to process the data in smaller batches that are easier to process on commonly accessible processing configurations.</li>
+<li>containerize and archive our computing environement to enable any future researcher to reproduce it in the future.</li>
+</ul>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We need the latest version of rnaturalearth</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="st">"rnaturalearth"</span> <span class="sc">%in%</span> <span class="fu">installed.packages</span>() <span class="sc">|</span> </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">packageVersion</span>(<span class="st">"rnaturalearth"</span>) <span class="sc">&lt;=</span> <span class="st">"0.3.2"</span>) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"https://github.com/ropensci/rnaturalearth"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tmap)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(geodata)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rnaturalearth)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(units)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stars)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(arrow)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">str_ends</span>(<span class="fu">getwd</span>(), <span class="st">"replication_report"</span>, <span class="at">negate =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setwd</span>(<span class="st">"replication_report"</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="fetch-and-prepare-data-from-other-sources-than-gee" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="fetch-and-prepare-data-from-other-sources-than-gee"><span class="header-section-number">7.1</span> Fetch and prepare data from other sources than GEE</h2>
+<p>We gather data for national boundaries and biomes and combine it.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="st">"revamp/countries/countries.rds"</span>)) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  countries <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"revamp/countries/countries.rds"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Countries  using geodata (ie. GADM), rnaturalearth is broken</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(<span class="st">"revamp"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(<span class="st">"revamp/countries"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># This data is from GADM which seems more complete and accurate</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  countries <span class="ot">&lt;-</span> <span class="fu">world</span>(<span class="at">resolution=</span><span class="dv">2</span>, <span class="at">level=</span><span class="dv">0</span>, <span class="at">path =</span> <span class="st">"revamp/countries"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  countries <span class="ot">&lt;-</span> countries <span class="sc">%&gt;%</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_as_sf</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_make_valid</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">country_num =</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(.), <span class="at">.before =</span> GID_0)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Fetch data from rnaturalearth for continents</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  countries2 <span class="ot">&lt;-</span> <span class="fu">ne_download</span>(<span class="at">scale =</span> <span class="dv">10</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>                            <span class="at">type =</span> <span class="st">"countries"</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>                            <span class="at">category =</span> <span class="st">"cultural"</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>                            <span class="at">destdir =</span> <span class="st">"revamp/countries"</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>                            <span class="at">load =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>                            <span class="at">returnclass =</span> <span class="st">"sf"</span>)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  country_continent <span class="ot">&lt;-</span> countries2 <span class="sc">%&gt;%</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(ADM0_A3, <span class="at">continent =</span> CONTINENT)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  countries <span class="ot">&lt;-</span> countries <span class="sc">%&gt;%</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(country_continent, <span class="fu">join_by</span>(GID_0 <span class="sc">==</span> ADM0_A3)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">continent =</span> <span class="fu">case_when</span>(</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"Åland"</span> <span class="sc">~</span> <span class="st">"Europe"</span>, <span class="co"># some territories are missing</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"Bonaire, Saint Eustatius and Saba"</span> <span class="sc">~</span> <span class="st">"North America"</span>,</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"Caspian Sea"</span> <span class="sc">~</span> <span class="st">"Europe"</span>,</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"Christmas Island"</span> <span class="sc">~</span> <span class="st">"Oceania"</span>,</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"French Guiana"</span> <span class="sc">~</span> <span class="st">"South America"</span>,</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"Guadeloupe"</span> <span class="sc">~</span> <span class="st">"North America"</span>,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"Kosovo"</span> <span class="sc">~</span> <span class="st">"Europe"</span>,</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"Martinique"</span> <span class="sc">~</span> <span class="st">"North America"</span>,</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"Mayotte"</span> <span class="sc">~</span> <span class="st">"Africa"</span>,</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"Paracel Islands"</span> <span class="sc">~</span> <span class="st">"Asia"</span>,</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"Réunion"</span> <span class="sc">~</span> <span class="st">"Africa"</span>,</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>      NAME_0 <span class="sc">==</span> <span class="st">"South Sudan"</span> <span class="sc">~</span> <span class="st">"Africa"</span>,</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>      <span class="at">.default =</span> continent),</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>      <span class="at">continent =</span> <span class="fu">ifelse</span>(continent <span class="sc">==</span> <span class="st">"Seven seas (open ocean)"</span>,</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"Open ocean"</span>, continent))</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_rds</span>(countries, <span class="st">"revamp/countries/countries.rds"</span>)</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co"># We prepare ecoregion polygons (only at first run, if not already done)</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">"revamp/aois/aois.gpkg"</span>)) {</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Fetch biomes</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(<span class="st">"revamp/biomes"</span>)</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">"revamp/biomes/wwf_biomes.zip"</span>)) {</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    wwf_url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://files.worldwildlife.org/wwfcmsprod/files/"</span>, </span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"Publication/file/6kcchn7e3u_official_teow.zip"</span>)</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(wwf_url, <span class="st">"revamp/biomes/wwf_biomes.zip"</span>)</span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unzip</span>(<span class="st">"revamp/biomes/wwf_biomes.zip"</span>, <span class="at">exdir =</span> <span class="st">"revamp/biomes"</span>)</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Merge ecoregions with the same biome</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>  biomes <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"revamp/biomes/official/wwf_terr_ecos.shp"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_make_valid</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(BIOME) <span class="sc">%&gt;%</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>()</span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename according to documentation and filter</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>  biomes <span class="ot">&lt;-</span> biomes <span class="sc">%&gt;%</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">biome_num =</span> BIOME) <span class="sc">%&gt;%</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">biome_name =</span> <span class="fu">case_when</span>(</span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Moist Broadleaf Forests"</span>,</span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Dry Broadleaf Forests"</span>,</span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Coniferous Forests"</span>,</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">4</span> <span class="sc">~</span> <span class="st">"Temperate Broadleaf &amp; Mixed Forests"</span>,</span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">5</span> <span class="sc">~</span> <span class="st">"Temperate Conifer Forests"</span>,</span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">6</span> <span class="sc">~</span> <span class="st">"Boreal Forests/Taiga"</span>,</span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">7</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Grasslands, Savannas &amp; Shrublands"</span>,</span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">"Temperate Grasslands, Savannas &amp; Shrublands"</span>,</span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">9</span> <span class="sc">~</span> <span class="st">"Flooded Grasslands &amp; Savannas"</span>,</span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">10</span> <span class="sc">~</span> <span class="st">"Montane Grasslands &amp; Shrublands"</span>,</span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">11</span> <span class="sc">~</span> <span class="st">"Tundra"</span>,</span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">12</span> <span class="sc">~</span> <span class="st">"Mediterranean Forests, Woodlands &amp; Scrub"</span>,</span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">13</span> <span class="sc">~</span> <span class="st">"Deserts &amp; Xeric Shrublands"</span>,</span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">14</span> <span class="sc">~</span> <span class="st">"Mangroves"</span>,</span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>      <span class="at">.default =</span> <span class="st">"Unknown"</span>), <span class="at">.before =</span> geometry)</span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>  my_biomes <span class="ot">&lt;-</span> biomes <span class="sc">%&gt;%</span></span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(biome_name <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Tropical &amp; Subtropical Moist Broadleaf Forests"</span>,</span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Tropical &amp; Subtropical Dry Broadleaf Forests"</span>,</span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Tropical &amp; Subtropical Coniferous Forests"</span>,</span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Temperate Broadleaf &amp; Mixed Forests"</span>,</span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Temperate Conifer Forests"</span>,</span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Boreal Forests/Taiga"</span>,</span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Mangroves"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">biome_num =</span> <span class="fu">case_when</span>(</span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Tropical &amp; Subtropical Moist Broadleaf Forests"</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Tropical &amp; Subtropical Dry Broadleaf Forests"</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Tropical &amp; Subtropical Coniferous Forests"</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Temperate Broadleaf &amp; Mixed Forests"</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Temperate Conifer Forests"</span> <span class="sc">~</span> <span class="dv">5</span>,</span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Boreal Forests/Taiga"</span> <span class="sc">~</span> <span class="dv">6</span>,</span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Mangroves"</span> <span class="sc">~</span> <span class="dv">7</span>))</span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Areas of interest (AOIs) combine countries and biomes</span></span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a>  aois <span class="ot">&lt;-</span> <span class="fu">st_intersection</span>(countries, my_biomes) <span class="sc">%&gt;%</span></span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">area =</span> <span class="fu">st_area</span>(.)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(area) <span class="co"># to start with the smallest for testing</span></span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>  <span class="co"># save as geoparquet</span></span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_write</span>(aois, <span class="st">"revamp/aois/aois.gpkg"</span>) </span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a>  aois <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"revamp/aois/aois.gpkg"</span>)</span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading layer `aois' from data source 
+  `C:\Users\fbede\Documents\Statistiques\PA_matching\replication_report\revamp\aois\aois.gpkg' 
+  using driver `GPKG'
+Simple feature collection with 364 features and 7 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -179.9994 ymin: -55.97751 xmax: 179.9992 ymax: 71.41746
+CRS:           unknown</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aois <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Biome =</span> biome_name) <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>() <span class="sc">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_polygons</span>(<span class="at">col =</span> <span class="st">"Biome"</span>) <span class="sc">+</span> </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>() <span class="sc">+</span> </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_layout</span>(<span class="at">legend.outside =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">legend.outside.position =</span> <span class="st">"bottom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="06_reimplement_matching_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
+<p></p><figcaption class="figure-caption">Areas of interest (biome segmented along national boundaries)</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We obtain 364 polygons of country/biomes combinations.</p>
+<p>We also download the data from <span class="citation" data-cites="curtis2018">(<a href="references.html#ref-curtis2018" role="doc-biblioref">Curtis et al. 2018</a>)</span> on deforestation drivers, which is a raster data.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We only execute this once</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">"revamp/drivers/curtis_et_al_orig.tif"</span>)) {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  science_url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://www.science.org/action/downloadSupplement?"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"doi=10.1126%2Fscience.aau3445&amp;file=aau3445-data-s3.tif"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">download.file</span>(<span class="at">url =</span> science_url, </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                <span class="at">destfile =</span> <span class="st">"revamp/drivers/curtis_et_al_orig.tif"</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                <span class="at">method =</span> <span class="st">"curl"</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># load country + biome data</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>drivers <span class="ot">&lt;-</span> <span class="fu">rast</span>(<span class="st">"revamp/drivers/curtis_et_al_orig.tif"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">project</span>(<span class="st">"epsg:4326"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">writeRaster</span>(<span class="st">"revamp/drivers/drivers_curtis.tif"</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="move-external-data-to-gee-and-prepare-all-information-there" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="move-external-data-to-gee-and-prepare-all-information-there"><span class="header-section-number">7.2</span> Move external data to GEE and prepare all information there</h2>
+<p>The first step of the data analysis workflow of Wolf et al.&nbsp;consisted in fetching data from Google Earth Engine. They downloaded each dataset (forest cover, forest loss, forest gain, elevation, slope, travel time and population density) as separate raster files to process them locally on their own computer. Because of the massive amount of such data, the subsequent steps in their analysis workflow are complex, rely from different languages, a large number of libraries (several of them now deprectated), fails to run and we are unable to debug it.</p>
+<p>The Google Earth Engine can be leveraged to do much more than only downloading data, and therefore we plan to re-implement on this cloud environment the data preparation steps, instead of doing it locally on individual machines.</p>
+<p>We use the R package <code>rgee</code> as an interface to Google Earth engine API <span class="citation" data-cites="aybar2020">(<a href="references.html#ref-aybar2020" role="doc-biblioref">Aybar et al. 2020</a>)</span>.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sometime rgee does not find the right python env, so we specify it</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>reticulate<span class="sc">::</span><span class="fu">use_python</span>(<span class="st">"C:/Users/fbede/AppData/Local/r-miniconda/envs/rgee"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rgee) <span class="co"># accesses GEE through its python API</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rgeeExtra)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ee_Initialize</span>(<span class="at">user =</span> <span class="st">"ndef"</span>, <span class="at">drive =</span> <span class="cn">TRUE</span>, )</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"revamp/gee"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>We start by uploading the country, biome and deforestation drivers’ data prepared in the previous step.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We add this manually, as we had issues with API auth. protocol for GSC</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>drivers_curtis <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"projects/ee-fbedecarrats/assets/drivers_curtis"</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># We also load the AOIs manually due to the same problem</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">"revamp/aois/aois_shp.zip"</span>)) {</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(<span class="st">"revamp/aois"</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_write</span>(aois, <span class="st">"revamp/aois/aois.shp"</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  aoi_files <span class="ot">=</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"revamp/aois"</span>, <span class="at">pattern =</span> <span class="st">"aois.*"</span>, </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                         <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">zip</span>(<span class="at">zipfile =</span> <span class="st">"revamp/aois/aois_shp.zip"</span>, <span class="at">files =</span> aoi_files)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>aois_ee <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">FeatureCollection</span>(<span class="st">"projects/ee-fbedecarrats/assets/aois"</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co"># We get the colors used by R using tmaptools::palette_explorer()</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>biome_fills <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">Image</span>()<span class="sc">$</span><span class="fu">byte</span>()<span class="sc">$</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paint</span>(<span class="at">featureCollection =</span> aois_ee,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">color =</span> <span class="st">"biome_num"</span>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>biome_nation_borders <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">Image</span>()<span class="sc">$</span><span class="fu">byte</span>()<span class="sc">$</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paint</span>(<span class="at">featureCollection =</span> aois_ee,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">color =</span> <span class="dv">1</span>,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">width =</span> <span class="dv">1</span>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>r_map_palette <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"b3de69"</span>, <span class="co"># light green: Tropical &amp; Subtropical Moist Broadleaf Forests </span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"fdb462"</span>, <span class="co"># light orange: Tropical &amp; Subtropical Dry Broadleaf Forests</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"80b1d3"</span>, <span class="co"># blue: Tropical &amp; Subtropical Coniferous Forest</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"bebada"</span>, <span class="co"># purple: Temperate Broadleaf &amp; Mixed Forests</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"fb8072"</span>, <span class="co"># dark orange: Temperate Conifer Forests</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"8dd3c7"</span>, <span class="co"># turquois: Boreal Forests/Taiga</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"ffffb3"</span>) <span class="co"># yellow: Mangroves</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>Map<span class="sc">$</span><span class="fu">addLayer</span>(biome_fills, <span class="fu">list</span>(<span class="at">min =</span> <span class="dv">1</span>, <span class="at">max =</span> <span class="dv">7</span>, <span class="at">palette =</span> r_map_palette)) <span class="sc">+</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  Map<span class="sc">$</span><span class="fu">addLayer</span>(biome_nation_borders, <span class="fu">list</span>(<span class="at">palette =</span> <span class="st">"000000"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/biomes_national_rgee.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Diplay of biomes segmented by national boarders on google earth engine</figcaption><p></p>
+</figure>
+</div>
+</section>
+</section>
+<section id="clip-hansen-data-with-biome-polygons" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Clip Hansen data with biome polygons</h1>
+<p>Instead of downloading and processing all the GFC data like Wolf and al., we instead keep only the data located within the perimeter of the biomes of interest.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Hansen/GFC -------------------------------------------------------------------</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>gfc <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"UMD/hansen/global_forest_change_2018_v1_6"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># We save the output as image to display it in quarto</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>gfc_mask <span class="ot">&lt;-</span> gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"datamask"</span>)<span class="sc">$</span><span class="fu">eq</span>(<span class="dv">1</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>gfc_wolf <span class="ot">&lt;-</span>  gfc<span class="sc">$</span><span class="fu">updateMask</span>(gfc_mask)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>Map<span class="sc">$</span><span class="fu">addLayer</span>(gfc_wolf, <span class="fu">list</span>(</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">bands =</span> <span class="fu">c</span>(<span class="st">"loss"</span>, <span class="st">"treecover2000"</span>, <span class="st">"gain"</span>),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">max =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">255</span>, <span class="dv">1</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/gfc_data_exported_by_wolf.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">GFC data exported by wolf to be processed on a local computer (green: tree cover in 2000, red: tree cover loss 2001-2018, blue: tree cover gain 2001-2012)</figcaption><p></p>
+</figure>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We save the output as image to display it in quarto</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>gfc_aois <span class="ot">&lt;-</span> gfc_wolf<span class="sc">$</span><span class="fu">clipToCollection</span>(aois_ee)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>Map<span class="sc">$</span><span class="fu">addLayer</span>(gfc_aois, <span class="fu">list</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">bands =</span> <span class="fu">c</span>(<span class="st">"loss"</span>, <span class="st">"treecover2000"</span>, <span class="st">"gain"</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">max =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">255</span>, <span class="dv">1</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/gfc_data_on_aois.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">GFC data restricted to areas of study to export for matching (green: tree cover in 2000, red: tree cover loss 2001-2018, blue: tree cover gain 2001-2012)</figcaption><p></p>
+</figure>
+</div>
+</section>
+<section id="stack-information-as-bands-in-a-single-raster" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Stack information as bands in a single raster</h1>
+<p>Wolf et al.&nbsp;downloaded each information source in a separate raster, that they later on joined. We find easier and less error-prone to stack all the information as bands of the same raster. The data might be downloaded in separate files for different national segment of each biome, but for the same regions, all the complementary information is attached to the same pixels with the same resolution (alias, a “clean” table).</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This function takes as an enty a GEE FeatureCollections and returns an GEE</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Image with 13 bands with forest cover, forest loss, year of forest loss, </span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># elevation, slope, travel time to a city, population density, country number,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># biome number, a dummy if it is a PA, or in a 10km distance of a PA, and the </span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># WPDA ID number of the PA if it is a PA. </span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>prepare_gee_data <span class="ot">&lt;-</span> <span class="cf">function</span>(ee_region) {</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  gfc <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"UMD/hansen/global_forest_change_2018_v1_6"</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  gfc_mask <span class="ot">&lt;-</span> gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"datamask"</span>)<span class="sc">$</span><span class="fu">eq</span>(<span class="dv">1</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  gfc_masked <span class="ot">&lt;-</span>  gfc<span class="sc">$</span><span class="fu">updateMask</span>(gfc_mask)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># GFC data</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  aoi_gfc <span class="ot">&lt;-</span> gfc_masked<span class="sc">$</span><span class="fu">clipToCollection</span>(ee_region)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  aoi_cover <span class="ot">&lt;-</span> aoi_gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"treecover2000"</span>)<span class="sc">$</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mean</span>(), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  aoi_loss <span class="ot">&lt;-</span> aoi_gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"loss"</span>)<span class="sc">$</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mean</span>(), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  aoi_lossyear <span class="ot">&lt;-</span> aoi_gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"lossyear"</span>)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  aoi_lossyear <span class="ot">&lt;-</span> aoi_lossyear<span class="sc">$</span><span class="fu">updateMask</span>(aoi_lossyear<span class="sc">$</span><span class="fu">neq</span>(<span class="dv">0</span>))<span class="sc">$</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mode</span>(<span class="at">maxRaw =</span> <span class="dv">20</span>), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">toInt</span>()</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_cover<span class="sc">$</span><span class="fu">addBands</span>(<span class="fu">c</span>(aoi_loss, aoi_lossyear))</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># elevation # 28min</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"USGS/GTOPO30"</span>)) <span class="co"># Elevation</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">4</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">4</span>]]<span class="sc">$</span><span class="fu">toInt32</span>()</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  <span class="co"># slope</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(ee<span class="sc">$</span>Terrain<span class="sc">$</span><span class="fu">slope</span>(aoi_image[[<span class="dv">4</span>]]))</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">5</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">5</span>]]<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  <span class="co"># travel_time</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"Oxford/MAP/accessibility_to_cities_2015_v1_0"</span>))</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">6</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">6</span>]]<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Population density</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  gpw <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/"</span>,</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>                <span class="st">"gpw_v4_population_density_adjusted_to_2015_"</span>,</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>                <span class="st">"unwpp_country_totals_rev11_2000_30_sec"</span>)</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(ee<span class="sc">$</span><span class="fu">Image</span>(gpw)<span class="sc">$</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>                                    <span class="fu">select</span>(<span class="st">"unwpp-adjusted_population_density"</span>))</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">7</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">7</span>]]<span class="sc">$</span><span class="fu">focal_mean</span>(<span class="at">radius =</span> <span class="fl">20e3</span>,</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">kernelType =</span> <span class="st">"circle"</span>,</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">units =</span> <span class="st">"meters"</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>  <span class="co"># We add countries and biomes</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>  reg_country_img <span class="ot">&lt;-</span> aois_ee<span class="sc">$</span><span class="fu">filterBounds</span>(ee_region<span class="sc">$</span><span class="fu">geometry</span>())<span class="sc">$</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"cntry_n"</span>), <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(reg_country_img<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>  reg_biome_img <span class="ot">&lt;-</span> aois_ee<span class="sc">$</span><span class="fu">filterBounds</span>(ee_region<span class="sc">$</span><span class="fu">geometry</span>())<span class="sc">$</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"biome_num"</span>), <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(reg_biome_img<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>  <span class="co"># We add information on protected areas</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>  wdpa_reg <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">FeatureCollection</span>(<span class="st">"WCMC/WDPA/current/polygons"</span>)<span class="sc">$</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filterBounds</span>(ee_region<span class="sc">$</span><span class="fu">geometry</span>())<span class="sc">$</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="st">"MARINE == 0 $$ STATUS != 'Proposed' &amp;&amp; GIS_AREA &gt;= 1"</span>)</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>  wdpa_reg <span class="ot">&lt;-</span> wdpa_reg<span class="sc">$</span><span class="fu">map</span>(<span class="cf">function</span>(pa) {</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(pa<span class="sc">$</span><span class="fu">set</span>(<span class="st">"PA"</span>, <span class="dv">1</span>))</span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>  pa_footprint <span class="ot">&lt;-</span>wdpa_reg<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"PA"</span>),</span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>                           <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>  pa_buffer <span class="ot">&lt;-</span> pa_footprint<span class="sc">$</span><span class="fu">focal_max</span>(<span class="dv">10000</span>, <span class="st">"circle"</span>, <span class="st">"meters"</span>)</span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(<span class="fu">c</span>(pa_footprint, pa_buffer))</span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>    wdpa_reg<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"WDPAID"</span>),</span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>                           <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>    wdpa_reg<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"STATUS_YR"</span>),</span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>                           <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Deforestation drivers by Curtis et al.</span></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>    ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"projects/ee-fbedecarrats/assets/drivers_curtis"</span>)<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Forgot to add the ecoregs from WWF. Uploading them as provided by WWF</span></span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>  wwf_ecoregs <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">FeatureCollection</span>(<span class="st">"projects/ee-fbedecarrats/assets/wwf_ecoregs"</span>)</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>    wwf_ecoregs<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"ECO_ID"</span>),</span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>                              <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(aoi_image) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"cover"</span>, <span class="st">"loss"</span>, <span class="st">"lossyear"</span>, <span class="st">"elev"</span>, <span class="st">"slope"</span>,</span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"travel_time"</span>, <span class="st">"pop_dens"</span>, <span class="st">"country_num"</span>, <span class="st">"biome_num"</span>,</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"is_pa"</span>, <span class="st">"is_pa_buffer"</span>, <span class="st">"wdpa_id"</span>, <span class="st">"status_year"</span>, </span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"driver"</span>, <span class="st">"ecoreg"</span>)</span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ADD CLIP /!\</span></span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">clipToCollection</span>(ee_region)</span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>The previous code creates for each area of interest a raster with the following bands: cover, loss, lossyear, elev, slope, travel_time, pop_dens, PA, WDPA ID number, PA_status_yr, PA_buffer, country, biome.</p>
+<p>Now we will iterate to download this raster in separated file, with one file per national segment of each biome of interest.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This loops over countries, but the data is only extracted for areas that</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># are within a biome of study.</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>my_countries <span class="ot">&lt;-</span> <span class="fu">unique</span>(aois<span class="sc">$</span>GID_0)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>country_tasks <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">country =</span> my_countries)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># each country takes between less than 1 and 32 minutes to process. </span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co"># The computations run in parallel.</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>aois_ee <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">FeatureCollection</span>(<span class="st">"projects/ee-fbedecarrats/assets/aois"</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(my_countries)) {</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  GID <span class="ot">&lt;-</span> my_countries[i]</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">paste0</span>(GID, <span class="st">" "</span>, i, <span class="st">"/"</span>, <span class="fu">length</span>(my_countries)))</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  aoi_country <span class="ot">&lt;-</span> aois_ee<span class="sc">$</span><span class="fu">filter</span>(<span class="fu">paste0</span>(<span class="st">"GID_0 == '"</span>, GID,<span class="st">"'"</span>))</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  aoi_extract <span class="ot">&lt;-</span> <span class="fu">prepare_gee_data</span>(aoi_country)</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">#country_tasks$task[[i]] &lt;- </span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  test <span class="ot">&lt;-</span> <span class="fu">ee_as_raster</span>(</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    aoi_extract, <span class="at">via =</span> <span class="st">"drive"</span>, <span class="at">container =</span> <span class="st">"rgee_country"</span>, <span class="at">lazy =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">dsn =</span> <span class="fu">paste0</span>(<span class="st">"revamp/gee/"</span>, GID, <span class="st">".tif"</span>),</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">skipEmptyTiles =</span> <span class="cn">TRUE</span>, <span class="at">scale =</span> <span class="dv">1000</span>,</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">region =</span> aoi_country<span class="sc">$</span><span class="fu">geometry</span>())</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="co"># We fetch the data once it is ready</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(my_countries)) {</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ee_utils_future_value</span>(country_tasks<span class="sc">$</span>task[[j]])</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="co"># This downloads the tifs for 201 national territories. Now we open them and store them to </span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"revamp/tabular_country"</span>)</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(my_countries)) {</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>  country_code <span class="ot">&lt;-</span> country_tasks<span class="sc">$</span>country[k]</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(country_code)</span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>  my_tifs <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"revamp/gee"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>                        <span class="at">pattern =</span> <span class="fu">paste0</span>(country_code, <span class="st">".*tif"</span>))</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># There can be several tifs for 1 country, so we merge them</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>  country_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (my_tif <span class="cf">in</span> my_tifs) {</span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>    my_rast <span class="ot">&lt;-</span> <span class="fu">rast</span>(my_tif)</span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>    my_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(my_rast) <span class="sc">%&gt;%</span></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(country_num <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> biome_num <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> is_pa_buffer <span class="sc">!=</span> <span class="dv">1</span>)</span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>  country_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(country_df, my_df)</span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_parquet</span>(country_df, <span class="fu">paste0</span>(<span class="st">"revamp/tabular_country/"</span>, </span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>                                   country_code, <span class="st">".parquet"</span>))</span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">c</span>(<span class="st">"my_rast"</span>, <span class="st">"my_df"</span>, <span class="st">"country_df"</span>))</span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a><span class="co"># Here we have 1 file per country. We will consolidate all data into 1 single</span></span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a><span class="co"># file.</span></span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>df_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"revamp/tabular_country"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a>all_df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(df_files[<span class="dv">1</span>])</span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (l <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(df_files)) {</span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(l)</span>
+<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a>  this_df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(df_files[l])</span>
+<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>  all_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(all_df, this_df)</span>
+<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-56"><a href="#cb11-56" aria-hidden="true" tabindex="-1"></a><span class="co"># The data occupies about 8-10 Go in memory</span></span>
+<span id="cb11-57"><a href="#cb11-57" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(all_df) <span class="co"># 80 287 087</span></span>
+<span id="cb11-58"><a href="#cb11-58" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"revamp/consolidated"</span>)</span>
+<span id="cb11-59"><a href="#cb11-59" aria-hidden="true" tabindex="-1"></a><span class="fu">write_parquet</span>(all_df, <span class="st">"revamp/consolidated/gee_data.parquet"</span>) <span class="co">#~385 Mo</span></span>
+<span id="cb11-60"><a href="#cb11-60" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(all_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="recode-data" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Recode data</h1>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>all_df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(<span class="st">"revamp/consolidated/gee_data.parquet"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="perform-matching" class="level1" data-number="11">
+<h1 data-number="11"><span class="header-section-number">11</span> Perform matching</h1>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography" style="display: none">
+<div id="ref-aybar2020" class="csl-entry" role="doc-biblioentry">
+Aybar, Cesar, Qiusheng Wu, Lesly Bautista, Roy Yali, and Antony Barja. 2020. <span>“Rgee: An r Package for Interacting with Google Earth Engine.”</span> <em>Journal of Open Source Software</em> 5 (51): 2272.
+</div>
+<div id="ref-curtis2018" class="csl-entry" role="doc-biblioentry">
+Curtis, Philip G., Christy M. Slay, Nancy L. Harris, Alexandra Tyukavina, and Matthew C. Hansen. 2018. <span>“Classifying Drivers of Global Forest Loss.”</span> <em>Science</em> 361 (6407): 11081111.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../replication_report/05_reproduction_as_is.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Reproduction “as is” of the publised results</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../replication_report/07_observations_initial_study.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Discussion of processing choices</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>
