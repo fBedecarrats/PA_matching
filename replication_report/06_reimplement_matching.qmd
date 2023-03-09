@@ -7,7 +7,7 @@ editor_options:
 
 ## Trying a different computation strategy
 
-We have not yet been able to successfully replicate Wolf et al. (2021) as their code does not run successfully and generates errors. We identified the origin of some errors and corrected them, but we remained stuck with Julia errors. We tried different computing environment : local, cloud servers and with several different configurations (Windows, Linux, different R, python and Julia versions, etc.), and with large amounts of CPUs and memory.
+We have not yet been able to successfully replicate the original study  as their code does not run successfully and generates errors. We identified the origin of some errors and corrected them, but we remained stuck with Julia errors. We tried different computing environment : local, cloud servers and with several different configurations (Windows, Linux, different R, python and Julia versions, etc.), and with large amounts of CPUs and memory.
 
 We believe that the computing sequence elaborated by this study authors is particularly complex because of the very large amount of data to be processed. We propose a different approach that seems more straight forward and use the same entry parameters as Wolf et al. (2021).
 
@@ -344,7 +344,7 @@ Now we will iterate to download this raster in separated file, with one file per
 ```{r}
 my_countries <- unique(aois$GID_0)
 gee_tasks <- tibble(country = my_countries)
-for (i in 1:length(my_countries)) {
+for (i in 18:length(my_countries)) {
   print(continents[i])
   aoi_region <- aois_ee$filter(paste0("contnnt == '", continents[i],"'"))
   aoi_extract <- prepare_gee_data(aoi_region)
@@ -354,6 +354,9 @@ for (i in 1:length(my_countries)) {
     skipEmptyTiles = TRUE, scale = 1000,
     region = aoi_region$geometry())
 }
+# Failing at:
+# "Process Tropical & Subtropical Moist Broadleaf Forests for New Zealand 18/364"
+
 ```
 
 ```{r}
@@ -366,7 +369,7 @@ aoi_num <- nrow(aois) # 364 areas of interest
 # over the corresponding geometry. The output are "future values" stored in
 # one field. Invoking theses future values when GEE is done processing will
 # fetch the corresponding rasters and store them locally
-for (i in 1:aoi_num) {
+for (i in 18:aoi_num) {
   aoi <- slice(aois, i) %>%
     st_drop_geometry()
   print(paste("Process", aoi["biome_name"], "for", aoi["NAME_0"], 
