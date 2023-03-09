@@ -362,6 +362,44 @@ for (j in 1:length(my_countries)) {
   ee_utils_future_value(country_tasks$task[[j]])
 }
 # This downloads the tifs for 201 national territories. Now we open them and store them to 
+library(arrow)
+my_schema <- schema(field(name = "cover", type = int8()),
+                    field(name = "loss", type = int8()),
+                    field(name = "lossyear", type = int8()),
+                    field(name = "elev", type = int16()),
+                    field(name = "slope", type = int8()),
+                    field(name = "travel_time", type = int32()),
+                    field(name = "pop_dens", type = int32()),
+                    field(name = "country_num", type = int16()),
+                    field(name = "biome_num", type = int16()),
+                    field(name = "is_pa", type = int8()),
+                    field(name = "is_pa_buffer", type = int8()),
+                    field(name = "wdpa_id", type = int32()),
+                    field(name = "status_year", type = int16()))
+
+dir.create("revamp/tabular_country")
+for (k in 1:length(my_countries)) {
+  country_code <- country_tasks$country[k]
+  print(country_code)
+  my_tifs <- list.files(path = "revamp/gee", full.names = TRUE,
+                        pattern = paste0(country_code, ".*tif"))
+  # There can be several tifs for 1 country, so we merge them
+  country_df <- data.frame()
+  for (my_tif in my_tifs) {
+    my_rast <- rast(my_tif)
+    my_df <- as.data.frame(my_rast) %>%
+      filter(country_num > 0 & biome_num > 0)
+  country_df <- bind_rows(country_df, my_df)
+  }
+  write_parquet(country_df, paste0("revamp/tabular_country/", 
+                                   country_code, ".parquet"))
+  rm(list = c("my_rast", "my_df", "country_df"))
+}
+# Now we'll store all this into a correctly partitionned parquet dataset file
+dir.create("revamp/tabular_struct")
+consolidated <- open_dataset("revamp/tabular_country", my_schema)
+write_dataset(consolidated, path = "revamp/tabular_struct",
+              partitioning = c("biome_num", "country_num"))
 
 ```
 
