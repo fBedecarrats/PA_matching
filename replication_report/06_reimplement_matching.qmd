@@ -9,9 +9,9 @@ editor_options:
 
 We have not yet been able to successfully replicate the original study  as their code does not run successfully and generates errors. We identified the origin of some errors and corrected them, but we remained stuck with Julia errors. We tried different computing environment : local, cloud servers and with several different configurations (Windows, Linux, different R, python and Julia versions, etc.), and with large amounts of CPUs and memory.
 
-We believe that the computing sequence elaborated by this study authors is particularly complex because of the very large amount of data to be processed. We propose a different approach that seems more straight forward and use the same entry parameters as Wolf et al. (2021).
+We believe that the computing sequence elaborated by this study authors is particularly complex because of the very large amount of data to be processed. We propose a different approach that seems more straight forward and use the same entry parameters as the original study. 
 
-Here we attempt to reproduce every analysis steps and parameters of Wolf et al. (2021) but to implement a different data processing strategy that:
+Here we attempt to reproduce every analysis steps and parameters of the original study but to implement a different data processing strategy that:
 
 -   implies less manipulations steps to be less error prone;
 -   only relies on one language and configuration for local processing.
@@ -20,6 +20,8 @@ Here we attempt to reproduce every analysis steps and parameters of Wolf et al. 
 -   containerize and archive our computing environement to enable any future researcher to reproduce it in the future.
 
 ```{r}
+#| eval: true
+
 # We need the latest version of rnaturalearth
 if (!"rnaturalearth" %in% installed.packages() | 
     packageVersion("rnaturalearth") <= "0.3.2") {
@@ -33,6 +35,7 @@ library(rnaturalearth)
 library(units)
 library(terra)
 library(stars)
+library(arrow)
 if (str_ends(getwd(), "replication_report", negate = TRUE)) {
   setwd("replication_report")
 }
@@ -43,47 +46,54 @@ if (str_ends(getwd(), "replication_report", negate = TRUE)) {
 We gather data for national boundaries and biomes and combine it.
 
 ```{r}
+#| eval: true
 #| fig-cap: "Areas of interest (biome segmented along national boundaries)"
 
-# Countries  using geodata (ie. GADM), rnaturalearth is broken
-dir.create("revamp")
-dir.create("revamp/countries")
+if (file.exists("revamp/countries/countries.rds")) {
+  countries <- read_rds("revamp/countries/countries.rds")
+} else {
+  # Countries  using geodata (ie. GADM), rnaturalearth is broken
+  dir.create("revamp")
+  dir.create("revamp/countries")
+  
+  # This data is from GADM which seems more complete and accurate
+  countries <- world(resolution=2, level=0, path = "revamp/countries")
+  countries <- countries %>%
+    st_as_sf() %>%
+    st_make_valid() %>%
+    mutate(country_num = 1:nrow(.), .before = GID_0)
+  # Fetch data from rnaturalearth for continents
+  countries2 <- ne_download(scale = 10,
+                            type = "countries",
+                            category = "cultural",
+                            destdir = "revamp/countries",
+                            load = TRUE,
+                            returnclass = "sf")
+  country_continent <- countries2 %>%
+    st_drop_geometry() %>%
+    select(ADM0_A3, continent = CONTINENT)
+  countries <- countries %>%
+    left_join(country_continent, join_by(GID_0 == ADM0_A3)) %>%
+    mutate(continent = case_when(
+      NAME_0 == "Åland" ~ "Europe", # some territories are missing
+      NAME_0 == "Bonaire, Saint Eustatius and Saba" ~ "North America",
+      NAME_0 == "Caspian Sea" ~ "Europe",
+      NAME_0 == "Christmas Island" ~ "Oceania",
+      NAME_0 == "French Guiana" ~ "South America",
+      NAME_0 == "Guadeloupe" ~ "North America",
+      NAME_0 == "Kosovo" ~ "Europe",
+      NAME_0 == "Martinique" ~ "North America",
+      NAME_0 == "Mayotte" ~ "Africa",
+      NAME_0 == "Paracel Islands" ~ "Asia",
+      NAME_0 == "Réunion" ~ "Africa",
+      NAME_0 == "South Sudan" ~ "Africa",
+      .default = continent),
+      continent = ifelse(continent == "Seven seas (open ocean)",
+                         "Open ocean", continent))
+  write_rds(countries, "revamp/countries/countries.rds")
+}
 
-# This data is from GADM which seems more complete and accurate
-countries <- world(resolution=2, level=0, path = "revamp/countries")
-countries <- countries %>%
-  st_as_sf() %>%
-  st_make_valid() %>%
-  mutate(country_num = 1:nrow(.), .before = GID_0)
-# Fetch data from rnaturalearth for continents
-countries2 <- ne_download(scale = 10,
-                         type = "countries",
-                         category = "cultural",
-                         destdir = "revamp/countries",
-                         load = TRUE,
-                         returnclass = "sf")
-country_continent <- countries2 %>%
-  st_drop_geometry() %>%
-  select(ADM0_A3, continent = CONTINENT)
-countries <- countries %>%
-  left_join(country_continent, join_by(GID_0 == ADM0_A3)) %>%
-  mutate(continent = case_when(
-    NAME_0 == "Åland" ~ "Europe", # some territories are missing
-    NAME_0 == "Bonaire, Saint Eustatius and Saba" ~ "North America",
-    NAME_0 == "Caspian Sea" ~ "Europe",
-    NAME_0 == "Christmas Island" ~ "Oceania",
-    NAME_0 == "French Guiana" ~ "South America",
-    NAME_0 == "Guadeloupe" ~ "North America",
-    NAME_0 == "Kosovo" ~ "Europe",
-    NAME_0 == "Martinique" ~ "North America",
-    NAME_0 == "Mayotte" ~ "Africa",
-    NAME_0 == "Paracel Islands" ~ "Asia",
-    NAME_0 == "Réunion" ~ "Africa",
-    NAME_0 == "South Sudan" ~ "Africa",
-    .default = continent),
-    continent = ifelse(continent == "Seven seas (open ocean)",
-                       "Open ocean", continent))
-# We prepare biome polygons (only at first run, if not already done)
+# We prepare ecoregion polygons (only at first run, if not already done)
 if (!file.exists("revamp/aois/aois.gpkg")) {
   # Fetch biomes
   dir.create("revamp/biomes")
@@ -323,20 +333,27 @@ prepare_gee_data <- function(ee_region) {
   aoi_image <- aoi_image$addBands(
     wdpa_reg$reduceToImage(properties = list("STATUS_YR"),
                            reducer = ee$Reducer$first())$toInt())
-  names(aoi_image) <- c("cover", "loss", "lossyear", "elev", "slope",
+  # Deforestation drivers by Curtis et al.
+  aoi_image <- aoi_image$addBands(
+    ee$Image("projects/ee-fbedecarrats/assets/drivers_curtis")$toInt())
+  # Forgot to add the ecoregs from WWF. Uploading them as provided by WWF
+  wwf_ecoregs <- ee$FeatureCollection("projects/ee-fbedecarrats/assets/wwf_ecoregs")
+  aoi_image <- aoi_image$addBands(
+    wwf_ecoregs$reduceToImage(properties = list("ECO_ID"),
+                              reducer = ee$Reducer$first())$toInt())
+    names(aoi_image) <- c("cover", "loss", "lossyear", "elev", "slope",
                         "travel_time", "pop_dens", "country_num", "biome_num",
-                        "is_pa", "is_pa_buffer", "wdpa_id", "status_year")
+                        "is_pa", "is_pa_buffer", "wdpa_id", "status_year", 
+                        "driver", "ecoreg")
   # ADD CLIP /!\
   aoi_image <- aoi_image$clipToCollection(ee_region)
 }
-
 ```
 
 The previous code creates for each area of interest a raster with the following bands: cover, loss, lossyear, elev, slope, travel_time, pop_dens, PA, WDPA ID number, PA_status_yr, PA_buffer, country, biome.
 
 
 Now we will iterate to download this raster in separated file, with one file per national segment of each biome of interest.
-
 
 ```{r}
 # This loops over countries, but the data is only extracted for areas that
@@ -345,12 +362,14 @@ my_countries <- unique(aois$GID_0)
 country_tasks <- tibble(country = my_countries)
 # each country takes between less than 1 and 32 minutes to process. 
 # The computations run in parallel.
+aois_ee <- ee$FeatureCollection("projects/ee-fbedecarrats/assets/aois")
 for (i in 1:length(my_countries)) {
   GID <- my_countries[i]
   print(paste0(GID, " ", i, "/", length(my_countries)))
   aoi_country <- aois_ee$filter(paste0("GID_0 == '", GID,"'"))
   aoi_extract <- prepare_gee_data(aoi_country)
-  country_tasks$task[[i]] <- ee_as_raster(
+  #country_tasks$task[[i]] <- 
+  test <- ee_as_raster(
     aoi_extract, via = "drive", container = "rgee_country", lazy = TRUE,
     dsn = paste0("revamp/gee/", GID, ".tif"),
     skipEmptyTiles = TRUE, scale = 1000,
@@ -362,20 +381,6 @@ for (j in 1:length(my_countries)) {
   ee_utils_future_value(country_tasks$task[[j]])
 }
 # This downloads the tifs for 201 national territories. Now we open them and store them to 
-library(arrow)
-my_schema <- schema(field(name = "cover", type = int8()),
-                    field(name = "loss", type = int8()),
-                    field(name = "lossyear", type = int8()),
-                    field(name = "elev", type = int16()),
-                    field(name = "slope", type = int8()),
-                    field(name = "travel_time", type = int32()),
-                    field(name = "pop_dens", type = int32()),
-                    field(name = "country_num", type = int16()),
-                    field(name = "biome_num", type = int16()),
-                    field(name = "is_pa", type = int8()),
-                    field(name = "is_pa_buffer", type = int8()),
-                    field(name = "wdpa_id", type = int32()),
-                    field(name = "status_year", type = int16()))
 
 dir.create("revamp/tabular_country")
 for (k in 1:length(my_countries)) {
@@ -388,19 +393,38 @@ for (k in 1:length(my_countries)) {
   for (my_tif in my_tifs) {
     my_rast <- rast(my_tif)
     my_df <- as.data.frame(my_rast) %>%
-      filter(country_num > 0 & biome_num > 0)
+      filter(country_num > 0 & biome_num > 0 & is_pa_buffer != 1)
   country_df <- bind_rows(country_df, my_df)
   }
   write_parquet(country_df, paste0("revamp/tabular_country/", 
                                    country_code, ".parquet"))
   rm(list = c("my_rast", "my_df", "country_df"))
 }
-# Now we'll store all this into a correctly partitionned parquet dataset file
-dir.create("revamp/tabular_struct")
-consolidated <- open_dataset("revamp/tabular_country", my_schema)
-write_dataset(consolidated, path = "revamp/tabular_struct",
-              partitioning = c("biome_num", "country_num"))
 
+# Here we have 1 file per country. We will consolidate all data into 1 single
+# file.
+df_files <- list.files(path = "revamp/tabular_country", full.names = TRUE)
+
+all_df <- read_parquet(df_files[1])
+for (l in 2:length(df_files)) {
+  print(l)
+  this_df <- read_parquet(df_files[l])
+  all_df <- bind_rows(all_df, this_df)
+}
+# The data occupies about 8-10 Go in memory
+nrow(all_df) # 80 287 087
+dir.create("revamp/consolidated")
+write_parquet(all_df, "revamp/consolidated/gee_data.parquet") #~385 Mo
+str(all_df)
 ```
 
-Ultimately, we have 201 national territories for which we download data.
+
+# Recode data
+
+```{r}
+all_df <- read_parquet("revamp/consolidated/gee_data.parquet")
+```
+
+
+
+# Perform matching
