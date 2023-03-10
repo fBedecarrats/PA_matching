@@ -36,6 +36,8 @@ library(units)
 library(terra)
 library(stars)
 library(arrow)
+library(tidyterra)
+library(MatchIt)
 if (str_ends(getwd(), "replication_report", negate = TRUE)) {
   setwd("replication_report")
 }
@@ -333,6 +335,7 @@ prepare_gee_data <- function(ee_region) {
                            reducer = ee$Reducer$first())$toInt()
   pa_buffer <- pa_footprint$focal_max(10000, "circle", "meters")
   aoi_image <- aoi_image$addBands(c(pa_footprint, pa_buffer))
+  # Possible improvement: recode buffer here not to include PAs (we diff later)
   aoi_image <- aoi_image$addBands(
     wdpa_reg$reduceToImage(properties = list("WDPAID"),
                            reducer = ee$Reducer$first())$toInt())
@@ -368,7 +371,7 @@ country_tasks <- tibble(country = my_countries)
 # each country takes between less than 1 and 32 minutes to process. 
 # The computations run in parallel.
 aois_ee <- ee$FeatureCollection("projects/ee-fbedecarrats/assets/aois")
-for (i in 1:length(my_countries)) {
+for (i in 181:length(my_countries)) {
   GID <- my_countries[i]
   print(paste0(GID, " ", i, "/", length(my_countries)))
   aoi_country <- aois_ee$filter(paste0("GID_0 == '", GID,"'"))
@@ -398,6 +401,7 @@ for (k in 1:length(my_countries)) {
   for (my_tif in my_tifs) {
     my_rast <- rast(my_tif)
     my_df <- as.data.frame(my_rast) %>%
+      mutate(is_pa_buffer = is_pa_buffer - is_pa) %>%
       filter(country_num > 0 & biome_num > 0 & is_pa_buffer != 1)
   country_df <- bind_rows(country_df, my_df)
   }
@@ -417,11 +421,34 @@ for (l in 2:length(df_files)) {
   all_df <- bind_rows(all_df, this_df)
 }
 # The data occupies about 8-10 Go in memory
-nrow(all_df) # 80 287 087
+nrow(all_df) # 62 689 720
 dir.create("revamp/consolidated")
-write_parquet(all_df, "revamp/consolidated/gee_data.parquet") #~385 Mo
+write_parquet(all_df, "revamp/consolidated/gee_data.parquet") #~301 Mo
 str(all_df)
 ```
+
+We can visualize one of the country data, for instance in Madagascar:
+
+```{r}
+#| eval: true
+#| fig-cap: "Visualization of the data etracted from GEE (red=forest cover in 2000, red: forest cover loss 2001-2018, blue: PA buffer excluded from the analysis)"
+
+mdg_files <- list.files(path = "revamp/gee", pattern = "MDG", full.names = TRUE)
+mdg <- rast(mdg_files)
+mdg %>%
+  select(loss, cover, is_pa_buffer, is_pa, country_num, biome_num) %>%
+  mutate(cover = ifelse(country_num == 0 | biome_num == 0, NA, cover),
+         loss = ifelse(country_num == 0 | biome_num == 0, NA, loss),
+         is_pa_buffer = ifelse(country_num == 0 | biome_num == 0, NA, is_pa_buffer),
+         cover = ifelse(loss > 0, 0, cover),
+         loss = loss * 255,
+         is_pa_buffer = (is_pa_buffer - is_pa) *255) %>%
+  tm_shape(colorNULL = "white") +
+  tm_rgb(colorNULL = "white") +
+  tm_shape(filter(countries, GID_0 == "MDG")) + 
+  tm_borders()
+```
+
 
 # Recode data
 
@@ -430,3 +457,35 @@ all_df <- read_parquet("revamp/consolidated/gee_data.parquet")
 ```
 
 # Perform matching
+
+```{r}
+matched_all <- matchit(# the first line of covar is coarsened
+  formula = is_pa ~ elev + slope + cover + travel_time + pop_dens +
+    country_num + ecoreg + driver, # these on 2nd line remain exact
+  method = "cem",
+  # for cutpoints 0 means no coarsening, and q5 means quintiles
+  cutpoints = list(elev = "q5", slope = "q5", cover = "q5",
+                   travel_time = "q5", pop_dens = "q5",
+                   country_num = 0, ecoreg = 0, driver = 0),
+  data = all_df)
+dir.create("revamp/milestones")
+write_rds(matched_all, "revamp/milestones/matched_all.rds")
+```
+
+
+# Regress for impact estimation
+
+```{r}
+# This is not implemented year. must be applied on matched units after allocating
+# status year of treatment to matched controls.
+all_df <- all_df %>%
+  mutate(year_loss = lossyear + 2000,
+         cover_loss = cover * loss,
+         loss_before = case_when(
+           status_year %in% 2002:2017 & year_loss < status_year ~ cover_loss,
+           .default = NA),
+         loss_after = case_when(
+           status_year %in% 2002:2017 & year_loss > status_year ~ cover_loss,
+           .default = NA))
+```
+
