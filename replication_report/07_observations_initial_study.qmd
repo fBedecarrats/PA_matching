@@ -62,3 +62,7 @@ We try to compute the same analysis, but including the areas that were both terr
 ## Reprojection *after* slope calculation and resolution reduction?
 
 The Google earth engine documentation warns against reprojecting after slope calculation or resolution reduction. It could be due to some internal processing contraints but my understanding is that it is a contraint from the area calculation.
+
+## No use of certain matching covariates in the impact estimation model
+
+cf. doubly robust matching, cf. Ho et al. 2007
