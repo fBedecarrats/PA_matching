@@ -280,11 +280,12 @@ Wolf et al. downloaded each information source in a separate raster, that they l
 # biome number, a dummy if it is a PA, or in a 10km distance of a PA, and the 
 # WPDA ID number of the PA if it is a PA. 
 prepare_gee_data <- function(ee_region) {
+  # ee_region <- aoi_country
   gfc <- ee$Image("UMD/hansen/global_forest_change_2018_v1_6")
   gfc_mask <- gfc$select("datamask")$eq(1)
   gfc_masked <-  gfc$updateMask(gfc_mask)
   
-  # GFC data
+  # GFC data as initial
   aoi_gfc <- gfc_masked$clipToCollection(ee_region)
   aoi_cover <- aoi_gfc$select("treecover2000")$
     reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
@@ -295,6 +296,39 @@ prepare_gee_data <- function(ee_region) {
     reduceResolution(reducer = ee$Reducer$mode(maxRaw = 20), bestEffort = TRUE)$
     toInt()
   aoi_image <- aoi_cover$addBands(c(aoi_loss, aoi_lossyear))
+  
+  # Different approach
+  gfc2 <- ee$Image("UMD/hansen/global_forest_change_2021_v1_9")
+  gfc2_mask <- gfc2$select("datamask")$eq(1)
+  gfc2_masked <-  gfc2$updateMask(gfc2_mask)
+  aoi_gfc2 <- gfc2_masked$clipToCollection(ee_region)
+  aoi_cover2 <- aoi_gfc2$select("treecover2000")$
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
+  aoi_loss2 <- aoi_gfc2$select("loss")$
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
+  aoi_lossyear2 <- aoi_gfc2$select("lossyear")
+  # From Rodrigo Principe classes
+  years <- ee$List$sequence(1, 21)
+  annual_loss <- function(year = 1) {
+    year_i <- ee$Number(year)
+    mask <- aoi_lossyear2$eq(year_i)
+    return(aoi_lossyear2$updateMask(mask)$set("loss in year", year_i))
+  }
+  loss_by_year <- years$map(annual_loss)
+
+
+  # From innovar
+  years <- c(1:21)
+  names(years) <- c(2001:2021)
+  # This creates an image with 1 band per year
+  aoi_lossyear2 <- aoi_gfc2$select("lossyear")$eq(years)
+
+  
+  library(innovar)
+  
+  test <- aois[18,]
+  test2 <- get_def(from = "2001-01-01", to = "2004-12-31", region = ee_region, 
+                   scale = 1000)
   
   # elevation # 28min
   aoi_image <- aoi_image$addBands(ee$Image("USGS/GTOPO30")) # Elevation
@@ -357,6 +391,9 @@ prepare_gee_data <- function(ee_region) {
   # ADD CLIP /!\
   aoi_image <- aoi_image$clipToCollection(ee_region)
 }
+
+
+
 ```
 
 The previous code creates for each area of interest a raster with the following bands: cover, loss, lossyear, elev, slope, travel_time, pop_dens, PA, WDPA ID number, PA_status_yr, PA_buffer, country, biome.
@@ -459,6 +496,7 @@ all_df <- read_parquet("revamp/consolidated/gee_data.parquet")
 # Perform matching
 
 ```{r}
+tic()
 matched_all <- matchit(# the first line of covar is coarsened
   formula = is_pa ~ elev + slope + cover + travel_time + pop_dens +
     country_num + ecoreg + driver, # these on 2nd line remain exact
@@ -467,18 +505,16 @@ matched_all <- matchit(# the first line of covar is coarsened
   cutpoints = list(elev = "q5", slope = "q5", cover = "q5",
                    travel_time = "q5", pop_dens = "q5",
                    country_num = 0, ecoreg = 0, driver = 0),
+  k2k = TRUE, # To get a 1-to-1 matching 
   data = all_df)
-dir.create("revamp/milestones")
-write_rds(matched_all, "revamp/milestones/matched_all.rds")
-```
+toc() # 225.58 sec elapsed
+tic()
+matched_data <- match.data(matched_all)
+toc() # 60.63 sec elapsed
 
-
-# Regress for impact estimation
-
-```{r}
 # This is not implemented year. must be applied on matched units after allocating
 # status year of treatment to matched controls.
-all_df <- all_df %>%
+matched_data <- matched_data %>%
   mutate(year_loss = lossyear + 2000,
          cover_loss = cover * loss,
          loss_before = case_when(
@@ -487,5 +523,17 @@ all_df <- all_df %>%
          loss_after = case_when(
            status_year %in% 2002:2017 & year_loss > status_year ~ cover_loss,
            .default = NA))
+
+simple_model <- lm()
+
+dir.create("revamp/milestones")
+write_rds(matched_all, "revamp/milestones/matched_all.rds")
+```
+
+
+# Regress for impact estimation
+
+```{r}
+
 ```
 
