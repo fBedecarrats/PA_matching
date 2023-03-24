@@ -297,40 +297,7 @@ prepare_gee_data <- function(ee_region) {
     toInt()
   aoi_image <- aoi_cover$addBands(c(aoi_loss, aoi_lossyear))
   
-  # Different approach
-  gfc2 <- ee$Image("UMD/hansen/global_forest_change_2021_v1_9")
-  gfc2_mask <- gfc2$select("datamask")$eq(1)
-  gfc2_masked <-  gfc2$updateMask(gfc2_mask)
-  aoi_gfc2 <- gfc2_masked$clipToCollection(ee_region)
-  aoi_cover2 <- aoi_gfc2$select("treecover2000")$
-    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
-  aoi_loss2 <- aoi_gfc2$select("loss")$
-    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
-  aoi_lossyear2 <- aoi_gfc2$select("lossyear")
-  # From Rodrigo Principe classes
-  years <- ee$List$sequence(1, 21)
-  annual_loss <- function(year = 1) {
-    year_i <- ee$Number(year)
-    mask <- aoi_lossyear2$eq(year_i)
-    return(aoi_lossyear2$updateMask(mask)$set("loss in year", year_i))
-  }
-  loss_by_year <- years$map(annual_loss)
-
-
-  # From innovar
-  years <- c(1:21)
-  names(years) <- c(2001:2021)
-  # This creates an image with 1 band per year
-  aoi_lossyear2 <- aoi_gfc2$select("lossyear")$eq(years)
-
-  
-  library(innovar)
-  
-  test <- aois[18,]
-  test2 <- get_def(from = "2001-01-01", to = "2004-12-31", region = ee_region, 
-                   scale = 1000)
-  
-  # elevation # 28min
+  # elevation 
   aoi_image <- aoi_image$addBands(ee$Image("USGS/GTOPO30")) # Elevation
   aoi_image[[4]] <- aoi_image[[4]]$toInt32()
   # slope
@@ -384,10 +351,30 @@ prepare_gee_data <- function(ee_region) {
   aoi_image <- aoi_image$addBands(
     wwf_ecoregs$reduceToImage(properties = list("ECO_ID"),
                               reducer = ee$Reducer$first())$toInt())
-    names(aoi_image) <- c("cover", "loss", "lossyear", "elev", "slope",
+    names(aoi_image) <- c("cover", "loss", "lossyear_as_wolf", "elev", "slope",
                         "travel_time", "pop_dens", "country_num", "biome_num",
                         "is_pa", "is_pa_buffer", "wdpa_id", "status_year", 
                         "driver", "ecoreg")
+    
+  # Add annual loss and most recent data
+  gfc2 <- ee$Image("UMD/hansen/global_forest_change_2021_v1_9")
+  gfc2_mask <- gfc2$select("datamask")$eq(1)
+  gfc2_masked <-  gfc2$updateMask(gfc2_mask)
+  aoi_gfc2 <- gfc2_masked$clipToCollection(ee_region)
+  aoi_loss_2021 <- aoi_gfc2$select("loss")$
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
+  names(aoi_loss_2021) <- "loss_2021"
+  aoi_image <- aoi_image$addBands(aoi_loss_2021)
+  aoi_lossyear2 <- aoi_gfc2$select("lossyear")
+  # This creates an image with 1 band per year
+  aoi_lossyear2 <- aoi_gfc2$select("lossyear")$eq(c(1:21))
+  names(aoi_lossyear2) <- paste0("lossyear_", c(2001:2021))
+  aoi_lossyear2 <- aoi_lossyear2$
+    reduceResolution(reducer = ee$Reducer$sum(), bestEffort = TRUE)$
+    toInt()
+  aoi_image <- aoi_image$addBands(aoi_lossyear2)
+  ee_print(aoi_image)
+    
   # ADD CLIP /!\
   aoi_image <- aoi_image$clipToCollection(ee_region)
 }
@@ -405,27 +392,54 @@ Now we will iterate to download this raster in separated file, with one file per
 # are within a biome of study.
 my_countries <- unique(aois$GID_0)
 country_tasks <- tibble(country = my_countries)
+dir.create("revamp/gee")
 # each country takes between less than 1 and 32 minutes to process. 
 # The computations run in parallel.
 aois_ee <- ee$FeatureCollection("projects/ee-fbedecarrats/assets/aois")
-for (i in 181:length(my_countries)) {
+for (i in 58:length(my_countries)) {
   GID <- my_countries[i]
   print(paste0(GID, " ", i, "/", length(my_countries)))
   aoi_country <- aois_ee$filter(paste0("GID_0 == '", GID,"'"))
   aoi_extract <- prepare_gee_data(aoi_country)
-  #country_tasks$task[[i]] <- 
-  test <- ee_as_raster(
+  ee_as_raster(
     aoi_extract, via = "drive", container = "rgee_country", lazy = TRUE,
     dsn = paste0("revamp/gee/", GID, ".tif"),
     skipEmptyTiles = TRUE, scale = 1000,
     region = aoi_country$geometry())
 }
 
+ee_print(aoi_extract)
+```
+
+We have 211 rasters for 201 national territories. The file names are a concatenation of 3 letters indicating the country (ISO3 country code), a time-stamps of when the GEE task was launched, plus a number when the country is split in several different countries. Sometimes GEE splits a territory in 2 or 3 rasters. It is the case for Canada, Russia, USA, Fiji, China, New Zealand, Kirghistan and UMI (?). The splitting of a country in several rasters happens when the forest biome areas of the corresponding countries are disjoint and GEE apparently optimises the output file sizes this way.
+
+Each raster is in WSG-84 projection with cells of 1km2 and includes 37 bands, all including integer values:
+
+-   cover: forest cover in 2000 (Hansen 2019 data)
+-   loss: a boolean for forest cover loss between 2001 and 2018 (Hansen 2019 data)
+-   lossyear_as_wolf: the loss year registered by Wolf, which is the mode of the lossyear for the \~1000 underlying cells in the original Hansen data (30x30m resolution)
+-   elev: mean elevation
+-   slope: slope
+-   travel_time: time travel to the nearest city
+-   pop_dens: population density
+-   country_num: an integer indicating the country (number + ISO3 list to be annexed to the data)
+-   biome_num: an integer indicating the biome according to WWF map of ecoregions
+-   ecoreg: an integer indicating the eco-region according to WWF map of ecoregions
+-   is_pa: an integer indicating if the cell overlaps with a terrestrial protected area (MARINE == 0, NB: coastal --both marine and terrestrial PAs-- are excluded, following Wolf procedure) with a status different from proposed, a spatial footprint (not just points in WDPA) and an area superior to 1km2 (WDPA version as of march 2023).
+-   is_pa_buffer: is distant within a distance of 10km or less from a cell registered as PA
+-   wdpa_id: the identification number of the PA. In case that several PAs overlap, only the first one in WDPA registry order is mentionned.
+-   status_year: the year in which the PA received its current status
+-   driver: the main deforestation driver according to curtis et al
+-   loss_2021: a boolean for forest cover loss between 2001 and 2021 (Hansen 2022 data)
+-   loss_nnnn: 21 fields where nnnn is a year number between 2001 and 2021, with values corresponding to the the sum of underlying deforesed cells
+
+```{r}
 # We fetch the data once it is ready
 for (j in 1:length(my_countries)) {
   ee_utils_future_value(country_tasks$task[[j]])
 }
 # This downloads the tifs for 201 national territories. Now we open them and store them to 
+
 
 dir.create("revamp/tabular_country")
 for (k in 1:length(my_countries)) {
@@ -486,7 +500,6 @@ mdg %>%
   tm_borders()
 ```
 
-
 # Recode data
 
 ```{r}
@@ -530,10 +543,8 @@ dir.create("revamp/milestones")
 write_rds(matched_all, "revamp/milestones/matched_all.rds")
 ```
 
-
 # Regress for impact estimation
 
 ```{r}
 
 ```
-
