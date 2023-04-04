@@ -444,7 +444,7 @@ for (j in 1:length(my_countries)) {
 dir.create("revamp/tabular_country")
 for (k in 1:length(my_countries)) {
   country_code <- country_tasks$country[k]
-  print(country_code)
+  print(paste(country_code, i, "/", length(my_countries)))
   my_tifs <- list.files(path = "revamp/gee", full.names = TRUE,
                         pattern = paste0(country_code, ".*tif"))
   # There can be several tifs for 1 country, so we merge them
@@ -483,6 +483,9 @@ We can visualize one of the country data, for instance in Madagascar:
 ```{r}
 #| eval: true
 #| fig-cap: "Visualization of the data etracted from GEE (red=forest cover in 2000, red: forest cover loss 2001-2018, blue: PA buffer excluded from the analysis)"
+
+
+
 
 mdg_files <- list.files(path = "revamp/gee", pattern = "MDG", full.names = TRUE)
 mdg <- rast(mdg_files)
