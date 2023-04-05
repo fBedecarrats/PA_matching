@@ -508,19 +508,13 @@ mdg %>%
 # Reload data
 
 ```{r}
-selected_columns <- c("cover", "loss", "lossyear_as_wolf", "elev", "slope",
-                      "travel_time", "pop_dens", "country_num", "biome_num",
-                      "is_pa", "is_pa_buffer", "wdpa_id", "status_year", 
-                      "driver", "ecoreg")
 if (Sys.getenv("USER") == "onyxia") {
   all_df <- aws.s3::s3read_using(FUN = arrow::read_parquet,
                                  object = "Replication_wolf/gee_data.parquet",
-                                 col_select = all_of(selected_columns),
                                  bucket = "fbedecarrats",
                                  opts = list("region" = ""))
 } else {
-  all_df <- read_parquet("revamp/consolidated/gee_data.parquet",
-                         selected_columns = all_of(selected_columns))
+  all_df <- read_parquet("revamp/consolidated/gee_data.parquet")
 }
 ```
 
@@ -542,6 +536,92 @@ toc() # 225.58 sec elapsed
 tic()
 matched_data <- match.data(matched_all)
 toc() # 60.63 sec elapsed
+
+write_parquet(matched_data, "revamp/consolidated/matched_data.parquet")
+matched_data <- read_parquet("revamp/consolidated/matched_data.parquet")
+
+matched_data %>%
+  mutate(subclass = as.integer(subclass)) %>%
+  group_by(is_pa, country_num) %>%
+  write_dataset("revamp/consolidated/matched_data")
+# clean memory
+rm(matched_data, matched_all, all_df)
+```
+
+```{r}
+matched_treatment <- open_dataset("revamp/consolidated/matched_data/is_pa=1")
+matched_control <- open_dataset("revamp/consolidated/matched_data/is_pa=0")
+
+country_nums <- matched_treatment %>%
+  select(country_num) %>%
+  unique() %>%
+  collect() %>%
+  pluck("country_num")
+
+join_treat_control <- function(x) {
+  inner_join(filter(matched_treatment, country_num == x),
+             filter(matched_control, country_num == x),
+             by = join_by(subclass),
+              suffix = c("treatment_", "control_")) %>%
+    group_by(treatment_country_num) %>%
+    write_dataset("revamp/consolidated/joined_data")
+}
+
+
+test <- inner_join(filter(matched_treatment, country_num == 2),
+             filter(matched_control, country_num == 2),
+             by = join_by(subclass)) 
+
+map(country_nums, join_treat_control)
+
+map(country_nums, print)
+
+
+matched_treatment <- read_parquet("revamp/consolidated/matched_treatment.parquet",
+                                  as_data_frame = FALSE)
+matched_control <- read_parquet("revamp/consolidated/matched_control.parquet",
+                                  as_data_frame = FALSE)
+tic()
+matched_treatment %>%
+  inner_join(matched_control, by = join_by(is_pa), 
+             suffix = c("treatment_", "control_")) %>%
+  write_parquet("revamp/consolidated/matched_joined.parquet")
+toc()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+tic()
+write_parquet(matched_data, matched_parquet_loc)
+toc() 
+
+matched_data <- read_parquet(matched_parquet_loc, as_data_frame = FALSE)
+
+
+
+
+matched_parquet_loc <- "revamp/consolidated/matched_data.parquet"
+tic()
+matched_treatment <- filter(matched_data, is_pa == 1)
+toc()
+tic()
+matched_controls <- filter(matched_data, is_pa == 0)
+toc()
+
 
 # This is not implemented year. must be applied on matched units after allocating
 # status year of treatment to matched controls.
