@@ -38,6 +38,7 @@ library(stars)
 library(arrow)
 library(tidyterra)
 library(MatchIt)
+library(tictoc)
 if (str_ends(getwd(), "replication_report", negate = TRUE)) {
   setwd("replication_report")
 }
@@ -503,10 +504,24 @@ mdg %>%
   tm_borders()
 ```
 
-# Recode data
+
+# Reload data
 
 ```{r}
-all_df <- read_parquet("revamp/consolidated/gee_data.parquet")
+selected_columns <- c("cover", "loss", "lossyear_as_wolf", "elev", "slope",
+                      "travel_time", "pop_dens", "country_num", "biome_num",
+                      "is_pa", "is_pa_buffer", "wdpa_id", "status_year", 
+                      "driver", "ecoreg")
+if (Sys.getenv("USER") == "onyxia") {
+  all_df <- aws.s3::s3read_using(FUN = arrow::read_parquet,
+                                 object = "Replication_wolf/gee_data.parquet",
+                                 col_select = all_of(selected_columns),
+                                 bucket = "fbedecarrats",
+                                 opts = list("region" = ""))
+} else {
+  all_df <- read_parquet("revamp/consolidated/gee_data.parquet",
+                         selected_columns = all_of(selected_columns))
+}
 ```
 
 # Perform matching
@@ -521,7 +536,7 @@ matched_all <- matchit(# the first line of covar is coarsened
   cutpoints = list(elev = "q5", slope = "q5", cover = "q5",
                    travel_time = "q5", pop_dens = "q5",
                    country_num = 0, ecoreg = 0, driver = 0),
-  k2k = TRUE, # To get a 1-to-1 matching 
+ # k2k = TRUE, # To get a 1-to-1 matching 
   data = all_df)
 toc() # 225.58 sec elapsed
 tic()
