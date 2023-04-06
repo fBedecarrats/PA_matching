@@ -504,10 +504,10 @@ mdg %>%
   tm_borders()
 ```
 
-
 # Reload data
 
 ```{r}
+
 if (Sys.getenv("USER") == "onyxia") {
   all_df <- aws.s3::s3read_using(FUN = arrow::read_parquet,
                                  object = "Replication_wolf/gee_data.parquet",
@@ -516,6 +516,9 @@ if (Sys.getenv("USER") == "onyxia") {
 } else {
   all_df <- read_parquet("revamp/consolidated/gee_data.parquet")
 }
+
+all_df <- all_df %>%
+  mutate(rownum = row_number(), .before = everything())
 ```
 
 # Perform matching
@@ -537,11 +540,24 @@ tic()
 matched_data <- match.data(matched_all)
 toc() # 60.63 sec elapsed
 
-write_parquet(matched_data, "revamp/consolidated/matched_data.parquet")
+matched_data <-  matched_data %>%
+  mutate(subclass = as.integer(subclass))
+
+# Write data
+if (Sys.getenv("USER") == "onyxia") {
+  aws.s3::s3write_using(FUN = arrow::write_parquet,
+                        x = matched_data,
+                        object = "Replication_wolf/matched_data.parquet",
+                        bucket = "fbedecarrats",
+                        opts = list("region" = ""))
+} else {
+  write_parquet(matched_data, "revamp/consolidated/matched_data.parquet")
+}
+
+
 matched_data <- read_parquet("revamp/consolidated/matched_data.parquet")
 
 matched_data %>%
-  mutate(subclass = as.integer(subclass)) %>%
   group_by(is_pa, country_num) %>%
   write_dataset("revamp/consolidated/matched_data")
 # clean memory
@@ -549,8 +565,10 @@ rm(matched_data, matched_all, all_df)
 ```
 
 ```{r}
-matched_treatment <- open_dataset("revamp/consolidated/matched_data/is_pa=1")
-matched_control <- open_dataset("revamp/consolidated/matched_data/is_pa=0")
+matched_treatment <- open_dataset("revamp/consolidated/matched_data/is_pa=1") %>%
+  select(country_num, rownum_trt = rownum, wdpa_id, status_year, subclass)
+matched_control <- open_dataset("revamp/consolidated/matched_data/is_pa=0") %>%
+  select(country_num, rownum_ctrl = rownum, subclass)
 
 country_nums <- matched_treatment %>%
   select(country_num) %>%
@@ -562,83 +580,20 @@ join_treat_control <- function(x) {
   inner_join(filter(matched_treatment, country_num == x),
              filter(matched_control, country_num == x),
              by = join_by(subclass),
-              suffix = c("treatment_", "control_")) %>%
-    group_by(treatment_country_num) %>%
+              suffix = c("_trt", "_ctrl")) %>%
+    group_by(country_num_trt) %>%
     write_dataset("revamp/consolidated/joined_data")
 }
 
 
-test <- inner_join(filter(matched_treatment, country_num == 2),
-             filter(matched_control, country_num == 2),
-             by = join_by(subclass)) 
+deforestation_calc <- function(df, year, name_prefix = "") {
+  C = sum(df$cover, na.rm = TRUE)
+  CL = sum(df$cover)
+}
 
+tic()
 map(country_nums, join_treat_control)
-
-map(country_nums, print)
-
-
-matched_treatment <- read_parquet("revamp/consolidated/matched_treatment.parquet",
-                                  as_data_frame = FALSE)
-matched_control <- read_parquet("revamp/consolidated/matched_control.parquet",
-                                  as_data_frame = FALSE)
-tic()
-matched_treatment %>%
-  inner_join(matched_control, by = join_by(is_pa), 
-             suffix = c("treatment_", "control_")) %>%
-  write_parquet("revamp/consolidated/matched_joined.parquet")
 toc()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-tic()
-write_parquet(matched_data, matched_parquet_loc)
-toc() 
-
-matched_data <- read_parquet(matched_parquet_loc, as_data_frame = FALSE)
-
-
-
-
-matched_parquet_loc <- "revamp/consolidated/matched_data.parquet"
-tic()
-matched_treatment <- filter(matched_data, is_pa == 1)
-toc()
-tic()
-matched_controls <- filter(matched_data, is_pa == 0)
-toc()
-
-
-# This is not implemented year. must be applied on matched units after allocating
-# status year of treatment to matched controls.
-matched_data <- matched_data %>%
-  mutate(year_loss = lossyear + 2000,
-         cover_loss = cover * loss,
-         loss_before = case_when(
-           status_year %in% 2002:2017 & year_loss < status_year ~ cover_loss,
-           .default = NA),
-         loss_after = case_when(
-           status_year %in% 2002:2017 & year_loss > status_year ~ cover_loss,
-           .default = NA))
-
-simple_model <- lm()
-
-dir.create("revamp/milestones")
-write_rds(matched_all, "revamp/milestones/matched_all.rds")
 ```
 
 # Regress for impact estimation
