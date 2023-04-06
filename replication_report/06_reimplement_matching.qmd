@@ -292,6 +292,8 @@ prepare_gee_data <- function(ee_region) {
     reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
   aoi_loss <- aoi_gfc$select("loss")$
     reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
+  aoi_gain <- aoi_gfc$select("loss")$
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
   aoi_lossyear <- aoi_gfc$select("lossyear")
   aoi_lossyear <- aoi_lossyear$updateMask(aoi_lossyear$neq(0))$
     reduceResolution(reducer = ee$Reducer$mode(maxRaw = 20), bestEffort = TRUE)$
@@ -328,13 +330,14 @@ prepare_gee_data <- function(ee_region) {
   # We add information on protected areas
   wdpa_reg <- ee$FeatureCollection("WCMC/WDPA/current/polygons")$
     filterBounds(ee_region$geometry())$
-    select("MARINE == 0 $$ STATUS != 'Proposed' && GIS_AREA >= 1")
-  wdpa_reg <- wdpa_reg$map(function(pa) {
+    filter(ee$Filter$expression(
+      "MARINE == '0' && STATUS != 'Proposed' && GIS_AREA >= 1"))
+  pa_footprint <- wdpa_reg$map(function(pa) {
     return(pa$set("PA", 1))
   })
   
-  pa_footprint <-wdpa_reg$reduceToImage(properties = list("PA"),
-                           reducer = ee$Reducer$first())$toInt()
+  pa_footprint <- pa_footprint$reduceToImage(properties = list("PA"),
+                                             reducer = ee$Reducer$first())$toInt()
   pa_buffer <- pa_footprint$focal_max(10000, "circle", "meters")
   aoi_image <- aoi_image$addBands(c(pa_footprint, pa_buffer))
   # Possible improvement: recode buffer here not to include PAs (we diff later)
@@ -403,13 +406,12 @@ for (i in 58:length(my_countries)) {
   aoi_country <- aois_ee$filter(paste0("GID_0 == '", GID,"'"))
   aoi_extract <- prepare_gee_data(aoi_country)
   ee_as_raster(
-    aoi_extract, via = "drive", container = "rgee_country", lazy = TRUE,
+    aoi_extract, via = "drive", container = "rgee_country_new", lazy = TRUE,
     dsn = paste0("revamp/gee/", GID, ".tif"),
     skipEmptyTiles = TRUE, scale = 1000,
     region = aoi_country$geometry())
 }
 
-ee_print(aoi_extract)
 ```
 
 We have 211 rasters for 201 national territories. The file names are a concatenation of 3 letters indicating the country (ISO3 country code), a time-stamps of when the GEE task was launched, plus a number when the country is split in several different countries. Sometimes GEE splits a territory in 2 or 3 rasters. It is the case for Canada, Russia, USA, Fiji, China, New Zealand, Kirghistan and UMI (?). The splitting of a country in several rasters happens when the forest biome areas of the corresponding countries are disjoint and GEE apparently optimises the output file sizes this way.
@@ -436,6 +438,7 @@ Each raster is in WSG-84 projection with cells of 1km2 and includes 37 bands, al
 
 ```{r}
 # We fetch the data once it is ready
+# my_countries <- "PER"
 for (j in 1:length(my_countries)) {
   ee_utils_future_value(country_tasks$task[[j]])
 }
@@ -453,8 +456,10 @@ for (k in 1:length(my_countries)) {
   for (my_tif in my_tifs) {
     my_rast <- rast(my_tif)
     my_df <- as.data.frame(my_rast) %>%
-      mutate(is_pa_buffer = is_pa_buffer - is_pa) %>%
-      filter(country_num > 0 & biome_num > 0 & is_pa_buffer != 1)
+      mutate(is_pa_buffer = is_pa_buffer - is_pa,
+             status_year = ifelse(status_year == 0, NA, status_year),
+             wdpa_id = ifelse(wdpa_id == 0, NA, wdpa_id)) %>%
+      filter(country_num > 0 & biome_num > 0 & is_pa_buffer != 1) 
   country_df <- bind_rows(country_df, my_df)
   }
   write_parquet(country_df, paste0("revamp/tabular_country/", 
@@ -467,7 +472,7 @@ for (k in 1:length(my_countries)) {
 df_files <- list.files(path = "revamp/tabular_country", full.names = TRUE)
 
 all_df <- read_parquet(df_files[1])
-for (l in 2:length(df_files)) {
+for (l in 1:length(df_files)) {
   print(l)
   this_df <- read_parquet(df_files[l])
   all_df <- bind_rows(all_df, this_df)
@@ -484,9 +489,6 @@ We can visualize one of the country data, for instance in Madagascar:
 ```{r}
 #| eval: true
 #| fig-cap: "Visualization of the data etracted from GEE (red=forest cover in 2000, red: forest cover loss 2001-2018, blue: PA buffer excluded from the analysis)"
-
-
-
 
 mdg_files <- list.files(path = "revamp/gee", pattern = "MDG", full.names = TRUE)
 mdg <- rast(mdg_files)
@@ -543,19 +545,8 @@ toc() # 60.63 sec elapsed
 matched_data <-  matched_data %>%
   mutate(subclass = as.integer(subclass))
 
-# Write data
-if (Sys.getenv("USER") == "onyxia") {
-  aws.s3::s3write_using(FUN = arrow::write_parquet,
-                        x = matched_data,
-                        object = "Replication_wolf/matched_data.parquet",
-                        bucket = "fbedecarrats",
-                        opts = list("region" = ""))
-} else {
-  write_parquet(matched_data, "revamp/consolidated/matched_data.parquet")
-}
-
-
-matched_data <- read_parquet("revamp/consolidated/matched_data.parquet")
+write_parquet(matched_data, "revamp/consolidated/matched_data.parquet")
+# matched_data <- read_parquet("revamp/consolidated/matched_data.parquet")
 
 matched_data %>%
   group_by(is_pa, country_num) %>%
@@ -565,16 +556,81 @@ rm(matched_data, matched_all, all_df)
 ```
 
 ```{r}
-matched_treatment <- open_dataset("revamp/consolidated/matched_data/is_pa=1") %>%
-  select(country_num, rownum_trt = rownum, wdpa_id, status_year, subclass)
-matched_control <- open_dataset("revamp/consolidated/matched_data/is_pa=0") %>%
-  select(country_num, rownum_ctrl = rownum, subclass)
+matched_treatment <- open_dataset("revamp/consolidated/matched_data/is_pa=1")
+matched_control <- open_dataset("revamp/consolidated/matched_data/is_pa=0") 
+
+
+
+subclasses <- matched_treatment %>%
+  select(subclass) %>%
+  unique() %>%
+  collect() %>%
+  pluck("subclass")
+
+
+subclasses_year <- matched_treatment %>%
+  select(subclass, status_year) %>%
+  unique() %>%
+  collect()
+
+
+test <- matched_control %>%
+  group_by(subclass) %>%
+  summarise(cover = mean(cover)) %>%
+  collect()
+
 
 country_nums <- matched_treatment %>%
   select(country_num) %>%
   unique() %>%
   collect() %>%
   pluck("country_num")
+
+
+all_df <- read_parquet("revamp/consolidated/gee_data.parquet",
+                       as_data_frame = FALSE)
+
+all_wdpaid <- all_df %>%
+  group_by(wdpa_id) %>%
+  summarise(n = n()) %>%
+  collect()
+
+
+deforestation_calc <- function(df, year, first_year = 2001, last_year = 2018) {
+  C <- sum(df$cover, na.rm = TRUE)
+  CL <- sum(df$cover * df$loss)
+  CL_b <- NA
+  CL_a <- NA
+  Y_b <- NA
+  Y_A <- NA
+  if (year %in% 2002:(last_year - 1)) {
+    df_b <- filter(df, lossyear + 2000 %in% 2001:(year - 1)) 
+    df_a <- filter(df, lossyear + 2000 %in% (year + 1):last_year)
+    CL_b <- sum(df_b$cover * df_b$loss)
+    CL_a <- sum(df_a$cover * df_a$loss)
+    Y_b = year - first_year
+    Y_a = last_year - year
+  }
+  out <- c(loss = - (((C - CL)/C)^(1/18) - 1),
+           loss_before = - (((C - CL_b)/C)^(1/Y_b) - 1),
+           loss_after = - (((C - CL_a)/C)^(1/Y_a) - 1),
+           loss_gain = (L/18 - G/13)/C)
+  return(out)
+}
+
+test_country_num <- 190 # Rwanda
+
+test_trt <- matched_treatment %>%
+  filter(country_num == test_country_num) 
+
+test_crtl <- matched_treatment %>%
+  filter(country_num == test_country_num)
+
+test_out <- test_trt %>%
+  mutate(control_vars = deforestation_calc(
+    df = filter(test_crtl, .$subclass_ctrl == subclass_trt),
+    year = status_year))
+
 
 join_treat_control <- function(x) {
   inner_join(filter(matched_treatment, country_num == x),
@@ -586,14 +642,16 @@ join_treat_control <- function(x) {
 }
 
 
-deforestation_calc <- function(df, year, name_prefix = "") {
-  C = sum(df$cover, na.rm = TRUE)
-  CL = sum(df$cover)
-}
+
 
 tic()
 map(country_nums, join_treat_control)
 toc()
+
+test <- all_df %>%
+  head() %>%
+  filter(cover == 1000)
+  
 ```
 
 # Regress for impact estimation
