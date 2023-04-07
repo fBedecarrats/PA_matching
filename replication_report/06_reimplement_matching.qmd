@@ -291,9 +291,11 @@ prepare_gee_data <- function(ee_region) {
   aoi_cover <- aoi_gfc$select("treecover2000")$
     reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
   aoi_loss <- aoi_gfc$select("loss")$
-    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
+    multiply(10000)$toInt()
   aoi_gain <- aoi_gfc$select("loss")$
-    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
+    multiply(10000)$toInt()
   aoi_lossyear <- aoi_gfc$select("lossyear")
   aoi_lossyear <- aoi_lossyear$updateMask(aoi_lossyear$neq(0))$
     reduceResolution(reducer = ee$Reducer$mode(maxRaw = 20), bestEffort = TRUE)$
@@ -366,7 +368,8 @@ prepare_gee_data <- function(ee_region) {
   gfc2_masked <-  gfc2$updateMask(gfc2_mask)
   aoi_gfc2 <- gfc2_masked$clipToCollection(ee_region)
   aoi_loss_2021 <- aoi_gfc2$select("loss")$
-    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
+    multiply(10000)$toInt()
   names(aoi_loss_2021) <- "loss_2021"
   aoi_image <- aoi_image$addBands(aoi_loss_2021)
   aoi_lossyear2 <- aoi_gfc2$select("lossyear")
@@ -374,8 +377,8 @@ prepare_gee_data <- function(ee_region) {
   aoi_lossyear2 <- aoi_gfc2$select("lossyear")$eq(c(1:21))
   names(aoi_lossyear2) <- paste0("lossyear_", c(2001:2021))
   aoi_lossyear2 <- aoi_lossyear2$
-    reduceResolution(reducer = ee$Reducer$sum(), bestEffort = TRUE)$
-    toInt()
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
+    multiply(10000)$toInt()
   aoi_image <- aoi_image$addBands(aoi_lossyear2)
   ee_print(aoi_image)
     
@@ -400,18 +403,19 @@ dir.create("revamp/gee")
 # each country takes between less than 1 and 32 minutes to process. 
 # The computations run in parallel.
 aois_ee <- ee$FeatureCollection("projects/ee-fbedecarrats/assets/aois")
-for (i in 58:length(my_countries)) {
+out_list <- list()
+for (i in 201:length(my_countries)) {
   GID <- my_countries[i]
   print(paste0(GID, " ", i, "/", length(my_countries)))
   aoi_country <- aois_ee$filter(paste0("GID_0 == '", GID,"'"))
   aoi_extract <- prepare_gee_data(aoi_country)
-  ee_as_raster(
+  out_list[[i]] <- ee_as_raster(
     aoi_extract, via = "drive", container = "rgee_country_new", lazy = TRUE,
     dsn = paste0("revamp/gee/", GID, ".tif"),
     skipEmptyTiles = TRUE, scale = 1000,
     region = aoi_country$geometry())
 }
-
+write_rds(gee_out_list, "revamp/gee_out_list.Rdata")
 ```
 
 We have 211 rasters for 201 national territories. The file names are a concatenation of 3 letters indicating the country (ISO3 country code), a time-stamps of when the GEE task was launched, plus a number when the country is split in several different countries. Sometimes GEE splits a territory in 2 or 3 rasters. It is the case for Canada, Russia, USA, Fiji, China, New Zealand, Kirghistan and UMI (?). The splitting of a country in several rasters happens when the forest biome areas of the corresponding countries are disjoint and GEE apparently optimises the output file sizes this way.
@@ -419,7 +423,7 @@ We have 211 rasters for 201 national territories. The file names are a concatena
 Each raster is in WSG-84 projection with cells of 1km2 and includes 37 bands, all including integer values:
 
 -   cover: forest cover in 2000 (Hansen 2019 data)
--   loss: a boolean for forest cover loss between 2001 and 2018 (Hansen 2019 data)
+-   loss: A ratio (in ten thouthands) of forest cover loss for the underlying pixels between 2001 and 2018 (Hansen 2019 data)
 -   lossyear_as_wolf: the loss year registered by Wolf, which is the mode of the lossyear for the \~1000 underlying cells in the original Hansen data (30x30m resolution)
 -   elev: mean elevation
 -   slope: slope
@@ -434,16 +438,18 @@ Each raster is in WSG-84 projection with cells of 1km2 and includes 37 bands, al
 -   status_year: the year in which the PA received its current status
 -   driver: the main deforestation driver according to curtis et al
 -   loss_2021: a boolean for forest cover loss between 2001 and 2021 (Hansen 2022 data)
--   loss_nnnn: 21 fields where nnnn is a year number between 2001 and 2021, with values corresponding to the the sum of underlying deforesed cells
+-   loss_nnnn: 21 fields where nnnn is a year number between 2001 and 2021, with values corresponding to the the mean of forest cover loss for the underlying cells
 
 ```{r}
 # We fetch the data once it is ready
 # my_countries <- "PER"
-for (j in 1:length(my_countries)) {
-  ee_utils_future_value(country_tasks$task[[j]])
+gee_out_list <- read_rds("revamp/gee_out_list.Rdata")
+for (j in 5:length(gee_out_list)) {
+  ee_utils_future_value(out_list[[j]])
 }
-# This downloads the tifs for 201 national territories. Now we open them and store them to 
-
+# This downloads the tifs for 201 national territories.
+# Note that this process cannot be relaunched if it fails for any reason
+# In such case, just go to drive and download manually the tifs uploaded there
 
 dir.create("revamp/tabular_country")
 for (k in 1:length(my_countries)) {
@@ -477,11 +483,11 @@ for (l in 1:length(df_files)) {
   this_df <- read_parquet(df_files[l])
   all_df <- bind_rows(all_df, this_df)
 }
+rm(this_df)
 # The data occupies about 8-10 Go in memory
 nrow(all_df) # 62 689 720
 dir.create("revamp/consolidated")
 write_parquet(all_df, "revamp/consolidated/gee_data.parquet") #~301 Mo
-str(all_df)
 ```
 
 We can visualize one of the country data, for instance in Madagascar:
@@ -510,17 +516,14 @@ mdg %>%
 
 ```{r}
 
-if (Sys.getenv("USER") == "onyxia") {
-  all_df <- aws.s3::s3read_using(FUN = arrow::read_parquet,
-                                 object = "Replication_wolf/gee_data.parquet",
-                                 bucket = "fbedecarrats",
-                                 opts = list("region" = ""))
-} else {
-  all_df <- read_parquet("revamp/consolidated/gee_data.parquet")
-}
+all_df <- read_parquet("revamp/consolidated/gee_data.parquet")
 
 all_df <- all_df %>%
-  mutate(rownum = row_number(), .before = everything())
+  rename(lossyear = lossyear_as_wolf) %>%
+  mutate(rownum = row_number(), .before = everything(),
+         loss = loss / 10000,
+         across(starts_with("lossyear_"), ~ .x / 10000),
+         lossyear = lossyear + 2000)
 ```
 
 # Perform matching
@@ -547,54 +550,60 @@ matched_data <-  matched_data %>%
 
 write_parquet(matched_data, "revamp/consolidated/matched_data.parquet")
 # matched_data <- read_parquet("revamp/consolidated/matched_data.parquet")
-
 matched_data %>%
   group_by(is_pa, country_num) %>%
   write_dataset("revamp/consolidated/matched_data")
-# clean memory
-rm(matched_data, matched_all, all_df)
+rm(list = c("matched_data", "matched_all"))
 ```
 
 ```{r}
+first_year = 2001 
+last_year = 2018
 matched_treatment <- open_dataset("revamp/consolidated/matched_data/is_pa=1")
 matched_control <- open_dataset("revamp/consolidated/matched_data/is_pa=0") 
 
 
 
-subclasses <- matched_treatment %>%
-  select(subclass) %>%
-  unique() %>%
-  collect() %>%
-  pluck("subclass")
+subset_trt <- matched_treatment %>%
+  filter(country_num == 175 & status_year %in% 2001:2018)
 
+subset_ctrl <- matched_control %>%
+  select(-status_year) %>%
+  filter(country_num == 175)
 
-subclasses_year <- matched_treatment %>%
+subclasses_trt <- subset_trt %>%
   select(subclass, status_year) %>%
-  unique() %>%
-  collect()
+  unique()
 
+defor_to_compute <- subclasses_trt %>%
+  inner_join(subset_ctrl, by = "subclass")
 
-test <- matched_control %>%
-  group_by(subclass) %>%
-  summarise(cover = mean(cover)) %>%
-  collect()
+defor_computed <- defor_to_compute %>%
+  mutate(before = lossyear >= first_year & lossyear < status_year,
+         before = as.integer(before), 
+         after = lossyear > status_year & lossyear <= last_year,
+         after = as.integer(after),
+         CL_b = cover * loss * before,
+         CL_a = cover * loss * after) %>%
+  group_by(subclass, status_year) %>%
+  summarise(C = sum(cover, na.rm = TRUE),
+            CL = sum(cover * loss, na.rm = TRUE),
+            CL_b = sum(CL_b, na.rm = TRUE),
+            CL_a = sum(CL_a, na.rm = TRUE)) %>%
+  mutate(Y_b = status_year - first_year,
+         Y_a = last_year - status_year,
+         loss = - (((C - CL)/C)^(1/18) - 1),
+         loss_before = - (((C - CL_b)/C)^(1/Y_b) - 1),
+         loss_after = - (((C - CL_a)/C)^(1/Y_a) - 1)) %>%
+  select(subclass, status_year, loss, loss_before, loss_after)
 
+expanded <- subset_trt %>%
+  left_join(defor_computed, by = c("subclass", "status_year"),
+            suffix = c("", "_ctrl"))
 
-country_nums <- matched_treatment %>%
-  select(country_num) %>%
-  unique() %>%
-  collect() %>%
-  pluck("country_num")
-
-
-all_df <- read_parquet("revamp/consolidated/gee_data.parquet",
-                       as_data_frame = FALSE)
-
-all_wdpaid <- all_df %>%
-  group_by(wdpa_id) %>%
-  summarise(n = n()) %>%
-  collect()
-
+tic()  
+test <- collect(expanded)
+toc()
 
 deforestation_calc <- function(df, year, first_year = 2001, last_year = 2018) {
   C <- sum(df$cover, na.rm = TRUE)
