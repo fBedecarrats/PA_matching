@@ -512,7 +512,7 @@ mdg %>%
   tm_borders()
 ```
 
-# Reload data
+# Reload GEE data
 
 ```{r}
 
@@ -556,6 +556,9 @@ matched_data %>%
 rm(list = c("matched_data", "matched_all"))
 ```
 
+
+## Compute deforestation after
+
 ```{r}
 first_year = 2001 
 last_year = 2018
@@ -595,71 +598,36 @@ defor_computed <- defor_to_compute %>%
          loss = - (((C - CL)/C)^(1/18) - 1),
          loss_before = - (((C - CL_b)/C)^(1/Y_b) - 1),
          loss_after = - (((C - CL_a)/C)^(1/Y_a) - 1)) %>%
-  select(subclass, status_year, loss, loss_before, loss_after)
+  select(subclass, status_year, ctrl_loss = loss, 
+         ctrl_loss_before = loss_before, ctrl_loss_after = loss_after)
 
 expanded <- subset_trt %>%
   left_join(defor_computed, by = c("subclass", "status_year"),
             suffix = c("", "_ctrl"))
 
-tic()  
-test <- collect(expanded)
-toc()
-
-deforestation_calc <- function(df, year, first_year = 2001, last_year = 2018) {
-  C <- sum(df$cover, na.rm = TRUE)
-  CL <- sum(df$cover * df$loss)
-  CL_b <- NA
-  CL_a <- NA
-  Y_b <- NA
-  Y_A <- NA
-  if (year %in% 2002:(last_year - 1)) {
-    df_b <- filter(df, lossyear + 2000 %in% 2001:(year - 1)) 
-    df_a <- filter(df, lossyear + 2000 %in% (year + 1):last_year)
-    CL_b <- sum(df_b$cover * df_b$loss)
-    CL_a <- sum(df_a$cover * df_a$loss)
-    Y_b = year - first_year
-    Y_a = last_year - year
-  }
-  out <- c(loss = - (((C - CL)/C)^(1/18) - 1),
-           loss_before = - (((C - CL_b)/C)^(1/Y_b) - 1),
-           loss_after = - (((C - CL_a)/C)^(1/Y_a) - 1),
-           loss_gain = (L/18 - G/13)/C)
-  return(out)
-}
-
-test_country_num <- 190 # Rwanda
-
-test_trt <- matched_treatment %>%
-  filter(country_num == test_country_num) 
-
-test_crtl <- matched_treatment %>%
-  filter(country_num == test_country_num)
-
-test_out <- test_trt %>%
-  mutate(control_vars = deforestation_calc(
-    df = filter(test_crtl, .$subclass_ctrl == subclass_trt),
-    year = status_year))
-
-
-join_treat_control <- function(x) {
-  inner_join(filter(matched_treatment, country_num == x),
-             filter(matched_control, country_num == x),
-             by = join_by(subclass),
-              suffix = c("_trt", "_ctrl")) %>%
-    group_by(country_num_trt) %>%
-    write_dataset("revamp/consolidated/joined_data")
-}
-
-
-
+complete <- expanded %>%
+  ungroup() %>%
+  mutate(before = lossyear >= first_year & lossyear < status_year,
+         before = as.integer(before), 
+         after = lossyear > status_year & lossyear <= last_year,
+         after = as.integer(after),
+         C = cover,
+         CL = cover * loss,
+         CL_b = CL * before,
+         CL_a = CL * after,
+         Y_b = status_year - first_year,
+         Y_a = last_year - status_year,
+         loss = - (((C - CL)/C)^(1/18) - 1),
+         loss_before = - (((C - CL_b)/C)^(1/Y_b) - 1),
+         loss_after = - (((C - CL_a)/C)^(1/Y_a) - 1)) %>%
+  select(-before, -after, -C, -CL, -CL_b, -CL_a, -Y_a, -Y_b) %>%
+  rename(trt_loss = loss, 
+         trt_loss_before = loss_before, 
+         trt_loss_after = loss_after)
 
 tic()
-map(country_nums, join_treat_control)
+test <- collect(complete)
 toc()
-
-test <- all_df %>%
-  head() %>%
-  filter(cover == 1000)
   
 ```
 
