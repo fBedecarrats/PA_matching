@@ -450,11 +450,18 @@ for (j in 5:length(gee_out_list)) {
 # This downloads the tifs for 201 national territories.
 # Note that this process cannot be relaunched if it fails for any reason
 # In such case, just go to drive and download manually the tifs uploaded there
+```
 
+## From rater to tabular 
+
+```{r}
+my_countries <- unique(aois$GID_0)
+country_tasks <- tibble(country = my_countries)
 dir.create("revamp/tabular_country")
+# tic()
 for (k in 1:length(my_countries)) {
   country_code <- country_tasks$country[k]
-  print(paste(country_code, i, "/", length(my_countries)))
+  print(paste(country_code, k, "/", length(my_countries)))
   my_tifs <- list.files(path = "revamp/gee", full.names = TRUE,
                         pattern = paste0(country_code, ".*tif"))
   # There can be several tifs for 1 country, so we merge them
@@ -484,10 +491,13 @@ for (l in 1:length(df_files)) {
   all_df <- bind_rows(all_df, this_df)
 }
 rm(this_df)
+# toc() # 1566.25 sec elapsed
+# tic()
 # The data occupies about 8-10 Go in memory
-nrow(all_df) # 62 689 720
+nrow(all_df) #  64 426 201
 dir.create("revamp/consolidated")
 write_parquet(all_df, "revamp/consolidated/gee_data.parquet") #~301 Mo
+# toc() # 25.22 sec elapsed
 ```
 
 We can visualize one of the country data, for instance in Madagascar:
@@ -515,7 +525,7 @@ mdg %>%
 # Reload GEE data
 
 ```{r}
-
+# tic()
 all_df <- read_parquet("revamp/consolidated/gee_data.parquet")
 
 all_df <- all_df %>%
@@ -524,12 +534,13 @@ all_df <- all_df %>%
          loss = loss / 10000,
          across(starts_with("lossyear_"), ~ .x / 10000),
          lossyear = lossyear + 2000)
+# toc() # 18.89 sec elapsed
 ```
 
 # Perform matching
 
 ```{r}
-tic()
+# tic()
 matched_all <- matchit(# the first line of covar is coarsened
   formula = is_pa ~ elev + slope + cover + travel_time + pop_dens +
     country_num + ecoreg + driver, # these on 2nd line remain exact
@@ -540,99 +551,185 @@ matched_all <- matchit(# the first line of covar is coarsened
                    country_num = 0, ecoreg = 0, driver = 0),
  # k2k = TRUE, # To get a 1-to-1 matching 
   data = all_df)
-toc() # 225.58 sec elapsed
-tic()
+toc() # 346.32 sec elapsed
+# tic()
 matched_data <- match.data(matched_all)
-toc() # 60.63 sec elapsed
+# toc() # 158.37 sec elapsed
 
 matched_data <-  matched_data %>%
   mutate(subclass = as.integer(subclass))
 
 write_parquet(matched_data, "revamp/consolidated/matched_data.parquet")
 # matched_data <- read_parquet("revamp/consolidated/matched_data.parquet")
+# tic()
 matched_data %>%
   group_by(is_pa, country_num) %>%
   write_dataset("revamp/consolidated/matched_data")
-rm(list = c("matched_data", "matched_all"))
+rm(list = c("matched_data", "matched_all", "all_df"))
+# toc() # 61.37 sec elapsed
 ```
 
 
 ## Compute deforestation after
 
 ```{r}
-first_year = 2001 
-last_year = 2018
-matched_treatment <- open_dataset("revamp/consolidated/matched_data/is_pa=1")
-matched_control <- open_dataset("revamp/consolidated/matched_data/is_pa=0") 
-
-
-
-subset_trt <- matched_treatment %>%
-  filter(country_num == 175 & status_year %in% 2001:2018)
-
-subset_ctrl <- matched_control %>%
-  select(-status_year) %>%
-  filter(country_num == 175)
-
-subclasses_trt <- subset_trt %>%
-  select(subclass, status_year) %>%
-  unique()
-
-defor_to_compute <- subclasses_trt %>%
-  inner_join(subset_ctrl, by = "subclass")
-
-defor_computed <- defor_to_compute %>%
-  mutate(before = lossyear >= first_year & lossyear < status_year,
-         before = as.integer(before), 
-         after = lossyear > status_year & lossyear <= last_year,
-         after = as.integer(after),
-         CL_b = cover * loss * before,
-         CL_a = cover * loss * after) %>%
-  group_by(subclass, status_year) %>%
-  summarise(C = sum(cover, na.rm = TRUE),
-            CL = sum(cover * loss, na.rm = TRUE),
-            CL_b = sum(CL_b, na.rm = TRUE),
-            CL_a = sum(CL_a, na.rm = TRUE)) %>%
-  mutate(Y_b = status_year - first_year,
-         Y_a = last_year - status_year,
-         loss = - (((C - CL)/C)^(1/18) - 1),
-         loss_before = - (((C - CL_b)/C)^(1/Y_b) - 1),
-         loss_after = - (((C - CL_a)/C)^(1/Y_a) - 1)) %>%
-  select(subclass, status_year, ctrl_loss = loss, 
-         ctrl_loss_before = loss_before, ctrl_loss_after = loss_after)
-
-expanded <- subset_trt %>%
-  left_join(defor_computed, by = c("subclass", "status_year"),
-            suffix = c("", "_ctrl"))
-
-complete <- expanded %>%
-  ungroup() %>%
-  mutate(before = lossyear >= first_year & lossyear < status_year,
-         before = as.integer(before), 
-         after = lossyear > status_year & lossyear <= last_year,
-         after = as.integer(after),
-         C = cover,
-         CL = cover * loss,
-         CL_b = CL * before,
-         CL_a = CL * after,
-         Y_b = status_year - first_year,
-         Y_a = last_year - status_year,
-         loss = - (((C - CL)/C)^(1/18) - 1),
-         loss_before = - (((C - CL_b)/C)^(1/Y_b) - 1),
-         loss_after = - (((C - CL_a)/C)^(1/Y_a) - 1)) %>%
-  select(-before, -after, -C, -CL, -CL_b, -CL_a, -Y_a, -Y_b) %>%
-  rename(trt_loss = loss, 
-         trt_loss_before = loss_before, 
-         trt_loss_after = loss_after)
-
-tic()
-test <- collect(complete)
-toc()
+# A function that computes the deforestation before and after status year for
+# protected area pixels, and before and after matched treatment status year for 
+# control pixels. Uses arrow for fast and larger-than-memory calculations
+compute_deforestation <- function(first_year, last_year, matched_treatment,
+                                  matched_control) {
+  subset_trt <- matched_treatment %>%
+    filter(status_year %in% first_year:last_year)
   
+  subset_ctrl <- matched_control %>%
+    select(-status_year)
+  
+  subclasses_trt <- subset_trt %>%
+    select(subclass, status_year) %>%
+    unique()
+  
+  defor_to_compute <- subclasses_trt %>%
+    inner_join(subset_ctrl, by = "subclass")
+  
+  defor_computed <- defor_to_compute %>%
+    mutate(before = lossyear >= first_year & lossyear < status_year,
+           before = as.integer(before), 
+           after = lossyear > status_year & lossyear <= last_year,
+           after = as.integer(after),
+           CL_b = cover * loss * before,
+           CL_a = cover * loss * after) %>%
+    group_by(subclass, status_year) %>%
+    summarise(C = sum(cover, na.rm = TRUE),
+              CL = sum(cover * loss, na.rm = TRUE),
+              CL_b = sum(CL_b, na.rm = TRUE),
+              CL_a = sum(CL_a, na.rm = TRUE)) %>%
+    mutate(Y_b = status_year - first_year,
+           Y_a = last_year - status_year,
+           loss = - (((C - CL)/C)^(1/18) - 1),
+           loss_before = - (((C - CL_b)/C)^(1/Y_b) - 1),
+           loss_after = - (((C - CL_a)/C)^(1/Y_a) - 1)) %>%
+    select(subclass, status_year, ctrl_loss = loss, 
+           ctrl_loss_before = loss_before, ctrl_loss_after = loss_after)
+  
+  expanded <- subset_trt %>%
+    left_join(defor_computed, by = c("subclass", "status_year"))
+  
+  complete <- expanded %>%
+    ungroup() %>%
+    mutate(before = lossyear >= first_year & lossyear < status_year,
+           before = as.integer(before), 
+           after = lossyear > status_year & lossyear <= last_year,
+           after = as.integer(after),
+           C = cover,
+           CL = cover * loss,
+           CL_b = CL * before,
+           CL_a = CL * after,
+           Y_b = status_year - first_year,
+           Y_a = last_year - status_year,
+           loss = - (((C - CL)/C)^(1/18) - 1),
+           loss_before = - (((C - CL_b)/C)^(1/Y_b) - 1),
+           loss_after = - (((C - CL_a)/C)^(1/Y_a) - 1)) %>%
+    select(-before, -after, -C, -CL, -CL_b, -CL_a, -Y_a, -Y_b) %>%
+    rename(trt_loss = loss, 
+           trt_loss_before = loss_before, 
+           trt_loss_after = loss_after)
+  return(collect(complete))
+}
+
+# Set parameters as in the original study
+# tic()
+df <- compute_deforestation(
+  first_year = 2001,
+  last_year = 2018,
+  matched_treatment = open_dataset("revamp/consolidated/matched_data/is_pa=1"),
+  matched_control  = open_dataset("revamp/consolidated/matched_data/is_pa=0"))
+toc() # 280.07 sec elapsed
+
+# Write output
+tic()
+write_parquet(df, "revamp/consolidated/matched_df.parquet")
+toc()
 ```
 
 # Regress for impact estimation
 
 ```{r}
+df <- read_parquet("revamp/consolidated/matched_df.parquet")
+
+# Nombre de PA
+nb_pa <- df %>%
+  pluck("wdpa_id") %>%
+  unique()
+
+25358-7177
+
+tic()
+comp_means <- df %>%
+  summarise(loss_trt = mean(trt_loss, na.rm = TRUE),
+            loss_ctrl = mean(ctrl_loss, na.rm = TRUE),
+            loss_before_trt = mean(trt_loss_before, na.rm = TRUE),
+            loss_before_crtl = mean(ctrl_loss_before, na.rm = TRUE),
+            loss_after_trt = mean(trt_loss_after, na.rm = TRUE),
+            loss_after_crtl = mean(ctrl_loss_after, na.rm = TRUE))
+toc()
+
+tic()
+comp_medians <- df %>%
+  summarise(loss_trt = median(trt_loss, na.rm = TRUE),
+            loss_ctrl = median(ctrl_loss, na.rm = TRUE),
+            loss_before_trt = median(trt_loss_before, na.rm = TRUE),
+            loss_before_crtl = median(ctrl_loss_before, na.rm = TRUE),
+            loss_after_trt = median(trt_loss_after, na.rm = TRUE),
+            loss_after_crtl = median(ctrl_loss_after, na.rm = TRUE))
+toc()
+
+
+hist(df$cover)
+hist(df$trt_loss)
+hist(df$ctrl_loss)
+
+df %>%
+  select(rownum, trt_loss, ctrl_loss) %>%
+  pivot_longer(-rownum) %>%
+  ggplot(aes(x = value)) +
+  geom_histogram() +
+  facet_grid(cols = vars(name))
+
+df %>%
+  select(rownum, trt_loss_before, ctrl_loss_before, trt_loss_after, ctrl_loss_after) %>%
+  pivot_longer(-rownum) %>%
+  mutate(before_after = ifelse(name == "trt_loss_before" | name == "ctrl_loss_before",
+                               "Before", "After"),
+         trt_ctrl = ifelse(name == "trt_loss_before" | name == "trt_loss_after",
+                           "Treatment", "Control"),
+         before_after = as_factor(before_after),
+         trt_ctrl = as_factor(trt_ctrl)) %>%
+  ggplot(aes(x = value)) +
+  geom_histogram() +
+  facet_grid(cols = vars(trt_ctrl), rows = vars(before_after))
+
+# Compute stats per PA
+PAs <- df %>%
+  group_by(wdpa_id) %>%
+  summarise(loss_trt = mean(trt_loss, na.rm = TRUE),
+            loss_ctrl = mean(ctrl_loss, na.rm = TRUE),
+            loss_before_trt = mean(trt_loss_before, na.rm = TRUE),
+            loss_before_ctrl = mean(ctrl_loss_before, na.rm = TRUE),
+            loss_after_trt = mean(trt_loss_after, na.rm = TRUE),
+            loss_after_ctrl = mean(ctrl_loss_after, na.rm = TRUE))
+
+PAs %>%
+  pivot_longer(-wdpa_id) %>%
+  mutate(group = ifelse(str_detect(name, "trt"), "Treatment", "Control"),
+         period = case_when(str_detect(name, "before") ~ "Before",
+                            str_detect(name, "after") ~ "After",
+                            .default = "All"),
+         group = as_factor(group),
+         period = as_factor(period)) %>%
+  ggplot(aes(x = value)) +
+  geom_histogram() +
+  facet_grid(cols = vars(group), rows = vars(period))
+
+table(test$name)
 
 ```
