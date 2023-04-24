@@ -13,6 +13,7 @@ library(tictoc)
 setwd("replication_report")
 
 if (!dir.exists("PA_matching_asis/processed_rasters")) {
+  dir.create("PA_matching_asis")
   dir.create("PA_matching_asis/processed_rasters")
   # Get files prepared using the scripts of the initial study
   ## List files
@@ -52,9 +53,11 @@ data <- c(carbon, countries, cover, cover_loss, drivers, ecoregions,
           elev, forest_biome, gain, loss, lossyear, non_threatened, PAs,
           PAs_buffer, pop_dens, slope, threatened, travel_time) 
 
-
+aois <- read_sf("revamp/aois/aois.gpkg")
 
 data %>%
+  crop()
+  filter(cover > 0) %>%
   as.data.frame() %>%
   write_parquet("PA_matching_asis/processed_rasters/consolidated.parquet")
 
