@@ -289,7 +289,8 @@ prepare_gee_data <- function(ee_region) {
   # GFC data as initial
   aoi_gfc <- gfc_masked$clipToCollection(ee_region)
   aoi_cover <- aoi_gfc$select("treecover2000")$
-    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$toInt()
+    reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
+    multiply(100)$toInt()
   aoi_loss <- aoi_gfc$select("loss")$
     reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
     multiply(10000)$toInt()
@@ -370,6 +371,10 @@ prepare_gee_data <- function(ee_region) {
   aoi_loss_2021 <- aoi_gfc2$select("loss")$
     reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
     multiply(10000)$toInt()
+  
+    # aoi_loss <- aoi_gfc$select("loss")$
+    # reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$
+    # multiply(10000)$toInt()
   names(aoi_loss_2021) <- "loss_2021"
   aoi_image <- aoi_image$addBands(aoi_loss_2021)
   aoi_lossyear2 <- aoi_gfc2$select("lossyear")
@@ -399,23 +404,25 @@ Now we will iterate to download this raster in separated file, with one file per
 # are within a biome of study.
 my_countries <- unique(aois$GID_0)
 country_tasks <- tibble(country = my_countries)
-dir.create("revamp/gee")
+dir.create("revamp/gee_mada1")
 # each country takes between less than 1 and 32 minutes to process. 
 # The computations run in parallel.
 aois_ee <- ee$FeatureCollection("projects/ee-fbedecarrats/assets/aois")
 out_list <- list()
-for (i in 201:length(my_countries)) {
+# for (i in 201:length(my_countries)) {
+for (i in 116:116) {
   GID <- my_countries[i]
   print(paste0(GID, " ", i, "/", length(my_countries)))
   aoi_country <- aois_ee$filter(paste0("GID_0 == '", GID,"'"))
   aoi_extract <- prepare_gee_data(aoi_country)
   out_list[[i]] <- ee_as_raster(
     aoi_extract, via = "drive", container = "rgee_country_new", lazy = TRUE,
-    dsn = paste0("revamp/gee/", GID, ".tif"),
+    # dsn = paste0("revamp/gee/", GID, ".tif"),
+    dsn = paste0("revamp/gee_mada1/", GID, ".tif"),
     skipEmptyTiles = TRUE, scale = 1000,
     region = aoi_country$geometry())
 }
-write_rds(gee_out_list, "revamp/gee_out_list.Rdata")
+write_rds(out_list, "revamp/gee_out_list.Rdata")
 ```
 
 We have 211 rasters for 201 national territories. The file names are a concatenation of 3 letters indicating the country (ISO3 country code), a time-stamps of when the GEE task was launched, plus a number when the country is split in several different countries. Sometimes GEE splits a territory in 2 or 3 rasters. It is the case for Canada, Russia, USA, Fiji, China, New Zealand, Kirghistan and UMI (?). The splitting of a country in several rasters happens when the forest biome areas of the corresponding countries are disjoint and GEE apparently optimises the output file sizes this way.
@@ -443,16 +450,16 @@ Each raster is in WSG-84 projection with cells of 1km2 and includes 37 bands, al
 ```{r}
 # We fetch the data once it is ready
 # my_countries <- "PER"
-gee_out_list <- read_rds("revamp/gee_out_list.Rdata")
-for (j in 5:length(gee_out_list)) {
-  ee_utils_future_value(out_list[[j]])
+out_list <- read_rds("revamp/gee_out_list.Rdata")
+for (j in 1:length(out_list)) {
+  ee_utils_future_value(out_list)
 }
 # This downloads the tifs for 201 national territories.
 # Note that this process cannot be relaunched if it fails for any reason
 # In such case, just go to drive and download manually the tifs uploaded there
 ```
 
-## From rater to tabular 
+## From rater to tabular
 
 ```{r}
 my_countries <- unique(aois$GID_0)
@@ -569,14 +576,13 @@ rm(list = c("matched_data", "matched_all", "all_df"))
 # toc() # 61.37 sec elapsed
 ```
 
-
 ## Compute deforestation after
 
 ```{r}
 # A function that computes the deforestation before and after status year for
 # protected area pixels, and before and after matched treatment status year for 
 # control pixels. Uses arrow for fast and larger-than-memory calculations
-compute_deforestation <- function(first_year, last_year, matched_treatment,
+calc_defor_mode <- function(first_year, last_year, matched_treatment,
                                   matched_control) {
   subset_trt <- matched_treatment %>%
     filter(status_year %in% first_year:last_year)
@@ -638,7 +644,7 @@ compute_deforestation <- function(first_year, last_year, matched_treatment,
 
 # Set parameters as in the original study
 # tic()
-df <- compute_deforestation(
+df <- calc_defor_mode(
   first_year = 2001,
   last_year = 2018,
   matched_treatment = open_dataset("revamp/consolidated/matched_data/is_pa=1"),
@@ -651,7 +657,7 @@ write_parquet(df, "revamp/consolidated/matched_df.parquet")
 toc()
 ```
 
-# Regress for impact estimation
+# Descriptive statistics on deforestation
 
 ```{r}
 df <- read_parquet("revamp/consolidated/matched_df.parquet")
@@ -660,8 +666,6 @@ df <- read_parquet("revamp/consolidated/matched_df.parquet")
 nb_pa <- df %>%
   pluck("wdpa_id") %>%
   unique()
-
-25358-7177
 
 tic()
 comp_means <- df %>%
@@ -683,10 +687,6 @@ comp_medians <- df %>%
             loss_after_crtl = median(ctrl_loss_after, na.rm = TRUE))
 toc()
 
-
-hist(df$cover)
-hist(df$trt_loss)
-hist(df$ctrl_loss)
 
 df %>%
   select(rownum, trt_loss, ctrl_loss) %>%
@@ -730,6 +730,47 @@ PAs %>%
   geom_histogram() +
   facet_grid(cols = vars(group), rows = vars(period))
 
-table(test$name)
+```
+
+```{r}
+df_subset <- all_df[1:10000,]
+
+calc_defor_annual <- function(x, min_year = 2001, max_year = 2018) {
+  x <- x %>%
+    mutate(row_id = row_number())
+  defor <- x %>%
+    select(row_id, status_year, starts_with("lossyear_")) %>%
+    pivot_longer(-c(row_id, status_year)) %>%
+    mutate(loss_year = as.integer(gsub("lossyear_", "", name))) %>%
+    filter(loss_year >= min_year & loss_year <= max_year) %>%
+    mutate(loss_before = ifelse(loss_year < status_year, value, 0),
+           loss_after = ifelse(loss_year > status_year, value, 0)) %>%
+    group_by(row_id) %>%
+    summarise(loss_before_annual = sum(loss_before, na.rm = TRUE),
+              loss_after_annual = sum(loss_after, na.rm = TRUE))
+  x <- left_join(x, defor, by = group_by(row_id))
+  return(x)
+}
+
+tic()
+all_df <- calc_defor_annual(all_df)
+toc()
+
+write_parquet(all_df, "revamp/consolidated/al_df_defor.parquet")
+
+
+test <- df_subset %>%
+  rowwise() %>%
+  mutate(test = sum(c_across("loss_2021":paste0("lossyear_", status_year))))
+
+test <- paste0("lossyear_", 2001:df_subset$status_year)
+
+test2 <- df_subset %>%
+  mutate(ref_years = paste(paste0("lossyear_", 2001:.$status_year), collapse = ", "),
+         test  = rowSums(pick(paste0("lossyear_", 2001:.$status_year))),
+         .after = status_year)
+
+subset2 <- all_df %>%
+  sample_n(10000)
 
 ```

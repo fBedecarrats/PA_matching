@@ -45,13 +45,22 @@ file_names <- list.files("PA_matching_asis/processed_rasters", pattern = "\\.tif
 data <- map(files, rast) # Load in a list
 names(data) <- file_names # name the elements
 list2env(data, envir = .GlobalEnv) # split the elements
-data <- c(carbon, countries, cover, cover_loss, drivers, ecoregions,
-          elev, forest_biome, gain, loss, lossyear, non_threatened, PAs,
-          PAs_buffer, pop_dens, slope, threatened, travel_time) 
+# data <- c(carbon, countries, cover, cover_loss, drivers, ecoregions,
+#           elev, forest_biome, gain, loss, lossyear, non_threatened, PAs,
+#           PAs_buffer, pop_dens, slope, threatened, travel_time) 
+data <- c(cover, cover_loss, ecoregions, forest_biome, gain, loss, 
+          lossyear, PAs, PAs_buffer) 
+
 
 data %>%
   as.data.frame() %>%
   write_parquet("PA_matching_asis/processed_rasters/consolidated.parquet")
+
+data <- read_parquet("PA_matching_asis/processed_rasters/consolidated.parquet",
+                     as_data_frame = FALSE)
+
+data %>%
+  summarise()
 
 
 mada_rast <- rast("revamp/gee_mada1/MDG_2023_04_17_11_00_41.tif")
