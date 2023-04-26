@@ -459,7 +459,7 @@ for (j in 1:length(out_list)) {
 # In such case, just go to drive and download manually the tifs uploaded there
 ```
 
-## From rater to tabular
+## From raster to tabular
 
 ```{r}
 my_countries <- unique(aois$GID_0)
