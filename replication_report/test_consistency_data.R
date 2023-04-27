@@ -124,10 +124,7 @@ stats3 <- data %>%
 stats3 <- stats3 %>%
   mutate(percent = round(n / sum(stats3$n) * 100, 2))
 
-library(haven)
-read_parquet("PA_matching_asis/processed_rasters/all_data.parquet",
-             as_data_frame = TRUE) %>%
-  write_dta("data_as_wolf.dta")
+
 
 
 stats2_bal <- stats2 %>%
