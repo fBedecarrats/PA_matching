@@ -94,41 +94,49 @@ aws.s3::put_object(file = "PA_matching_asis/processed_rasters/all_data.parquet",
 
 data <- read_parquet("PA_matching_asis/processed_rasters/all_data.parquet",
                      as_data_frame = FALSE)
+# Stats for incomplete data 
 stats <- data %>%
   mutate(with_forest_cover = cover > 0,
          with_loss = loss > 0,
          with_lossyear = lossyear > 0) %>%
   group_by(with_forest_cover, with_loss, with_lossyear) %>%
   summarise(n = n()) %>%
-  mutate(percent = round(n / sum(stats$n) * 100, 2)) %>%
   collect()
-
+stats <- stats %>%
+  mutate(percent = round(n / sum(stats$n) * 100, 2)) 
+# By treatmnent/control
 stats2 <- data %>%
   mutate(with_forest_cover = cover > 0,
          with_loss = loss > 0,
          with_lossyear = lossyear > 0,
-         is_treatment = case_when(
-           PAs == 1 ~ "PA",
-           PAs_buffer == 1 ~ "PA_buffer",
-           .default = "Control")) %>%
+         is_treatment = PAs == 1) %>%
   group_by(with_forest_cover, with_loss, with_lossyear, is_treatment) %>%
   summarise(n = n()) %>%
-  collect()
+  collect() %>%
+  filter(with_forest_cover & with_loss) 
 
-stats3 <- data %>%
-  mutate(with_loss = loss > 0,
-         with_lossyear = lossyear > 0) %>%
-  group_by(with_loss, with_lossyear) %>%
-  summarise(n = n()) %>%
-  collect()
-stats3 <- stats3 %>%
-  mutate(percent = round(n / sum(stats3$n) * 100, 2))
+no_lossyear_control = (stats2 %>% 
+                         filter(with_forest_cover, with_loss, !is_treatment) %>%
+                         filter(!with_lossyear) %>%
+                         pluck("n")) /
+  (ungroup(stats2) %>% 
+     filter(with_forest_cover, with_loss, !is_treatment) %>%
+     summarise(n = sum(n)) %>% pluck("n")) 
 
+
+no_lossyear_treatment = (stats2 %>% 
+                         filter(with_forest_cover, with_loss, is_treatment) %>%
+                         filter(!with_lossyear) %>%
+                         pluck("n")) /
+  (ungroup(stats2) %>% 
+     filter(with_forest_cover, with_loss, is_treatment) %>%
+     summarise(n = sum(n)) %>% pluck("n")) 
 
 
 
 stats2_bal <- stats2 %>%
-  filter(with_forest_cover & with_loss)
+  filter(with_forest_cover & with_loss) %>%
+  mutate(tot)
   
 
 data_mdg %>%
