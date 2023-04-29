@@ -12,14 +12,14 @@ library(MatchIt)
 library(tictoc)
 setwd("replication_report")
 
-# # Teste format de la variable PAs
-# pas <- rast("PA_matching_asis/processed_rasters/PAs.tif")
-# pas_df <- pas %>%
-#   as.data.frame()
-# test <- pas_df %>%
-#   group_by(layer) %>%
-#   summarise(n = n())
-# ###############
+# Teste format de la variable PAs
+pas <- rast("PA_matching_asis/processed_rasters/PAs.tif")
+pas_df <- pas %>%
+  as.data.frame()
+test <- pas_df %>%
+  group_by(layer) %>%
+  summarise(n = n())
+###############
 
 if (!dir.exists("PA_matching_asis/processed_rasters")) {
   dir.create("PA_matching_asis")
@@ -58,15 +58,13 @@ if (!file.exists("PA_matching_asis/aois.gpkg")) {
     region = "")
 }
 
-
-
 # Load files into memory
 files <- list.files("PA_matching_asis/processed_rasters", pattern = "\\.tif$", 
                     full.names = TRUE) # List available files
 file_names <- list.files("PA_matching_asis/processed_rasters", pattern = "\\.tif$", 
                          full.names = FALSE) %>%
   str_remove("\\.tif") # Prepare the names (no path or extension)
-data <- map2(files, file_names, ~ rast(.x, names = )) # Load in a list
+data <- map(files, rast) # Load in a list
 names(data) <- file_names # name the elements
 list2env(data, envir = .GlobalEnv) # split the elements
 rm(data)
@@ -77,11 +75,12 @@ names(data) <- file_names
 
 # Prepare AOIs to iterate upon
 aois <- read_sf("PA_matching_asis/aois.gpkg") %>%
-  st_transform(crs = crs(cover))
-
+  st_transform(crs = crs(cover)) %>%
+  st_cast("POLYGON") 
 all_data <- data.frame()
 n_aois <- nrow(aois)
-for (i in 1:nrow(aois)) {
+tic()
+for (i in 1:n_aois) {
   aoi <- aois[i, ]
   print(paste(aoi$GID_0, i, "/", n_aois))
   aoi_data <- data %>%
@@ -93,21 +92,57 @@ for (i in 1:nrow(aois)) {
   all_data <- bind_rows(all_data, aoi_data)
   rm(aoi_data)
 }
-write_parquet(all_data, "PA_matching_asis/processed_rasters/all_data.parquet")
-aws.s3::put_object(file = "PA_matching_asis/processed_rasters/all_data.parquet",
-                   object = "PA_matching_asis/all_data.parquet",
+toc()
+
+write_parquet(all_data, "PA_matching_asis/processed_rasters/all_data_wolf.parquet")
+aws.s3::put_object(file = "PA_matching_asis/processed_rasters/all_data_wold.parquet",
+                   object = "PA_matching_asis/all_data_wolf.parquet",
                    bucket = "fbedecarrats",
                    region = "",
                    overwrite = TRUE,
                    multipart = TRUE)
 
-# data <- read_parquet("PA_matching_asis/processed_rasters/all_data.parquet",
-#                      as_data_frame = FALSE)
-data <- read_parquet("PA_matching_asis/processed_rasters/all_data.parquet")
+
+aois_mdg <- aois %>%
+  filter(GID_0 == "MDG")
+
+aois_mdg_poly <- aois_mdg %>%
+  st_cast("POLYGON")
+
+
+
+
+# Prepare AOIs to iterate upon
+aois2 <- read_sf("PA_matching_asis/aois.gpkg") %>%
+  st_transform(crs = crs(cover)) # %>%
+# st_cast("POLYGON") 
+all_data2 <- data.frame()
+n_aois2 <- nrow(aois2)
+tic()
+for (i in 1:n_aois2) {
+  aoi <- aois2[i, ]
+  print(paste(aoi$GID_0, i, "/", n_aois))
+  aoi_data <- data %>%
+    crop(aoi) %>%
+    mask(aoi) %>%
+    as.data.frame() %>%
+    filter(ecoregions >= 0 & countries >= 0 & drivers >= 0 & forest_biome == 1 &
+             slope >= 0 & !is.na(cover_loss) & !is.na(pop_dens))
+  all_data2 <- bind_rows(all_data2, aoi_data)
+  rm(aoi_data)
+}
+toc()
+
+
+
+data <- read_parquet("PA_matching_asis/processed_rasters/all_data.parquet",
+                     as_data_frame = FALSE)
+# data <- read_parquet("PA_matching_asis/processed_rasters/all_data.parquet")
 
 test2 <- data %>%
   group_by(PAs) %>%
-  summarise(n = n())
+  summarise(n = n()) %>%
+  collect()
 
 data %>%
   summarise(sum(PAs > 0),
