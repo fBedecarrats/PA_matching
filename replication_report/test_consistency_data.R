@@ -75,8 +75,14 @@ names(data) <- file_names
 
 # Prepare AOIs to iterate upon
 aois <- read_sf("PA_matching_asis/aois.gpkg") %>%
-  st_transform(crs = crs(cover)) %>%
-  st_cast("POLYGON") 
+  st_transform(crs = crs(cover)) # %>%
+  # st_cast("POLYGON") 
+aois2 <- aois %>%
+  mutate(bbox_area = st_area(st_as_sfc(st_bbox(.))), 
+         .before = everything())
+
+pb <- c("UMI", "FJI", "NZL")
+VNM_205
 all_data <- data.frame()
 n_aois <- nrow(aois)
 tic()
@@ -109,19 +115,12 @@ aois_mdg <- aois %>%
 aois_mdg_poly <- aois_mdg %>%
   st_cast("POLYGON")
 
-
-
-
-# Prepare AOIs to iterate upon
-aois2 <- read_sf("PA_matching_asis/aois.gpkg") %>%
-  st_transform(crs = crs(cover)) # %>%
-# st_cast("POLYGON") 
 all_data2 <- data.frame()
-n_aois2 <- nrow(aois2)
+n_aois2 <- nrow(aois_mdg)
 tic()
 for (i in 1:n_aois2) {
-  aoi <- aois2[i, ]
-  print(paste(aoi$GID_0, i, "/", n_aois))
+  aoi <- aois_mdg[i, ]
+  print(paste(aoi$GID_0, i, "/", n_aois2))
   aoi_data <- data %>%
     crop(aoi) %>%
     mask(aoi) %>%
@@ -133,6 +132,23 @@ for (i in 1:n_aois2) {
 }
 toc()
 
+
+all_data3 <- data.frame()
+n_aois3 <- nrow(aois_mdg_poly)
+tic()
+for (i in 1:n_aois3) {
+  aoi <- aois_mdg_poly[i, ]
+  print(paste(aoi$GID_0, i, "/", n_aois3))
+  aoi_data <- data %>%
+    crop(aoi) %>%
+    mask(aoi) %>%
+    as.data.frame() %>%
+    filter(ecoregions >= 0 & countries >= 0 & drivers >= 0 & forest_biome == 1 &
+             slope >= 0 & !is.na(cover_loss) & !is.na(pop_dens))
+  all_data3 <- bind_rows(all_data3, aoi_data)
+  rm(aoi_data)
+}
+toc()
 
 
 data <- read_parquet("PA_matching_asis/processed_rasters/all_data.parquet",
