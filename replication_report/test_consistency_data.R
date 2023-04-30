@@ -1,3 +1,6 @@
+
+# Load libraries ----------------------------------------------------------
+
 library(tidyverse)
 library(sf)
 library(tmap)
@@ -10,7 +13,6 @@ library(arrow)
 library(tidyterra)
 library(MatchIt)
 library(tictoc)
-library(wdpar)
 setwd("replication_report")
 
 # Teste format de la variable PAs
@@ -103,136 +105,72 @@ aws.s3::put_object(file = "PA_matching_asis/processed_rasters/all_data_wolf.parq
                    multipart = TRUE)
 rm(list = ls())
 
+
+# Load tabularized wolf raster data and PAs' csv -------------------------------
 data <- read_parquet("PA_matching_asis/processed_rasters/all_data_wolf.parquet")
-                     #, 
-                     # as_data_frame = FALSE)
 
-wdpa <- read_csv("data_input/WDPA_no_geom_Feb2022.csv") 
-# %>%
-#   arrow_table()
+wdpa <- read_csv("PA_matching_asis/data_processed/PAs_tab.csv") %>%
+  select(ID, WDPAID, IUCN_CAT, MARINE, STATUS, GIS_AREA,
+         status_year = STATUS_YR)
 
-dir.create("PA_matching_asis/data_processed")
-aws.s3::save_object(
-  object = "Replication_wolf/data_processed/PAs_tab.csv",
-  bucket = "fbedecarrats",
-  file = "PA_matching_asis/data_processed/PAs_tab.csv",
-  overwrite = TRUE,
-  region = "")
+# Join tabularized wolf raster data and PAs ------------------------------------
+data <- data %>%
+  left_join(wdpa, by = join_by(PAs == ID)) %>%
+  mutate(treatment = case_when(
+    MARINE == 0 & STATUS != "Proposed" & GIS_AREA >= 1 ~ 1,
+    .default = 0)) %>% # PAs have a value 1 at PA_buffer
+  filter(!(PAs_buffer - sum(PAs > 0, na.rm = TRUE) > 0)) # On enlève les buffers
 
-test <- data %>%
-  group_by(PAs) %>%
-  summarise(n = n()) %>%
-  collect()
 
 data %>%
-  summarise(sum(PAs > 0),
-            sum(PAs > 1),
-            sum(PAs > 1000))
+  group_by(treatment) %>%
+  summarise(n = n())
 
-# Stats for incomplete data 
-stats <- data %>%
-  mutate(with_forest_cover = cover > 0,
+# We check that we have no pixel with a raster value for PA and no match in
+# the WDPA dataset
+testthat::expect_equal(
+data %>%
+  mutate(is_PA = !is.na(PAs),
+         has_wdpaid = !is.na(WDPAID)) %>%
+  group_by(is_PA, has_wdpaid) %>%
+  summarise(n = n()) %>%
+  filter((is_PA != has_wdpaid)) %>%
+  nrow(), 0
+)
+
+
+
+# Stats for incomplete data by treatmnent/control
+test_lossyear_presence <- data %>%
+  mutate(with_forest_cover = cover > 30,
          with_loss = loss > 0,
          with_lossyear = lossyear > 0) %>%
-  group_by(with_forest_cover, with_loss, with_lossyear) %>%
-  summarise(n = n()) %>%
-  collect()
-stats <- stats %>%
-  mutate(percent = round(n / sum(stats$n) * 100, 2)) 
-
-# By treatmnent/control
-stats2 <- data %>%
-  mutate(with_forest_cover = cover > 0,
-         with_loss = loss > 0,
-         with_lossyear = lossyear > 0,
-         is_treatment = !is.na(PAs)) %>%
-  group_by(with_forest_cover, with_loss, with_lossyear, is_treatment) %>%
+  group_by(with_forest_cover, with_loss, with_lossyear, treatment) %>%
   summarise(n = n()) %>%
   collect() %>%
   filter(with_forest_cover & with_loss) 
 
-no_lossyear_control = (stats2 %>% 
-                         filter(with_forest_cover, with_loss, !is_treatment) %>%
+
+no_lossyear_control = (test_lossyear_presence %>% 
+                         filter(with_forest_cover, with_loss, treatment == 0) %>%
                          filter(!with_lossyear) %>%
                          pluck("n")) /
-  (ungroup(stats2) %>% 
-     filter(with_forest_cover, with_loss, !is_treatment) %>%
+  (ungroup(test_lossyear_presence) %>% 
+     filter(with_forest_cover, with_loss, treatment == 0) %>%
      summarise(n = sum(n)) %>% pluck("n")) 
 
-no_lossyear_treatment = (stats2 %>% 
-                         filter(with_forest_cover, with_loss, is_treatment) %>%
+no_lossyear_treatment = (test_lossyear_presence %>% 
+                         filter(with_forest_cover, with_loss, treatment == 1) %>%
                          filter(!with_lossyear) %>%
                          pluck("n")) /
-  (ungroup(stats2) %>% 
-     filter(with_forest_cover, with_loss, is_treatment) %>%
-     summarise(n = sum(n)) %>% pluck("n"))
-
-
-
-# By treatmnent/control : FILTER COVER 30%
-stats3 <- data %>%
-  mutate(with_forest_cover = cover > 0.3,
-         with_loss = loss > 0,
-         with_lossyear = lossyear > 0,
-         is_treatment = !is.na(PAs)) %>%
-  group_by(with_forest_cover, with_loss, with_lossyear, is_treatment) %>%
-  summarise(n = n()) %>%
-  collect() %>%
-  filter(with_forest_cover & with_loss) 
-
-no_lossyear_control_mincover = (stats3 %>% 
-                         filter(with_forest_cover, with_loss, !is_treatment) %>%
-                         filter(!with_lossyear) %>%
-                         pluck("n")) /
-  (ungroup(stats3) %>% 
-     filter(with_forest_cover, with_loss, !is_treatment) %>%
+  (ungroup(test_lossyear_presence) %>% 
+     filter(with_forest_cover, with_loss, treatment == 1) %>%
      summarise(n = sum(n)) %>% pluck("n")) 
-
-no_lossyear_treatment_mincover = (stats3 %>% 
-                           filter(with_forest_cover, with_loss, is_treatment) %>%
-                           filter(!with_lossyear) %>%
-                           pluck("n")) /
-  (ungroup(stats2) %>% 
-     filter(with_forest_cover, with_loss, is_treatment) %>%
-     summarise(n = sum(n)) %>% pluck("n"))
-
-
-data2 <- data %>%
-  left_join(wdpa, by = c("PAs" = "WDPAID"))
-
-PA_ids <- data$PAs %>%
-  unique()
-
-wdpa_ids <- wdpa$WDPAID %>%
-  unique()
-PAs_notin_WDPA <- PA_ids[!(PA_ids %in% wdpa_ids)]
-
-
-
-str(wdpa_ids)
-test <- data2 %>%
-  mutate(is_PA = !is.na(PAs),
-         has_noname = is.na(NAME)) %>%
-  group_by(is_PA, has_noname) %>%
-  summarise(n = n())
-
-test_wdpa <- wdpa %>%
-  mutate(has_noname = is.na(NAME)) %>%
-  group_by(has_noname) %>%
-  summarise(n = n())
-
-wdpa_ids <- data %>%
-  group_by(PAs) %>%
-  summarise(n = n()) %>%
-  collect()
-
-
-
 
 # Matching
 tic()
 matched_all <- matchit(# the first line of covar is coarsened
-  formula = PAs ~ elev + slope + cover + travel_time + pop_dens +
+  formula = treatment ~ elev + slope + cover + travel_time + pop_dens +
     countries + ecoregions + drivers, # these on 2nd line remain exact
   method = "cem",
   # for cutpoints 0 means no coarsening, and q5 means quintiles
@@ -240,24 +178,28 @@ matched_all <- matchit(# the first line of covar is coarsened
                    travel_time = "q5", pop_dens = "q5",
                    countries = 0, ecoregions = 0, drivers = 0),
   # k2k = TRUE, # To get a 1-to-1 matching 
-  data = collect(data))
-toc() # 408.53 sec elapsed
+  data = data)
+toc() # 222.13 sec elapsed
 
 tic()
 matched_data <- match.data(matched_all)
-toc() # 120.36 sec elapsed
+toc() # 15.54 sec elapsed
 
 matched_data <-  matched_data %>%
   mutate(subclass = as.integer(subclass))
 
 dir.create("PA_matching_asis/consolidated")
-write_parquet(matched_data, "PA_matching_asis/consolidated/matched_data.parquet")
+write_parquet(matched_data, "PA_matching_asis/consolidated/matched_data.parquet",
+                )
 # matched_data <- read_parquet("revamp/consolidated/matched_data.parquet")
 # tic()
 matched_data %>%
-  group_by(PAs) %>%
+  group_by(treatment) %>%
   write_dataset("PA_matching_asis/consolidated/matched_data")
-rm(list = c("matched_data", "matched_all", "data"))
+rm(list = c("matched_data", "matched_all", "data", "wdpa"))
+
+
+# Compute deforestation ---------------------------------------------------
 
 # A function that computes the deforestation before and after status year for
 # protected area pixels, and before and after matched treatment status year for 
@@ -324,16 +266,19 @@ calc_defor_mode <- function(first_year, last_year, matched_treatment,
 
 # Set parameters as in the original study
 tic()
-df <- calc_defor_mode(
+calc_defor_mode(
   first_year = 2001,
   last_year = 2018,
-  matched_treatment = open_dataset("PA_matching_asis/consolidated/matched_data/PAs=1"),
-  matched_control  = open_dataset("PA_matching_asis/consolidated/matched_data/PAs=0"))
+  matched_treatment = open_dataset(
+    "PA_matching_asis/consolidated/matched_data/treatment=1"),
+  matched_control  = open_dataset(
+    "PA_matching_asis/consolidated/matched_data/treatment=0")) %>%
+  write_parquet("PA_matching_asis/consolidated/matched_df.parquet")
 toc() # 280.07 sec elapsed
 
 # Write output
 tic()
-write_parquet(df, "revamp/consolidated/matched_df.parquet")
+write_parquet(df, "PA_matching_asis/consolidated/matched_df.parquet")
 toc()
 
 
