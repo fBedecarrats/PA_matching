@@ -10,6 +10,7 @@ library(arrow)
 library(tidyterra)
 library(MatchIt)
 library(tictoc)
+library(wdpar)
 setwd("replication_report")
 
 # Teste format de la variable PAs
@@ -100,13 +101,25 @@ aws.s3::put_object(file = "PA_matching_asis/processed_rasters/all_data_wolf.parq
                    region = "",
                    overwrite = TRUE,
                    multipart = TRUE)
+rm(list = ls())
 
+data <- read_parquet("PA_matching_asis/processed_rasters/all_data_wolf.parquet")
+                     #, 
+                     # as_data_frame = FALSE)
 
-data <- read_parquet("PA_matching_asis/processed_rasters/all_data.parquet",
-                     as_data_frame = FALSE)
-# data <- read_parquet("PA_matching_asis/processed_rasters/all_data.parquet")
+wdpa <- read_csv("data_input/WDPA_no_geom_Feb2022.csv") 
+# %>%
+#   arrow_table()
 
-test2 <- data %>%
+dir.create("PA_matching_asis/data_processed")
+aws.s3::save_object(
+  object = "Replication_wolf/data_processed/PAs_tab.csv",
+  bucket = "fbedecarrats",
+  file = "PA_matching_asis/data_processed/PAs_tab.csv",
+  overwrite = TRUE,
+  region = "")
+
+test <- data %>%
   group_by(PAs) %>%
   summarise(n = n()) %>%
   collect()
@@ -132,7 +145,7 @@ stats2 <- data %>%
   mutate(with_forest_cover = cover > 0,
          with_loss = loss > 0,
          with_lossyear = lossyear > 0,
-         is_treatment = PAs > 0) %>%
+         is_treatment = !is.na(PAs)) %>%
   group_by(with_forest_cover, with_loss, with_lossyear, is_treatment) %>%
   summarise(n = n()) %>%
   collect() %>%
@@ -161,7 +174,7 @@ stats3 <- data %>%
   mutate(with_forest_cover = cover > 0.3,
          with_loss = loss > 0,
          with_lossyear = lossyear > 0,
-         is_treatment = PAs > 0) %>%
+         is_treatment = !is.na(PAs)) %>%
   group_by(with_forest_cover, with_loss, with_lossyear, is_treatment) %>%
   summarise(n = n()) %>%
   collect() %>%
@@ -183,10 +196,38 @@ no_lossyear_treatment_mincover = (stats3 %>%
      filter(with_forest_cover, with_loss, is_treatment) %>%
      summarise(n = sum(n)) %>% pluck("n"))
 
+
+data2 <- data %>%
+  left_join(wdpa, by = c("PAs" = "WDPAID"))
+
+PA_ids <- data$PAs %>%
+  unique()
+
+wdpa_ids <- wdpa$WDPAID %>%
+  unique()
+PAs_notin_WDPA <- PA_ids[!(PA_ids %in% wdpa_ids)]
+
+
+
+str(wdpa_ids)
+test <- data2 %>%
+  mutate(is_PA = !is.na(PAs),
+         has_noname = is.na(NAME)) %>%
+  group_by(is_PA, has_noname) %>%
+  summarise(n = n())
+
+test_wdpa <- wdpa %>%
+  mutate(has_noname = is.na(NAME)) %>%
+  group_by(has_noname) %>%
+  summarise(n = n())
+
 wdpa_ids <- data %>%
   group_by(PAs) %>%
   summarise(n = n()) %>%
   collect()
+
+
+
 
 # Matching
 tic()
