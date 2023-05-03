@@ -264,6 +264,8 @@ calc_defor_mode <- function(first_year, last_year, matched_treatment,
   return(collect(complete))
 }
 
+dir.create("PA_matching_asis/consolidated/matched_df")
+
 # Set parameters as in the original study
 tic()
 calc_defor_mode(
@@ -273,7 +275,7 @@ calc_defor_mode(
     "PA_matching_asis/consolidated/matched_data/treatment=1"),
   matched_control  = open_dataset(
     "PA_matching_asis/consolidated/matched_data/treatment=0")) %>%
-  write_parquet("PA_matching_asis/consolidated/matched_df.parquet")
+  write_dataset("PA_matching_asis/consolidated/matched_df")
 toc() # 280.07 sec elapsed
 
 # Write output

@@ -14,9 +14,11 @@ Some code modifications are required for the code to run. These edits are not in
 We will use the following function that explicitly declares which modification are made in the source code.
 
 ```{r}
-
 library(tidyverse)
 
+if (!stringr::str_ends(getwd(), "replication_report")) {
+  setwd("replication_report")
+}
 # A function to replace some parts of the code
 replace_all <- function(pattern, replacement, file) {
   readLines(file) %>%
@@ -393,18 +395,101 @@ Warning messages:
 
 matching_script <- "PA_matching_asis/005 - covariate_matching.jl"
 
-my_wd <- paste0(getwd(), "/")
+# Modify the location of the working directory
+my_wd <- paste0(getwd(), "/PA_matching_asis/")
+
+# The way Julia has to write pathes on windows is really weird
+if (str_detect(str_to_lower(Sys.getenv("OS")), "windows")) {
+  # Needs bunch of escape characters in the working directory
+  my_wd <- str_replace_all(my_wd, "\\/", "\\\\\\\\\\\\\\\\\\\\")
+  # \U and \s mean something so these letters get chopped in the process
+  my_wd <- str_replace_all(my_wd, "ers", "Users")
+  # Need also to specify the location of the specific tif
+  replace_all(pattern = "data_processed\\/rasters\\/cover.tif", 
+            replacement = "data_processed\\\\\\\\rasters\\\\\\\\cover.tif",
+            file = matching_script)
+} 
 
 # Change the working directory location
 replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_matching/", 
             replacement = my_wd,
             file = matching_script)
 
-# Need to specify the DataFrame in csv 
+# Need to specify the output type (DataFrame) in CSV.read command 
 replace_all(pattern = "CSV\\.read\\(\"data_processed/PAs_tab\\.csv\"\\)", 
             replacement = 
               "CSV\\.read\\(\"data_processed/PAs_tab\\.csv\", DataFrame\\)",
             file = matching_script)
+
+# No need to load this package: not used, and throws useless warnings
+replace_all(pattern = "using RCall",
+            replacement = "",
+            file = matching_script)
+
+# Update syntax for joins: join(..., kind = inner) => innerjoin()
+replace_all(pattern = "out = join\\(data_treatment,",
+            replacement = "out = leftjoin\\(data_treatment,",
+            file = matching_script)
+replace_all(pattern = "on = \\:PAs,",
+            replacement = "on = \\:PAs\\)",
+            file = matching_script)
+replace_all(pattern = "kind = \\:left\\)",
+            replacement = "",
+            file = matching_script)
+
+# Need to add a dot before equal of in-place operations
+replace_all(pattern = "out\\[\\:,var\\] = mean\\(df_small\\[\\:,var\\]\\)",
+            replacement = "out\\[\\:,var\\] .= mean\\(df_small\\[\\:,var\\]\\)",
+            file = matching_script)
+
+# Update joining syntax
+replace_all(pattern = "join(data_treatment_coarsened[!,vcat\\(:PAs,:STATUS_YR,match\\)], data_control_coarsened, on = match, kind = :inner)",
+            replacement = "innerjoin(data_treatment_coarsened[!, vcat\\(:PAs, :STATUS_YR, match\\)], data_control_coarsened, on = match\\)",
+            file = matching_script)
+
+# On line 141, update inner join syntax
+replace_all(pattern = "join\\(data_treatment_coarsened",
+            replacement = "innerjoin\\(data_treatment_coarsened",
+            file = matching_script)
+replace_all(pattern = ", kind = \\:inner\\)",
+            replacement = "\\)",
+            file = matching_script)
+
+# Update the by() syntax => combine(groupby())
+replace_all(pattern = 'by\\(df, setdiff\\(names\\(df\\), \\["treatment"\\]\\)\\)',
+            replacement = 'combine\\(groupby\\(df, setdiff\\(names\\(df\\), \\["treatment"\\]\\)\\)\\)',
+            file = matching_script)
+replace_all(pattern = "by\\(data_treatment, \\:PAs\\)",
+            replacement = "combine\\(groupby\\(data_treatment, \\:PAs\\)\\)",
+            file = matching_script)
+replace_all(pattern = "by\\(data_matched, \\:PAs\\)",
+            replacement = "combine\\(groupby\\(data_matched, \\:PAs\\)\\)",
+            file = matching_script)
+
+# Adjust DataFrame syntax and dot in front of equal for in-place operation
+replace_all(pattern = "\\(df\\[n\\] = NaN\\)",
+            replacement = "\\(df\\[\\:, n\\] .= NaN\\)",
+            file = matching_script)
+
+# This also has to be updated to follow DataFrame syntax
+replace_all(pattern = "mean\\(convert\\(Array,df_small\\[\\:,cont_vars\\]\\), dims=1\\)\\[1,\\:\\]",
+            replacement = "\\[mean\\(col\\) for col = eachcol\\(df_small\\[\\:,cont_vars\\]\\), row=1\\]",
+            file = matching_script)
+
+# Uncomment the lines launching the generation of the main results
+replace_all(pattern = "#data_matched",
+            replacement = "data_matched",
+            file = matching_script)
+replace_all(pattern = "#CSV.write",
+            replacement = "CSV.write",
+            file = matching_script)
+
+
+n_cores <- parallel::detectCores()
+replace_all(pattern = "addprocs\\(12\\)",
+            replacement = paste0("addprocs\\(", n_cores - 1, "\\)"),
+            file = matching_script)
+
 ```
 
 
@@ -413,7 +498,6 @@ replace_all(pattern = "CSV\\.read\\(\"data_processed/PAs_tab\\.csv\"\\)",
 #| eval: false
 
 library(JuliaCall)
-
 julia_source(matching_script)
 ```
 
