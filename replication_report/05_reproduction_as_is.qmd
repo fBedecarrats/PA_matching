@@ -270,6 +270,9 @@ replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_matching/",
             replacement = my_wd,
             file = join_script)
 
+replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"\\)',
+            replacement = 'wdpar::wdpa_read\\("data_input/WDPA_Jan2020_Public.zip"\\)',
+            file = join_script)
 # Correct the typo in the code
 replace_all(pattern = "PAs_buffer = PA_dists <= 10e3",
             replacement = "PAs_buffer = PAs_dist <= 10e3",
@@ -396,7 +399,7 @@ Warning messages:
 matching_script <- "PA_matching_asis/005 - covariate_matching.jl"
 
 # Modify the location of the working directory
-my_wd <- paste0(getwd(), "/PA_matching_asis/")
+my_wd <-getwd()
 
 # The way Julia has to write pathes on windows is really weird
 if (str_detect(str_to_lower(Sys.getenv("OS")), "windows")) {
@@ -504,10 +507,43 @@ julia_source(matching_script)
 
 ### Merge the results
 
-### Perform country level analysis
+```{r}
+join_results_script <- "PA_matching_asis/006 - join_results.R"
+wolf_path <- "/home/chrisgraywolf/shared/analysis/PA_matching/"
+my_data_input <- paste0(getwd(), "/replication_report/PA_matching_asis")
+replace_all(pattern = wolf_path ,
+            replacement = my_data_input,
+            file = join_results_script)
+replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"\\)',
+            replacement = 'wdpar::wdpa_read\\("data_input/WDPA_Jan2020_Public.zip"\\)',
+            file = join_results_script)
+replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_loss/data/",
+            replacement = "PA_matching_asis/",
+            file = join_results_script)
 
-### Produce summary figures
+```
+
 
 ### Compute SVC model
+
+
+```{r}
+svc_model_script <- "PA_matching_asis/007 - SVC model.R"
+replace_all(pattern = "setwd\\(project_dir\\)",
+            replacement = "# setwd(project_dir)",
+            file = svc_model_script)
+```
+
+
+### Perform country level analysis
+
+```{r}
+replace_all(pattern = "",
+            replacement = "",
+            file = join_results_script)
+```
+
+
+### Produce summary figures
 
 ### Run matching sensitivity
