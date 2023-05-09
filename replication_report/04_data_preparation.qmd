@@ -8,6 +8,13 @@ editor_options:
 
 The replication of this study requires a careful data management. The input data only represents a volume of 16.35 GB (without accounting for the data fetched through IUCN API) and it has to be transformed once or twice before the statistical analysis. First, a folder structure must be created before running the original study source code.
 
+```{r wet_wd}
+if (!stringr::str_ends(getwd(), "replication_report")) {
+  setwd("replication_report")
+}
+```
+
+
 ```{r create_dirs}
 # Create arborescence needed for code from Wolf et al. to run
 dir.create("data_input")
@@ -29,13 +36,8 @@ Several data sources are automatically fetched when running the source code, but
 The following code performs these modifications.
 
 ```{r replace_function}
-
 library(tidyverse) # A library bundle to ease data management
 
-# Copy the code from Github ---------------------------------------------------
-if (!stringr::str_ends(getwd(), "replication_report")) {
-  setwd("replication_report")
-}
 # Not a good practice, only for debugging
 # setwd("replication_report")
 # URL pointing to the zip download of the Wolf et al. repository
@@ -159,7 +161,8 @@ The published article mentions that the sources are publicly available, but seve
 # Secrets are stored in a Vault accessed above
 save_from_s3(from = "Replication_wolf/data_input/range_maps/iucn_species_classes.zip",
              to = "iucn_species_classes.zip")
-system(paste("unzip -P", my_key_zip, "iucn_species_classes.zip"))
+system(paste("unzip -P", my_key_zip, "iucn_species_classes.zip",
+              " -d data_input/range_maps/"))
 file.remove("iucn_species_classes.zip")
 
 save_from_s3(from = "Replication_wolf/data_input/range_maps/BOTW.zip",
@@ -196,101 +199,15 @@ We initially tried to obtain it through the package {wdpar}, with the following 
 
 ```{r}
 #| eval: false
-
-library(aws.s3)
-library(tidyverse)
 library(wdpar)
-library(sf)
 
 # Found the previous version of WDPA
 wdpa_Jan2020_url <- "https://pp-import-production.s3-eu-west-1.amazonaws.com/WDPA_Jan2020_Public.zip"
 dest_wdpa_Jan2020 <- "data_input/WDPA_Jan2020_Public.zip"
 download.file(wdpa_Jan2020_url, destfile = dest_wdpa_Jan2020)
-unzip(zipfile = dest_wdpa_Jan2020, exdir = "data_input")
-
-save_from_s3(from = "Replication_wolf/WDPA_Jan2023_Public.gdb.zip",
-             to = "data_input/WDPA_Jan2023_Public.gdb.zip")
-save_from_s3(from = "Replication_wolf/data_input/PAs/WDPA_Jan2023_poly.parquet",
-             to = "data_input/PAs/WDPA_Jan2023_poly.parquet")
-
-# Get the data from protectedplanet
-if (file.exists("data_input/WDPA_Jan2023_Public.gdb.zip")) {
-  wdpa_global <- wdpa_read("data_input/WDPA_Jan2023_Public.gdb.zip")
-} else {
-  wdpa_global <- wdpa_fetch("global", download_dir = "data_input")
-}
-
-# Build a name with same structure than Wolf et al.
-wdpa_file_name <- list.files("data_input", pattern = ".gdb.zip") %>%
-  str_remove("_Public.gdb.zip") %>%
-  paste0("data_input/PAs/", ., "-shapefile-polygons.shp")
-# Filter for polygons (filtering out points to be sure not to exclude something
-# by mistake) and write locally.
-wdpa_global %>%
-  #"We excluded PAs from our primary analysis that: 
-  #[1] had point (centroid) information only, 
-  filter(st_geometry_type(.) != "MULTIPOINT") %>%
-  #[2] were exclusively marine, 
-  filter(MARINE != "2") %>% #0: 100% terrestrial, 1: both, 2: 100% marine
-  #[3] were established after 2000 since the forest loss data range from 2001 to 2018,
-  filter(STATUS_YR > 2000) %>%
-  #[4] had area less than 1 km2 since forest change in small PAs can be hard to
-  # estimate accurately, 
-  filter(REP_AREA - REP_M_AREA >= 1) %>%
-  st_write(dsn = wdpa_file_name)
-
-# 48066 PAs filtered. Check as this seems quite low compared to 286356 in the 
-# WDPA global database.
 ```
 
 We then downloaded the data as zipped shapefiles from [protectedplanet.net](https://www.protectedplanet.net/) and placed it in the folder `replication_report/temp`. We executed the following script to store it in the same format than referred to in Wolf et al. source code. However, the WDPA polygons include some topological errors and the code failed. We finally chose to store the data in geoparquet format, which is more performant and more lenient regarding topological validity.
-
-```{r}
-library(tidyverse)
-library(sf)
-library(aws.s3)
-unzip(zipfile = "temp/WDPA_Jan2023_Public_shp.zip", 
-      exdir = "temp")
-unzip(zipfile = "temp/WDPA_Jan2023_Public_shp_0.zip",
-      exdir = "temp/shp0")
-unzip(zipfile = "temp/WDPA_Jan2023_Public_shp_1.zip",
-      exdir = "temp/shp1")
-unzip(zipfile = "temp/WDPA_Jan2023_Public_shp_2.zip",
-      exdir = "temp/shp2")
-wdpa <- st_read("temp/shp0/WDPA_Jan2023_Public_shp-polygons.shp") %>%
-  bind_rows(st_read("temp/shp1/WDPA_Jan2023_Public_shp-polygons.shp")) %>%
-  bind_rows(st_read("temp/shp2/WDPA_Jan2023_Public_shp-polygons.shp"))
-st_write(obj = wdpa, 
-         dsn = "data_input/PAs/WDPA_Jan2023_Public_shp-polygons.shp")
-
-wdpa2 <- wdpa %>%
-  #"We excluded PAs from our primary analysis that: 
-  #[1] had point (centroid) information only, 
-  # filter(st_geometry_type(.) != "MULTIPOINT") %>% already OK in shapefile
-  #[2] were exclusively marine, 
-  filter(MARINE != "2") %>% #0: 100% terrestrial, 1: both, 2: 100% marine
-  #[3] were established after 2000 since the forest loss data range from 2001 to 2018,
-  filter(STATUS_YR > 2000) %>%
-  #[4] had area less than 1 km2 since forest change in small PAs can be hard to
-  # estimate accurately, 
-  filter(GIS_AREA >= 1)
-
-dir.create("data_input/PAs/v2")
-st_write(obj = wdpa2, 
-         dsn = "data_input/PAs/v2/WDPA_Jan2023_Public_shp-polygons.shp")
-
-dir.create("data_input/PAs/v3")
-remotes::install_github("paleolimbot/geoarrow")
-library(geoarrow)
-write_geoparquet(wdpa2, "data_input/PAs/v3/WDPA_Jan2023_poly.parquet")
-
-put_to_s3(from = "data_input/PAs/v3/WDPA_Jan2023_poly.parquet",
-          to = "Replication_wolf/data_input/PAs/WDPA_Jan2023_poly.parquet")
-
-## TO ADD : script modification new/old
-# PAs <- geoparquet::read_reoparquet_sf("data_input/PAs/WDPA_Jan2023_poly.parquet")
-# PAs = read_sf("data_input/PAs/WDPA_Jan2023-shapefile-polygons.shp")
-```
 
 ## Fetch source data
 
@@ -299,37 +216,9 @@ put_to_s3(from = "data_input/PAs/v3/WDPA_Jan2023_poly.parquet",
 get the right WDPA data. Wolf et al. use the data from January 2020.
 
 
-
-## Prepare data
-
-The data from IUCN now comes in 2 parts for the reptiles.
-
-```{r fix_ui}
-
-library(tidyverse)
-library(sf)
-
-
-```
-
 ## Get pre-processed milestones
 
 ```{r}
-
-library(dplyr)
-library(stringr)
-library(aws.s3)
-library(purrr)
-library(stringr)
-
-if (Sys.info()["sysname"] == "Windows") {
-  source("secrets_aws.R")
-}
-
-# Listing files in bucket
-my_files <- get_bucket_df(bucket = "fbedecarrats",
-                          prefix = "Replication_wolf",
-                          region = "")
 # Selecting tifs at root
 my_tifs <- my_files %>%
   filter(str_ends(Key, ".tif")) %>%
@@ -341,29 +230,9 @@ my_tifs_dest <- my_tifs %>%
   str_replace("Replication_wolf/data_processed", "data_processed") %>%
   str_replace("Replication_wolf", "data_input")
 
-# transfer_tif <- tibble(my_tifs, my_tifs_dest)
-
-# A function to iterate/vectorize copy
-save_from_s3 <- function(x, y) {
-  aws.s3::save_object(
-    object = x,
-    bucket = "fbedecarrats",
-    file = y,
-    overwrite = FALSE,
-    region = "")
-  }
 # copy from S3 to local
 map2(my_tifs, my_tifs_dest, save_from_s3)
 
-# Select PA shp
-my_PAs <- my_files %>%
-  filter(str_detect(Key, "/PAs/WDPA")) %>%
-  pluck("Key")
-# Create paths in local machine
-my_PAs_dest <- my_PAs %>%
-  str_replace("Replication_wolf/", "data_input/")
-# Retrieve the data
-map2(my_PAs, my_PAs_dest, save_from_s3)
 
 # # Select WWF shp
 # my_biomes <- my_files %>%
