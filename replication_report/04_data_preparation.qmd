@@ -161,8 +161,7 @@ The published article mentions that the sources are publicly available, but seve
 # Secrets are stored in a Vault accessed above
 save_from_s3(from = "Replication_wolf/data_input/range_maps/iucn_species_classes.zip",
              to = "iucn_species_classes.zip")
-system(paste("unzip -P", my_key_zip, "iucn_species_classes.zip",
-              " -d data_input/range_maps/"))
+system(paste("unzip -P", my_key_zip, "iucn_species_classes.zip"))
 file.remove("iucn_species_classes.zip")
 
 save_from_s3(from = "Replication_wolf/data_input/range_maps/BOTW.zip",
