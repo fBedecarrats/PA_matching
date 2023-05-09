@@ -204,6 +204,9 @@ library(sf)
 
 # Found the previous version of WDPA
 wdpa_Jan2020_url <- "https://pp-import-production.s3-eu-west-1.amazonaws.com/WDPA_Jan2020_Public.zip"
+dest_wdpa_Jan2020 <- "data_input/WDPA_Jan2020_Public.zip"
+download.file(wdpa_Jan2020_url, destfile = dest_wdpa_Jan2020)
+unzip(zipfile = dest_wdpa_Jan2020, exdir = "data_input")
 
 save_from_s3(from = "Replication_wolf/WDPA_Jan2023_Public.gdb.zip",
              to = "data_input/WDPA_Jan2023_Public.gdb.zip")
@@ -290,6 +293,7 @@ put_to_s3(from = "data_input/PAs/v3/WDPA_Jan2023_poly.parquet",
 ```
 
 ## Fetch source data
+
 
 
 get the right WDPA data. Wolf et al. use the data from January 2020.
