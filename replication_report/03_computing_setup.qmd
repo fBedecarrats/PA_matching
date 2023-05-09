@@ -174,7 +174,7 @@ use_condaenv(my_envname)
 ```
 
 ```{r setup_py2}
-
+# eval: false
 library(reticulate) # to run python from R
 
 # Variables to modify
@@ -255,7 +255,7 @@ First we install or set-up Julia from R if needed.
 
 library(JuliaCall)
 
-if (!dir.exists(paste0(rappdirs::user_data_dir(), "/R/JuliaCall/julia"))) {
+if (!dir.exists(paste0(system.file(package = "JuliaCall"), "/julia"))) {
   install_julia()
 }
 if (!exists("my_julia")) {
