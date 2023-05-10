@@ -152,8 +152,7 @@ save_from_s3(from = "Replication_wolf/data_processed/species_data.csv",
 # Fetch birds from S3
 save_from_s3(from = "Replication_wolf/data_input/range_maps/birds_shps.zip",
              to = "birds_shps.zip")
-system(paste("unzip -P", my_key_zip, "birds_shp.zip", 
-             " -d data_input/range_maps/"))
+system(paste("unzip -P", my_key_zip, "birds_shps.zip"))
 file.remove("birds_shps.zip")
 
 # species_data <- read_csv("data_processed/species_data.csv")
@@ -214,9 +213,9 @@ Run the file
 
 ```{r}
 #| eval: false
-setwd("/home/onyxia/work/PA_matching/replication_report")
+
 library(reticulate)
-my_envname <- "replication-wolf2"
+my_envname <- "replication-wolf"
 use_condaenv(my_envname)
 species_richness_script <- "PA_matching_asis/003 - species_richness.py"
 source_python(species_richness_script)
@@ -271,7 +270,7 @@ replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_matching/",
             file = join_script)
 
 replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"\\)',
-            replacement = 'wdpar::wdpa_read\\("data_input/WDPA_Jan2020_Public.zip"\\)',
+            replacement = 'wdpar::wdpa_read\\("data_input/WDPA_Jan2020_Public.zip"\\) %>% dplyr::filter\\(st_geometry_type(\\.\\) != "MULTIPOINT"\\)',
             file = join_script)
 # Correct the typo in the code
 replace_all(pattern = "PAs_buffer = PA_dists <= 10e3",

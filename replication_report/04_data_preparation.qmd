@@ -203,6 +203,7 @@ library(wdpar)
 # Found the previous version of WDPA
 wdpa_Jan2020_url <- "https://pp-import-production.s3-eu-west-1.amazonaws.com/WDPA_Jan2020_Public.zip"
 dest_wdpa_Jan2020 <- "data_input/WDPA_Jan2020_Public.zip"
+options(timeout=3000) # Need to increase download timeout to get the data
 download.file(wdpa_Jan2020_url, destfile = dest_wdpa_Jan2020)
 ```
 

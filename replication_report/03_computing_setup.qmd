@@ -47,19 +47,21 @@ if (system.file(package = "gdalUtils") == "") {
   remotes::install_github("https://github.com/cran/gdalUtils", upgrade = FALSE)
 } 
 if (system.file(package = "ggeasy") == "") {
-  remotes::install_github("jonocarroll/ggeasy")
+  remotes::install_github("jonocarroll/ggeasy", , upgrade = FALSE)
 } 
 if (system.file(package = "velox") == "") {
   remotes::install_github("https://github.com/hunzikp/velox", upgrade = FALSE)
 } 
 if (system.file(package = "rnaturalearth") == "") {
-  remotes::install_github("https://github.com/ropensci/rnaturalearth")
+  remotes::install_github("https://github.com/ropensci/rnaturalearth",
+                          upgrade = FALSE)
 } 
 if (system.file(package = "gdalUtils") == "") {
   remotes::install_github("gearslaboratory/gdalUtils")
 } 
 if (system.file(package = "geoarrow") == "") {
-  remotes::install_github("paleolimbot/geoarrow")
+  remotes::install_github("paleolimbot/geoarrow",
+                          upgrade = FALSE)
 } 
 
 
@@ -201,7 +203,7 @@ julia_install_package_if_needed("LibGEOS")
 
 ## Adapt to Windows system (optionnal)
 
-The script `002 - dl_IUCN.R` includes a system command that `wget` that refers to a fownloading software that is included in UNIX platforms (Mac and Linux). 
+The script `002 - dl_IUCN.R` includes a system command that `wget` that refers to a downloading software that is included in UNIX platforms (Mac and Linux). 
 
 On Linux, if `wget` is not available, the user must run the same commands without `wsl`, that is run the command `sudo apt-get update` followed by the command `sudo apt-get install parallel`.
 
