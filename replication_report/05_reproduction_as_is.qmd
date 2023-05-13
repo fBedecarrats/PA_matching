@@ -509,18 +509,21 @@ julia_source(matching_script)
 
 ```{r}
 join_results_script <- "PA_matching_asis/006 - join_results.R"
-wolf_path <- "/home/chrisgraywolf/shared/analysis/PA_matching/"
-my_data_input <- paste0(getwd(), "/replication_report/PA_matching_asis")
-replace_all(pattern = wolf_path ,
-            replacement = my_data_input,
+# Do not change working directory
+replace_all(pattern = "setwd\\(project_dir\\)",
+            replacement = "# setwd\\(project_dir\\)",
             file = join_results_script)
 replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"\\)',
-            replacement = 'wdpar::wdpa_read\\("data_input/WDPA_Jan2020_Public.zip"\\)',
+            replacement = 'wdpar::wdpa_read\\("data_input/PAs/WDPA_Jan2020_Public.zip"\\)',
             file = join_results_script)
 replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_loss/data/",
             replacement = "PA_matching_asis/",
             file = join_results_script)
 
+```
+
+```{r}
+source(join_results_script)
 ```
 
 
@@ -532,7 +535,49 @@ svc_model_script <- "PA_matching_asis/007 - SVC model.R"
 replace_all(pattern = "setwd\\(project_dir\\)",
             replacement = "# setwd(project_dir)",
             file = svc_model_script)
+replace_all(pattern = "setwd\\(project_dir\\)",
+            replacement = "# setwd(project_dir)",
+            file = svc_model_script)
+replace_all(pattern = "select",
+            replacement = "dplyr::select",
+            file = svc_model_script)
+replace_all(pattern = '\\"main\\"',
+            replacement = '\\"change\\"',
+            file = svc_model_script)
+source(svc_model_script)
 ```
+
+
+```{r}
+PAs <- readRDS("data_processed/PA_df.RDS")
+
+table(PAs$group)
+
+no_coord <- PAs %>%
+  filter(is.na(long))
+
+no_coord_countries <- no_coord %>%
+  group_by(Country) %>%
+  summarise(n = n())
+
+PA_df = read.csv("data_processed/data_matched.csv", as.is=TRUE, na.strings=c("","NaN","NA"))
+table(PA_df$STATUS_YR)
+PA_table = read.csv("data_processed/PAs_tab.csv", as.is=TRUE)
+table(PA_table$STATUS_YR)
+
+wdpa = wdpar::wdpa_read("data_input/PAs/WDPA_Jan2020_Public.zip")
+
+library(sf)
+wdpa_poly <- wdpa %>%
+  mutate()
+  group_by()
+  filter( )
+
+
+table(wdpa$STATUS_YR)
+
+```
+
 
 
 ### Perform country level analysis
