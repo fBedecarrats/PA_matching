@@ -32,4 +32,7 @@ my_files <- get_bucket_df(bucket = "fbedecarrats",
                           region = "") %>%
   pluck("Key")
 
-map2(my_files, my_files, save_from_s3)
+my_files_dest <- str_replace(my_files, "data_processed", "data_processed_new")
+dir.create("data_processed_new")
+dir.create("data_processed_new/rasters")
+map2(my_files, my_files_dest, save_from_s3)
