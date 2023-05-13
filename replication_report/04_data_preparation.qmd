@@ -162,8 +162,7 @@ The published article mentions that the sources are publicly available, but seve
 # Secrets are stored in a Vault accessed above
 save_from_s3(from = "Replication_wolf/data_input/range_maps/iucn_species_classes.zip",
              to = "iucn_species_classes.zip")
-system(paste("unzip -P", my_key_zip, "iucn_species_classes.zip",
-              " -d data_input/range_maps/"))
+system(paste("unzip -P", my_key_zip, "iucn_species_classes.zip"))
 file.remove("iucn_species_classes.zip")
 
 save_from_s3(from = "Replication_wolf/data_input/range_maps/BOTW.zip",
@@ -205,6 +204,7 @@ library(wdpar)
 # Found the previous version of WDPA
 wdpa_Jan2020_url <- "https://pp-import-production.s3-eu-west-1.amazonaws.com/WDPA_Jan2020_Public.zip"
 dest_wdpa_Jan2020 <- "data_input/WDPA_Jan2020_Public.zip"
+options(timeout=3000) # Need to increase download timeout to get the data
 download.file(wdpa_Jan2020_url, destfile = dest_wdpa_Jan2020)
 ```
 
