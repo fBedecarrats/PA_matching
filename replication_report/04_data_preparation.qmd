@@ -23,6 +23,7 @@ dir.create("data_input/range_maps")
 dir.create("temp")
 dir.create("data_processed")
 dir.create("data_processed/rasters")
+dir.create("output")
 ```
 
 ## Code updates to fix automatic downloads
