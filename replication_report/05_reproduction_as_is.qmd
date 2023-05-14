@@ -508,6 +508,30 @@ julia_source(matching_script)
 ```
 
 
+```{r save_matching_output}
+
+# Save outputs
+# List present tifs
+# See which are not already in S3
+processed_local <- list.files(path = "data_processed",
+                              recursive = TRUE,
+                              full.names = TRUE) %>%
+  str_subset(., "vrt$", negate = TRUE)
+# Listing files in bucket
+my_files <- get_bucket_df(bucket = "fbedecarrats",
+                          prefix = "Replication_wolf",
+                          region = "")
+processed_s3 <- my_files %>%
+  filter(str_detect(Key, "/data_processed/")) %>%
+  mutate(path = str_remove(Key, "Replication_wolf/")) %>%
+  pluck("path")
+to_put_s3 <- processed_local[!processed_local %in% processed_s3]
+to_put_s3
+path_in_s3 <- paste0("Replication_wolf/", to_put_s3)
+# Put them in S3
+map2(to_put_s3, path_in_s3, put_to_s3)
+```
+
 ### Merge the results
 
 ```{r}
@@ -517,7 +541,7 @@ replace_all(pattern = "setwd\\(project_dir\\)",
             replacement = "# setwd\\(project_dir\\)",
             file = join_results_script)
 replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"\\)',
-            replacement = 'wdpar::wdpa_read\\("data_input/PAs/WDPA_Jan2020_Public.zip"\\)',
+            replacement = 'geoarrow::read_geoparquet_sf\\("data_input/PAs/WDPA_Jan2020_polygons.parquet"\\)',
             file = join_results_script)
 replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_loss/data/",
             replacement = "PA_matching_asis/",
@@ -547,8 +571,48 @@ replace_all(pattern = "select",
 replace_all(pattern = '\\"main\\"',
             replacement = '\\"change\\"',
             file = svc_model_script)
+
+```
+
+```{r}
 source(svc_model_script)
 ```
+
+```{r save_svc_output}
+
+# Save outputs
+# List present tifs
+# See which are not already in S3
+processed_local <- list.files(path = "output",
+                              recursive = TRUE,
+                              full.names = TRUE) %>%
+  str_subset(., "vrt$", negate = TRUE)
+# Listing files in bucket
+my_files <- get_bucket_df(bucket = "fbedecarrats",
+                          prefix = "Replication_wolf",
+                          region = "")
+processed_s3 <- my_files %>%
+  filter(str_detect(Key, "/data_processed/")) %>%
+  mutate(path = str_remove(Key, "Replication_wolf/")) %>%
+  pluck("path")
+to_put_s3 <- processed_local[!processed_local %in% processed_s3]
+to_put_s3
+path_in_s3 <- paste0("Replication_wolf/", to_put_s3)
+# Put them in S3
+map2(to_put_s3, path_in_s3, put_to_s3)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ```{r}
