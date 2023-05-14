@@ -17,5 +17,8 @@ git clone $REPO_URL $WORK_DIR
 chown -R onyxia:users $WORK_DIR
 
 # copy files from S3 
+# mc mb /home/onyxia/work/PA_matching/replication_report/data_input
+# mc mb /home/onyxia/work/PA_matching/replication_report/data_input/PAs
+# mc cp s3/fbedecarrats/Replication_wolf/data_input/PAs/WDPA_Jan2020_polygons.parquet /home/onyxia/work/PA_matching/replication_report/data_input/PAs
 # mc cp -r s3/fbedecarrats/Replication_wolf/data_input $REPLI_DIR
 mc cp -r s3/fbedecarrats/Replication_wolf/data_processed $REPLI_DIR
