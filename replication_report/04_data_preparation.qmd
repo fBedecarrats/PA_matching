@@ -218,6 +218,8 @@ if (!file.exists("data_input/PAs/WDPA_Jan2020_polygons.parquet")) {
     layer = "WDPA_poly_Jan2020")
   write_geoparquet(wdpa2020_poly, "data_input/PAs/WDPA_Jan2020_polygons.parquet")
 }
+# save_from_s3("Replication_wolf/data_input/PAs/WDPA_Jan2020_polygons.parquet",
+#              "data_input/PAs/WDPA_Jan2020_polygons.parquet")
 ```
 
 ## Fetch source data
