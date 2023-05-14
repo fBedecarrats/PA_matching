@@ -191,13 +191,7 @@ file.remove("BOTW.zip")
 
 ### Data on protected areas
 
-The Protected planet website only provides the latest version of the World database on protected areas (WDPA). When the data is fetched in the geographic database format (.gdb), some columns are missing that are available when fetching the data in shapefile format (.shp), in particular the field GIS_AREA. 
-By probing the portals wh
-We were able to manually could not figure out how to obtain the versions from previous months or years. Wolf et al. used the January 2020 version, we use the January 2023. The dataset includes the year of creation of the status, which enables to apply the same temporal filters than the authors (Protected areas created between from 2001 and 2019), but it is possible that information about existing entities have been added, modified or deleted between January 2020 and January 2021.
-
-We encountered several obstacles for this operation, that we document below.
-
-We initially tried to obtain it through the package {wdpar}, with the following code. However, when using this method, a column named `GIS_AREA` is not present in the data, while it is used by the script by Wolf et al. performing the matching (`005 - covariate_matching.jl`).
+The Protected planet website only provides the latest version of the World database on protected areas (WDPA). The data can be fetched in shapefile, which is the format used for the original study. The original study used a WDPA version rom January 2020 in shapefile format f. This is not documented, but ended up finding the WDPA version from January 2020 in gdb format on a open AWS server used by UNEP-WCM. The data is difficult to access in GDB format, so we extract it and save it in geoparquet.
 
 ```{r}
 #| eval: false
@@ -213,39 +207,18 @@ if (!stringr::str_ends(getwd(), "replication_report")) {
 # Found the previous version of WDPA
 dest_wdpa_Jan2020 <- "data_input/PAs/WDPA_Jan2020_Public.zip"
 
-if (!file.exists(dest_wdpa_Jan2020)) {
+if (!file.exists("data_input/PAs/WDPA_Jan2020_polygons.parquet")) {
   wdpa_Jan2020_url <- "https://pp-import-production.s3-eu-west-1.amazonaws.com/WDPA_Jan2020_Public.zip"
   options(timeout=3000) # Need to increase download timeout to get the data
   download.file(wdpa_Jan2020_url, destfile = dest_wdpa_Jan2020)
+  
+  unzip(dest_wdpa_Jan2020, exdir = "data_input/PAs")
+  wdpa2020_poly <- read_sf(
+    dsn = "data_input/PAs/WDPA_Jan2020_Public/WDPA_Jan2020_Public.gdb",
+    layer = "WDPA_poly_Jan2020")
+  write_geoparquet(wdpa2020_poly, "data_input/PAs/WDPA_Jan2020_polygons.parquet")
 }
-
-wdpa2020 <- wdpa_read(dest_wdpa_Jan2020)
-wdpa2023_poly <- st_read(
-  "data_input/PAs/WDPA_May2023_Public_shp-polygons/WDPA_May2023_Public_shp-polygons.shp")
-
-colnames(wdpa2023_poly)[!colnames(wdpa2023_poly) %in% colnames(wdpa2020)]
-# "GIS_M_AREA" "GIS_AREA"   "PARENT_ISO" "SUPP_INFO" "CONS_OBJ" 
-
-wdpa2020_poly <- wdpa2020 %>%
-  filter(st_geometry_type(.) == "MULTIPOLYGON")
-
-wdpa2020_poly_in_wdpa2023_poly <- wdpa2020_poly %>%
-  filter(WDPAID %in% wdpa2023_poly$WDPAID)
-
-wdpa2023_poly_in_wdpa2020_poly <- wdpa2023_poly %>%
-  filter(WDPAID %in% wdpa2020_poly$WDPAID) 
-
-nrow(wdpa2023_poly) - nrow(wdpa2020_poly_in_wdpa2023_poly)  # 312
-nrow(wdpa2023_poly) # 91058
-nrow(wdpa2023_poly) - nrow(wdpa2023_poly_in_wdpa2020_poly)  # 334
-
-write_geoparquet(wdpa2023_poly_in_wdpa2020_poly,
-                 "data_input/PAs/wdpa2023_poly_in_wdpa2020_poly.parquet")
 ```
-
-In the WDPA dataset of February 2023, we find 775 protected areas polygonds (out of a total of 91 058 protected areas polygons in the February 2023 dataset) that were not in the WDPA dataset of January 2020. We also find out that 13 protected area polygons have been removed from WDPA, that is that they were in the dataset in January 2020 and cannot be found anymore in February 2023.
-
-We then downloaded the data as zipped shapefiles from [protectedplanet.net](https://www.protectedplanet.net/) and placed it in the folder `replication_report/temp`. We executed the following script to store it in the same format than referred to in Wolf et al. source code. However, the WDPA polygons include some topological errors and the code failed. We finally chose to store the data in geoparquet format, which is more performant and more lenient regarding topological validity.
 
 ## Fetch source data
 
