@@ -261,7 +261,7 @@ There is a typo on line 136: an object called `PA_dists` is called but no object
 
 
 ```{r}
-
+ 
 join_script <- "PA_matching_asis/004 - join_rasters.R"
 my_wd <- paste0(getwd(), "/")
 # Change the working directory location
@@ -270,7 +270,7 @@ replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_matching/",
             file = join_script)
 
 replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"\\)',
-            replacement = 'wdpar::wdpa_read\\("data_input/WDPA_Jan2020_Public.zip"\\) %>% dplyr::filter\\(st_geometry_type(\\.\\) != "MULTIPOINT"\\)',
+            replacement = 'geoarrow::read_geoparquet_sf\\("data_input/PAs/WDPA_Jan2020_polygons.parquet"\\)',
             file = join_script)
 # Correct the typo in the code
 replace_all(pattern = "PAs_buffer = PA_dists <= 10e3",
