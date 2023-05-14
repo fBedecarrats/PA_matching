@@ -10,7 +10,7 @@ The replication of this study requires a careful data management. The input data
 
 ```{r wet_wd}
 if (!stringr::str_ends(getwd(), "replication_report")) {
-  setwd("replication_report")
+  setwd("PA_matching/replication_report")
 }
 ```
 
