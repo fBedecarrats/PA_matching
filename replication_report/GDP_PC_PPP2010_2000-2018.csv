@@ -1,4 +1,4 @@
-Country Name,Country Code,Indicator Name,Indicator Code,date,value
+Country Name,iso3c,Indicator Name,Indicator Code,date,value
 Aruba,ABW,GDP per capita (constant 2010 US$),NY.GDP.PCAP.KD,2000,28417.3842120132
 Aruba,ABW,GDP per capita (constant 2010 US$),NY.GDP.PCAP.KD,2001,26966.0548644166
 Aruba,ABW,GDP per capita (constant 2010 US$),NY.GDP.PCAP.KD,2002,25508.3027198476
