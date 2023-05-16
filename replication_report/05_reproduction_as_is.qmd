@@ -546,6 +546,11 @@ replace_all(pattern = "setwd\\(project_dir\\)",
 replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"\\)',
             replacement = 'geoarrow::read_geoparquet_sf\\("data_input/PAs/WDPA_Jan2020_polygons.parquet"\\)',
             file = join_results_script)
+replace_all(pattern = 'wb\\(indicator="NY.GDP.PCAP.KD", startdate=2000, enddate=2018\\)',
+            replacement = 'read_csv\\("GDP_PC_PPP2010_2000-2018.csv"\\)',
+            file = join_results_script)
+
+            
 replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_loss/data/",
             replacement = "PA_matching_asis/",
             file = join_results_script)
