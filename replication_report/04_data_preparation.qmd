@@ -225,8 +225,36 @@ if (!file.exists("data_input/PAs/WDPA_Jan2020_polygons.parquet")) {
 ## Fetch source data
 
 
+### GDP
 
-get the right WDPA data. Wolf et al. use the data from January 2020.
+In the source code of the original study, the world bank data is fetched using a R package that interfaces with the API of the World Wank "World Development Indicators" (WDI) database, using the following code :
+
+```{r}
+#! eval: false
+GDP_raw = wb(indicator="NY.GDP.PCAP.KD", startdate=2000, enddate=2018) # GDP per capita, PPP (current international $)
+```
+There a two main problems with this method:  
+
+- The data for the corresponding year returned by the API is different. When the original study was submitted to Nature Ecology & Evolution (17 November 2019 according to its metadata), the GDP per capita indicator returned by the WDI API was based on the 2010 PPP. Since 2021, the GDP per capita indicator returned by the WDI API is based on the 2015 PPP. The data is not reproducible and using this method produces different data.
+- The data for Venezuela has been removed from the WDI public database "due to the unavailability of data".
+
+To avoid this issue, we use the Internet Archive to download a snapthot of the data from the 8 November 2019 avalable at [this persistent address](https://web.archive.org/web/20200916094145if_/http://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.KD?downloadformat=csv). The following prepares the data at the same format than the one outputted by the wbstat package to ensure it is identical with what was used for the initial study.
+
+```{r}
+download.file("https://web.archive.org/web/20200916094145if_/http://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.KD?downloadformat=csv", destfile = "temp/gdp_cap.zip", method = "curl")
+unzip(zipfile = "temp/gdp_cap.zip", exdir = "temp")
+GDP_raw <- read_csv("temp/API_NY.GDP.PCAP.KD_DS2_en_csv_v2_1345070.csv", 
+                    skip = 3)
+
+GDP_raw <- gdp_cap %>%
+  dplyr::select(starts_with(c("Country", "Indicator", "2"))) %>%
+  dplyr::select(-`2019`) %>%
+  pivot_longer(cols = -starts_with(c("Country", "Indicator")),
+               names_to = "date")
+
+write_csv(GDP_raw, "GDP_PC_PPP2010_2000-2018.csv")
+
+```
 
 
 ## Get pre-processed milestones
