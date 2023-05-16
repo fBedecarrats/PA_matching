@@ -16,6 +16,9 @@ We will use the following function that explicitly declares which modification a
 ```{r}
 library(tidyverse)
 
+if (!stringr::str_detect(getwd(), "PA_matching")) {
+  setwd("PA_matching")
+}
 if (!stringr::str_ends(getwd(), "replication_report")) {
   setwd("replication_report")
 }
