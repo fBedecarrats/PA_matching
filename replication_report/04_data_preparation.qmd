@@ -6,11 +6,14 @@ editor_options:
 
 # Data gathering and preparation {#sec-data_preparation}
 
-The replication of this study requires a careful data management. The input data only represents a volume of 16.35 GB (without accounting for the data fetched through IUCN API) and it has to be transformed once or twice before the statistical analysis. First, a folder structure must be created before running the original study source code.
+The replication of this study requires a careful data management. The input data only represents a volume of 25.5 GB and it has to be transformed once or twice before the statistical analysis. First, a folder structure must be created before running the original study source code.
 
 ```{r wet_wd}
+if (!stringr::str_detect(getwd(), "PA_matching")) {
+  setwd("PA_matching")
+}
 if (!stringr::str_ends(getwd(), "replication_report")) {
-  setwd("PA_matching/replication_report")
+  setwd("replication_report")
 }
 ```
 
@@ -82,6 +85,11 @@ replace_all(pattern = old,
 replace_all(pattern = "data_input/official_teow.zip\\?1349272619",
             replacement = "data_input/6kcchn7e3u_official_teow.zip",
             file = join_script)
+
+# Prevent the scripts to modify the working directory
+list.files("PA_matching_asis", full.names = TRUE) %>%
+  map(\(x) replace_all("setwd", "# setwd", x))
+
 ```
 
 ## Data that needs to be fetched manually before running code
@@ -93,31 +101,9 @@ Several sources needs to be collected manually and stored in the file tree to ru
 library(tidyverse)
 library(aws.s3)
 
-# Gather secrets required to work with S3 systems
-if (Sys.info()["sysname"] == "Windows") {
-  if (file.exists("secrets_aws.R")) {
-    source("secrets_aws.R")
-  } else { 
-    print(paste0(
-    "You must save your AWS credentials in a local file named secret_aws.R. ",
-    "For more indications see: https://www.book.utilitr.org/",
-    "sspcloud.html#renouveler-des-droits-dacc%C3%A8s-p%C3%A9rim%C3%A9s"))
-  }
-}
-
-# If running on SSP Cloud, getting the key from vault
-if (Sys.info()["effective_user"] == "onyxia") {
-  system("vault kv get -format=table onyxia-kv/fbedecarrats/species_info", 
-         intern = TRUE) -> my_secret 
-  my_key_zip <- my_secret %>%
-    pluck(18) %>%
-    str_extract("[:alnum:]*$")
-  my_key_api <- my_secret %>%
-    pluck(17) %>%
-    str_extract("[:alnum:]*$")
-} else {
- my_secret <- readLines("secret_zip_key")
-}
+# To use the S3 server to save and load intermediate results,# You must enter 
+# your AWS credentials in the R console. For more indications see: 
+# https://www.book.utilitr.org/01_r_insee/fiche_utiliser_rstudio_sspcloud#renouveler-des-droits-dacc%C3%A8s-p%C3%A9rim%C3%A9s
 
 # A function to put data from local machine to S3
 put_to_s3 <- function(from, to) {
@@ -139,10 +125,12 @@ save_from_s3 <- function(from, to) {
     region = "")
 }
 
-# Listing files in bucket
-my_files <- get_bucket_df(bucket = "fbedecarrats",
-                          prefix = "Replication_wolf",
-                          region = "")
+if (Sys.getenv("AWS_ACCESS_KEY_ID") != "") {
+  # Listing files in bucket
+  my_files <- get_bucket_df(bucket = "fbedecarrats",
+                            prefix = "Replication_wolf",
+                            region = "")
+}
 ```
 
 ### Species data
@@ -154,17 +142,31 @@ The published article mentions that the sources are publicly available, but seve
 - It is also required to generate a token from the UICN website and include it in the line 18 of the script `002 - dl_IUCN.R` for it to run successfully.
 
 
-
 ```{r}
 # Fetch and unzip species range maps -------------------------------------------
 
 # We stored the range maps in encrypted zip (sensitive data)
-# Secrets are stored in a Vault accessed above
+
+# If running on SSP Cloud, getting the ecryption key from vault
+if (Sys.info()["effective_user"] == "onyxia") {
+  system("vault kv get -format=table onyxia-kv/fbedecarrats/species_info", 
+         intern = TRUE) -> my_secret 
+  my_key_zip <- my_secret %>%
+    pluck(18) %>%
+    str_extract("[:alnum:]*$")
+  my_key_api <- my_secret %>%
+    pluck(17) %>%
+    str_extract("[:alnum:]*$")
+} else { # otherwise you need to store your file encryption key 
+         # in a file named secret_zip_key
+ my_secret <- readLines("secret_zip_key")
+}
+
+# Load the data from S3 and decrypt it
 save_from_s3(from = "Replication_wolf/data_input/range_maps/iucn_species_classes.zip",
              to = "iucn_species_classes.zip")
 system(paste("unzip -P", my_key_zip, "iucn_species_classes.zip"))
 file.remove("iucn_species_classes.zip")
-
 save_from_s3(from = "Replication_wolf/data_input/range_maps/BOTW.zip",
              to = "BOTW.zip")
 system(paste("unzip -P", my_key_zip, "BOTW.zip", " -d data_input/range_maps/"))
