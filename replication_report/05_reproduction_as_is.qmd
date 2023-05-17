@@ -30,11 +30,6 @@ replace_all <- function(pattern, replacement, file) {
 }
 ```
 
-The following functions are a series of utilities to save the data to a datalake (based on S3)
-
-We also re-create the file arborescence
-
-
 
 ### Fetch data from Google Earth Engine
 
@@ -567,12 +562,6 @@ source(join_results_script)
 
 ```{r}
 svc_model_script <- "PA_matching_asis/007 - SVC model.R"
-replace_all(pattern = "setwd\\(project_dir\\)",
-            replacement = "# setwd(project_dir)",
-            file = svc_model_script)
-replace_all(pattern = "setwd\\(project_dir\\)",
-            replacement = "# setwd(project_dir)",
-            file = svc_model_script)
 replace_all(pattern = "select",
             replacement = "dplyr::select",
             file = svc_model_script)
@@ -608,62 +597,41 @@ to_put_s3
 path_in_s3 <- paste0("Replication_wolf/", to_put_s3)
 # Put them in S3
 map2(to_put_s3, path_in_s3, put_to_s3)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```{r}
-PAs <- readRDS("data_processed/PA_df.RDS")
-
-table(PAs$group)
-
-no_coord <- PAs %>%
-  filter(is.na(long))
-
-no_coord_countries <- no_coord %>%
-  group_by(Country) %>%
-  summarise(n = n())
-
-PA_df = read.csv("data_processed/data_matched.csv", as.is=TRUE, na.strings=c("","NaN","NA"))
-table(PA_df$STATUS_YR)
-PA_table = read.csv("data_processed/PAs_tab.csv", as.is=TRUE)
-table(PA_table$STATUS_YR)
-
-wdpa = wdpar::wdpa_read("data_input/PAs/WDPA_Jan2020_Public.zip")
-
-library(sf)
-wdpa_poly <- wdpa %>%
-  mutate()
-  group_by()
-  filter( )
-
-
-table(wdpa$STATUS_YR)
-
 ```
-
-
 
 ### Perform country level analysis
 
 ```{r}
+country_analysis_script <- "PA_matching_asis/007 - country level analysis.R"
+# ne_load fetches from the temporary location (which is lost if we run in 
+# different threads with `source(script)`). This ensures the data is fetched
+replace_all(pattern = "ne_load",
+            replacement = "ne_download",
+            file = country_analysis_script)
+replace_all(pattern = 'read.dbf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.dbf", as.is=TRUE\\)',
+            replacement = 'arrow::read_parquet\\("data_input/PAs/WDPA_Jan2020_polygons.parquet", col_select = -Shape\\)',
+            file = country_analysis_script)
+    
+```
+
+
+### Produce summary figures
+
+```{r}
+country_analysis_script <- "PA_matching_asis/007 - summary figures.R"
+replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"\\)',
+            replacement = 'geoarrow::read_geoparquet_sf\\("data_input/PAs/WDPA_Jan2020_polygons.parquet"\\)',
+            file = country_analysis_script)
 replace_all(pattern = "",
             replacement = "",
             file = join_results_script)
 ```
 
 
-### Produce summary figures
-
 ### Run matching sensitivity
+
+```{r}
+replace_all(pattern = "",
+            replacement = "",
+            file = join_results_script)
+```
