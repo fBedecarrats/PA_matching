@@ -16,8 +16,6 @@ if (!stringr::str_ends(getwd(), "replication_report")) {
   setwd("replication_report")
 }
 ```
-
-
 ```{r create_dirs}
 # Create arborescence needed for code from Wolf et al. to run
 dir.create("data_input")
@@ -28,6 +26,7 @@ dir.create("data_processed")
 dir.create("data_processed/rasters")
 dir.create("output")
 ```
+
 
 ## Code updates to fix automatic downloads
 
@@ -116,12 +115,12 @@ put_to_s3 <- function(from, to) {
 }
 
 # A function to iterate/vectorize copy
-save_from_s3 <- function(from, to) {
+save_from_s3 <- function(from, to, overwrite = FALSE) {
   aws.s3::save_object(
     object = from,
     bucket = "fbedecarrats",
     file = to,
-    overwrite = FALSE,
+    overwrite = overwrite,
     region = "")
 }
 
@@ -131,6 +130,9 @@ if (Sys.getenv("AWS_ACCESS_KEY_ID") != "") {
                             prefix = "Replication_wolf",
                             region = "")
 }
+
+
+
 ```
 
 ### Species data
