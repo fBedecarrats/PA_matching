@@ -611,6 +611,9 @@ replace_all(pattern = "ne_load",
 replace_all(pattern = 'read.dbf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.dbf", as.is=TRUE\\)',
             replacement = 'arrow::read_parquet\\("data_input/PAs/WDPA_Jan2020_polygons.parquet", col_select = -Shape\\)',
             file = country_analysis_script)
+
+
+            
     
 ```
 
@@ -618,13 +621,81 @@ replace_all(pattern = 'read.dbf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygon
 ### Produce summary figures
 
 ```{r}
-country_analysis_script <- "PA_matching_asis/007 - summary figures.R"
+summary_figures_script <- "PA_matching_asis/007 - summary figures.R"
+
 replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"\\)',
             replacement = 'geoarrow::read_geoparquet_sf\\("data_input/PAs/WDPA_Jan2020_polygons.parquet"\\)',
-            file = country_analysis_script)
-replace_all(pattern = "",
-            replacement = "",
-            file = join_results_script)
+            file = summary_figures_script)
+
+replace_all(pattern = "ne_load",
+            replacement = "ne_download",
+            file = summary_figures_script)
+
+replace_all(pattern = "select",
+            replacement = "dplyr::select",
+            file = summary_figures_script)
+
+replace_all(pattern = '54030',
+            replacement = '"ESRI:54030"',
+            file = summary_figures_script)
+```
+
+We find negligible differences with the descriptive statistics presented in the result section of the original study.
+
+The original study reports: 
+> "Prior to matching with control areas, our primary PA dataset contained 25,348 PAs. However, 7,177 (28.3%) of these PAs could not be matched with any unprotected pixels having similar matching-covariate values. Consequently, after applying coarsened exact matching to identify control areas, our final dataset contained 18,171 PAs, with a total area of 5,293,217 km2 (Fig. 1 and Extended Data Fig. 1)."
+On our side, we find 18,728 matched protected area fitting the analysis criteria defined by the source code, covering 6,167,491 km2.
+
+The original study reports: 
+> "In absolute terms, the 18,171 PAs in our analysis had an average annual forest loss rate of ~1.53 Mha."
+Our replication finds ~1.71 Mha of deforestatoin in the 18,728 analyzed.
+
+The original study reports
+
+
+```{r}
+#| eval: false
+# absolute terms - approximate total forest loss per year on average:
+(100*sum(df$GIS_AREA * df$cover_loss/100)/18)/1e6 # (/100 to convert to proportion of pixel)
+```
+```
+[1] 1.709959
+```
+The original study reports: 
+> In our analysis, 28.7% of the PAs did not have any forest loss.
+
+In our replication, we find that 27.9% of of the PAs did not have any forest loss.
+
+Regarding the overall deforestation in PAs created before 2001, the original study reports:
+> Overall, PAs reduced, but did not eliminate, deforestation; the median annual deforestation rate in control areas (0.54%; s.d. = 2.21%) was 4.97 times higher than within PAs (0.11% per year; s.d. = 2.45%)
+
+
+In protected areas created between 2001 and 2017, annual cover cela passerait de 0.431% à 0.477%, soit une hausse de 0.045%
+Dans les zones de contrôle, la déforestation annuelle passerait de 0.751% à 1.032%, soit une hausse de 
+```
+> # paper text
+> round(100*mean(df$PA_loss_before), 3) 
+[1] 0.431
+> round(100*mean(df$PA_loss_after), 3) 
+[1] 0.477
+> P = df$PA_loss_after - df$PA_loss_before
+> C = df$Control_loss_after - df$Control_loss_before
+> round(100*mean(P), 3)
+[1] 0.045
+> round(100*mean(C), 3)
+[1] 0.281
+> 100*sd(P)/sqrt(length(P))
+[1] 0.01974945
+> 100*sd(C)/sqrt(length(C))
+[1] 0.0142932
+> round(100*mean(df$Control_loss_before), 3) 
+[1] 0.751
+> round(100*mean(df$Control_loss_after), 3) 
+[1] 1.032
+> round(100*tapply(df_small$value, list(df_small$variable, df_small$Continent), mean),3)
+                Oceania North America Europe  Asia Africa Lower GDP Higher GDP
+Control areas     0.065         0.003  0.597 0.273  0.818     0.235      0.291
+Protected areas   0.214        -0.081  0.154 0.130  0.293     0.148      0.024
 ```
 
 
