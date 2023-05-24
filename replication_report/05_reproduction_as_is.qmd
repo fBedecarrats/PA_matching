@@ -640,31 +640,109 @@ replace_all(pattern = '54030',
             file = summary_figures_script)
 ```
 
-We find negligible differences with the descriptive statistics presented in the result section of the original study.
+### Results
+
+In this section, we reproduce a series of outputs generated in the code of the script `007 - summary figures.R` that correspond to the main results reported in the original study. We find moderate differences in descriptive statistics and negligible ones on the outcomes on conservations. 
+
+#### Conservation extent
+
+The original study reports
+> "Globally, 15.7% of forest is formally protected"
+
+```{r}
+tab <- table(cover[] >= 30, PA_rast[], useNA="always")
+prop.table(tab,1) # 0.18650047
+```
+
+We find that 18.7% of the forest is formally protected. This raises the questions about whether the authors of the original study used the same version of WDPA or biome extent than the ones we had access to for the replication, although we fetched it from the same sources. We will try to better under
+
+#### PA characteristics
 
 The original study reports: 
 > "Prior to matching with control areas, our primary PA dataset contained 25,348 PAs. However, 7,177 (28.3%) of these PAs could not be matched with any unprotected pixels having similar matching-covariate values. Consequently, after applying coarsened exact matching to identify control areas, our final dataset contained 18,171 PAs, with a total area of 5,293,217 km2 (Fig. 1 and Extended Data Fig. 1)."
-On our side, we find 18,728 matched protected area fitting the analysis criteria defined by the source code, covering 6,167,491 km2.
+> "In absolute terms, the 18,171 PAs in our analysis had an average annual forest loss rate of ~1.53 Mha."
+
+```{r}
+nrow(readRDS("data_processed/PA_df.RDS") %>% dplyr::filter(group == "main"))
+addmargins(table(matched=df$matched, cat=df$cat_simple, gp=df$group))
+
+```
+
+In our replication, we have in the primary PA dataset we find 25850 Protected areas fitting the analysis criteria defined by the source code. Of those 18,728 could be matched protected area, covering 6,167,491 km2. Our replication finds ~1.71 Mha of deforestatoin in the 18,728 analyzed. 
+
+```{r}
+average_initial <- 5293217 / 18171 # 291.3003
+additional_PAs <- 18728 - 18171 # 557
+additional_area <- 6167491 - 5293217 # 874274
+average_additional <- additional_area / additional_PAs # 1569.612
+```
+
+This suggest that we did not get exactly the same WDPA dataset from the beginning, although the one we used (WDPA_Jan2020_Public) is the one referred to in the source code (WDPA_Jan2020-shapefile-polygons.shp), and mentionned in the bibliography of the original study (reference 59 is: "The World Database on Protected Areas (WDPA) (IUCN and UNEP-WCMC, accessed 1 January 2020)"). We have 557 additional PAs in our replication, corresponding to 874,274 km2. According to the relative number and areas, we deduce that these 557 additionnal PAs have an average are of 1569 km2, compared to an average of 291 km2 for the PAs reported. We conclude that the additional PAs tend to be larger than the ones used in the original dataset, but we are not able to identify them as the data used for the original study have not been published.
+
+#### PAs without loss
 
 The original study reports: 
-> "In absolute terms, the 18,171 PAs in our analysis had an average annual forest loss rate of ~1.53 Mha."
-Our replication finds ~1.71 Mha of deforestatoin in the 18,728 analyzed.
+> In our analysis, 28.7% of the PAs did not have any forest loss. Among PAs with known management category, deforestation rates were highest in nonstrict PAs in Africa (0.31% per year), Europe (0.29% per year) and South America (0.19% per year), and lowest in strict PAs in Oceania (0.02% per year)
+```{r}
+mean(df$PA_loss ==  0)
+```
+In our replication, we find that 27.9% of of the PAs did not have any forest loss.
 
-The original study reports
+```{r}
+n_no_loss_replic <- round(18728*0.279) # 5225.112
+n_no_loss_origin <- round(18171*0.287) # 5215.077
+n_no_loss_additionnal <- n_no_loss_replic - n_no_loss_origin
+n_no_loss_additionnal / additional_PAs
+```
+
+In absolute terms, this means that the original study found that 5215 PAs had no forest loss, which corresponds to a 28.7% of 18,171 PAs, while the replication finds 5225 PAs without forest loss (28.7% of PAs with no forest loss), which corresponds to a 27.9% of 18,728 PAs. This means that, of the 557 additionnal PAs included in the replication, only 10 had no forest loss (1.8%).
+
+We can also reproduce figure 2:
+![Fig. 2: Deforestation rate distributions](output/loss_hist_bw.png)
+
+#### Conservation impact: before 2001
+
+The original study reports in its abstract:
+> **Overall, protected areas did not eliminate deforestation, but reduced deforestation rates by 41%.**
+
+And in its results section:`
+> Overall, PAs reduced, but did not eliminate, deforestation; the median annual deforestation rate in control areas (0.54%; s.d. = 2.21%) was 4.97 times higher than within PAs (0.11% per year; s.d. = 2.45%) (Fig. 2). In absolute terms, the 18,171 PAs in our analysis had an average annual forest loss rate of ~1.53 Mha. In our analysis, 28.7% of the PAs did not have any forest loss. Among PAs with known management category, deforestation rates were highest in nonstrict PAs in Africa (0.31% per year), Europe (0.29% per year) and South America (0.19% per year), and lowest in strict PAs in Oceania (0.02% per year)
+
+```{r}
+diff_mean <- round(100*(1-mean(inside)/mean(outside)),3) # 42.74% instead of 41.12% 
+diff_add_median <- round(100*median(outside-inside),3) # median additive difference of 0.226% vs 0.194%
+iqr_diff <- IQR(outside-inside) # 0.008525058
+out_median <- median(outside) # 0.005685758 -> 0.57% instead of 0.54%
+out_sd <- sd(outside) # 0.02531807 instead of 2.21%
+in_median <- median(inside) # 0.00116665 almost identical to 0.11% per year
+in_ds <- sd(inside) # 0.02413182 vs. 2.45%
+diff_median <- median(outside)/median(inside) # 4.873577
+(100*sum(df$GIS_AREA * df$cover_loss/100)/18)/1e6 # 1.71)/ instead of 1.53
+```
+
+The results of the comparisons are very close in relative terms. In absulte term the difference is 11.8% higher: 1.71 Mha in annual loss instead of 1.53.  
+
+We reproduce the Figure 3:
+
+![Fig. 3: Forest loss in and around PAs]()
+
+#### Conservation impact 2002-2017
 
 
 ```{r}
-#| eval: false
-# absolute terms - approximate total forest loss per year on average:
-(100*sum(df$GIS_AREA * df$cover_loss/100)/18)/1e6 # (/100 to convert to proportion of pixel)
+
 ```
+
+/!\ C'est calculé avec GIS area vs. pixels... étrange.
+
+
 ```
 [1] 1.709959
 ```
-The original study reports: 
-> In our analysis, 28.7% of the PAs did not have any forest loss.
+```{r}
 
-In our replication, we find that 27.9% of of the PAs did not have any forest loss.
+```
+
 
 Regarding the overall deforestation in PAs created before 2001, the original study reports:
 > Overall, PAs reduced, but did not eliminate, deforestation; the median annual deforestation rate in control areas (0.54%; s.d. = 2.21%) was 4.97 times higher than within PAs (0.11% per year; s.d. = 2.45%)

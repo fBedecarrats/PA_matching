@@ -73,6 +73,8 @@ required_packages <- c( # List all required R packages
   "JuliaCall", # To interact with Julia 
   "tidyverse", # To facilitate data manipulation
   "aws.s3", # to interact with S3
+  "arrow",
+  "geoarrow",
   # All packages below are used in Wolf and al. code files:
   "countrycode",
   "cowplot",

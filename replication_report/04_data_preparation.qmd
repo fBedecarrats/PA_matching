@@ -212,6 +212,7 @@ if (!stringr::str_ends(getwd(), "replication_report")) {
 dest_wdpa_Jan2020 <- "data_input/PAs/WDPA_Jan2020_Public.zip"
 
 if (!file.exists("data_input/PAs/WDPA_Jan2020_polygons.parquet")) {
+  # URL identification from https://github.com/RS-eco/ggmap2/blob/main/R/getData2.R
   wdpa_Jan2020_url <- "https://pp-import-production.s3-eu-west-1.amazonaws.com/WDPA_Jan2020_Public.zip"
   options(timeout=3000) # Need to increase download timeout to get the data
   download.file(wdpa_Jan2020_url, destfile = dest_wdpa_Jan2020)
@@ -222,8 +223,10 @@ if (!file.exists("data_input/PAs/WDPA_Jan2020_polygons.parquet")) {
     layer = "WDPA_poly_Jan2020")
   write_geoparquet(wdpa2020_poly, "data_input/PAs/WDPA_Jan2020_polygons.parquet")
 }
-# save_from_s3("Replication_wolf/data_input/PAs/WDPA_Jan2020_polygons.parquet",
-#              "data_input/PAs/WDPA_Jan2020_polygons.parquet")
+put_to_s3("data_input/PAs/WDPA_Jan2020_polygons.parquet",
+          "Replication_wolf/data_input/PAs/WDPA_Jan2020_polygons.parquet")
+save_from_s3("Replication_wolf/data_input/PAs/WDPA_Jan2020_polygons.parquet",
+             "data_input/PAs/WDPA_Jan2020_polygons.parquet", overwrite = TRUE)
 ```
 
 ## Fetch source data
