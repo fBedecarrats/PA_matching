@@ -2,6 +2,8 @@
 output: html_document
 editor_options: 
   chunk_output_type: console
+execute:
+  eval: false
 ---
 
 # Reproduction "as is" of the publised results {#sec-reproducion_asis}
