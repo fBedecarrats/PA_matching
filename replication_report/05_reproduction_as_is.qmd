@@ -595,7 +595,7 @@ my_files <- get_bucket_df(bucket = "fbedecarrats",
                           prefix = "Replication_wolf",
                           region = "")
 processed_s3 <- my_files %>%
-  filter(str_detect(Key, "/data_processed/")) %>%
+  filter(str_detect(Key, "/output/")) %>%
   mutate(path = str_remove(Key, "Replication_wolf/")) %>%
   pluck("path")
 to_put_s3 <- processed_local[!processed_local %in% processed_s3]

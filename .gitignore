@@ -14,6 +14,7 @@ data_*/*
 # docs/*
 *.zip
 replication_report/*/
+!replication_report/output/
 *secret*
 PA_matching-*
 PA_matching_*
