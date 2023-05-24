@@ -66,3 +66,5 @@ The Google earth engine documentation warns against reprojecting after slope cal
 ## No use of certain matching covariates in the impact estimation model
 
 cf. doubly robust matching, cf. Ho et al. 2007
+
+## Problems with lossyear

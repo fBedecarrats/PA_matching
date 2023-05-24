@@ -528,6 +528,7 @@ to_put_s3
 path_in_s3 <- paste0("Replication_wolf/", to_put_s3)
 # Put them in S3
 map2(to_put_s3, path_in_s3, put_to_s3)
+put_to_s3("data_processed/PA_df.RDS", "Replication_wolf/data_processed/PA_df.RDS")
 ```
 
 ### Merge the results
@@ -544,7 +545,10 @@ replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons
 replace_all(pattern = 'wb\\(indicator="NY.GDP.PCAP.KD", startdate=2000, enddate=2018\\)',
             replacement = 'read_csv\\("GDP_PC_PPP2010_2000-2018.csv"\\)',
             file = join_results_script)
-
+# Legacy regions in country_codes: https://vincentarelbundock.github.io/countrycode/reference/codelist.html
+replace_all(pattern = '"region"',
+            replacement = '"region23"',
+            file = join_results_script)
             
 replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_loss/data/",
             replacement = "PA_matching_asis/",
@@ -717,65 +721,46 @@ out_sd <- sd(outside) # 0.02531807 instead of 2.21%
 in_median <- median(inside) # 0.00116665 almost identical to 0.11% per year
 in_ds <- sd(inside) # 0.02413182 vs. 2.45%
 diff_median <- median(outside)/median(inside) # 4.873577
-(100*sum(df$GIS_AREA * df$cover_loss/100)/18)/1e6 # 1.71)/ instead of 1.53
+annual_area_deforest <- (100*sum(df$GIS_AREA * df$cover_loss/100)/18)/1e6 # 1.71)/ instead of 1.53
+defor_by_status_continent <- tab[order(tab$value, decreasing=TRUE),]
+# Africa Nonstrict 0.30544782
+# Europe Nonstrict 0.24789509
+# South America Nonstrict 0.20705785
+# ...
+# Oceania    Strict 0.03195096
+# Oceania Nonstrict 0.03166633
 ```
 
-The results of the comparisons are very close in relative terms. In absulte term the difference is 11.8% higher: 1.71 Mha in annual loss instead of 1.53.  
+The results of the comparisons are very close in relative terms. In absolute term the difference is 11.8% higher: 1.71 Mha in annual loss instead of 1.53.  
 
 We reproduce the Figure 3:
 
-![Fig. 3: Forest loss in and around PAs]()
+![Fig. 3: Forest loss in and around PAs](output/loss_box_no_unk.png)
 
 #### Conservation impact 2002-2017
 
+The original study reports: 
+> We identified 9,875 PAs established between 2002 and 2017 that were suitable for inclusion in our spatiotemporal analysis. The establishment of these PAs was associated with a moderate increase in the deforestation rate (average = 0.19%; s.e.m. = 0.02%), whereas control areas saw a larger increase in the deforestation rate (average = 0.61%; s.e.m. = 0.02%) over the same time span (Extended Data Fig. 3). This overall pattern was observed for both strict and nonstrict PAs in lower and higher GDP countries (Extended Data Fig. 3).
 
 ```{r}
-
+treat_loss_before <- round(100*mean(df$PA_loss_before), 3) # 0.431
+treat_loss_after <- round(100*mean(df$PA_loss_after), 3) # 0.477
+P = df$PA_loss_after - df$PA_loss_before
+C = df$Control_loss_after - df$Control_loss_before
+reduc_treat <- round(100*mean(P), 3)
+reduc_cont <- round(100*mean(C), 3)
+reduc_treat_sd 100*sd(P)/sqrt(length(P))
+reduc_cont_sd <-  100*sd(C)/sqrt(length(C))
+cont_loss_brefore <- round(100*mean(df$Control_loss_before), 3) # 0.751
+cont_loss_after <- round(100*mean(df$Control_loss_after), 3) # 1.032
+contin_diff <- round(100*tapply(df_small$value, list(df_small$variable, df_small$Continent), mean),3)
+#                 South America Oceania North America Europe  Asia Africa
+# Control areas           0.084   0.065        -0.014  0.597 0.273  0.818
+# Protected areas         0.133   0.214        -0.125  0.154 0.130  0.293
 ```
 
-/!\ C'est calculé avec GIS area vs. pixels... étrange.
-
-
-```
-[1] 1.709959
-```
-```{r}
-
-```
-
-
-Regarding the overall deforestation in PAs created before 2001, the original study reports:
-> Overall, PAs reduced, but did not eliminate, deforestation; the median annual deforestation rate in control areas (0.54%; s.d. = 2.21%) was 4.97 times higher than within PAs (0.11% per year; s.d. = 2.45%)
-
-
-In protected areas created between 2001 and 2017, annual cover cela passerait de 0.431% à 0.477%, soit une hausse de 0.045%
-Dans les zones de contrôle, la déforestation annuelle passerait de 0.751% à 1.032%, soit une hausse de 
-```
-> # paper text
-> round(100*mean(df$PA_loss_before), 3) 
-[1] 0.431
-> round(100*mean(df$PA_loss_after), 3) 
-[1] 0.477
-> P = df$PA_loss_after - df$PA_loss_before
-> C = df$Control_loss_after - df$Control_loss_before
-> round(100*mean(P), 3)
-[1] 0.045
-> round(100*mean(C), 3)
-[1] 0.281
-> 100*sd(P)/sqrt(length(P))
-[1] 0.01974945
-> 100*sd(C)/sqrt(length(C))
-[1] 0.0142932
-> round(100*mean(df$Control_loss_before), 3) 
-[1] 0.751
-> round(100*mean(df$Control_loss_after), 3) 
-[1] 1.032
-> round(100*tapply(df_small$value, list(df_small$variable, df_small$Continent), mean),3)
-                Oceania North America Europe  Asia Africa Lower GDP Higher GDP
-Control areas     0.065         0.003  0.597 0.273  0.818     0.235      0.291
-Protected areas   0.214        -0.081  0.154 0.130  0.293     0.148      0.024
-```
-
+Check difference of averages before!
+Reported ratios amount to DiD, but initial levels cast doubts on parallel trends, etc.
 
 ### Run matching sensitivity
 
