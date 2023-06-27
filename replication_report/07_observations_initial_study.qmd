@@ -9,6 +9,23 @@ editor_options:
 
 Here we list a series of data processings that raised questions during the re-implementation.
 
+## Erratic data for yearloss
+
+```{r}
+library(aws.s3)
+library(tidyverse)
+library(terra)
+library(sf)
+
+lossyear_wolf <- s3read_using(FUN = rast, object = 
+                    "Replication_wolf/data_processed/rasters/lossyear.tif",
+                    bucket = "fbedecarrats", opts = list("region" = ""))
+lossyear_new <- s3read_using(FUN = rast, object = 
+                    "Replication_wolf/data_input/GFC_1_6_downscaling_to_Wolf_6933.tif",
+                    bucket = "fbedecarrats", opts = list("region" = ""))
+
+```
+
 ## Year of deforestation corresponds to mode for coarsened polygon
 
 ### Difference in computation
@@ -17,13 +34,13 @@ The authors describe the corresponding part of their data preparation as "We use
 
 ```{javascript}
 #| eval: false
-,
+
 lossyear = lossyear.updateMask(lossyear.neq(0)).reduceResolution(reducer=ee.Reducer.mode(maxRaw=20), bestEffort=True)
 ```
 
 This means that while aggregating several (\~1000) pixels, the authors retained only one year, corresponding to the year in which the most of occurrence of deforestation occurred among all the aggregated polygons.
 
-This might alter the calculation, potentially masking the first years of deforestation and therefore delaying the impact of conservation (ie. deforestation that started before PA creation only appears after PA creation.
+This might alter the calculation, potentially masking the first years of deforestation and therefore delaying the impact of conservation (ie. deforestation that started before PA creation only appears after PA creation).
 
 ### Incidence on results
 
