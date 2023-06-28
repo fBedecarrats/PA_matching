@@ -198,7 +198,7 @@ file.remove("BOTW.zip")
 The Protected planet website only provides the latest version of the World database on protected areas (WDPA). The data can be fetched in shapefile, which is the format used for the original study. The original study used a WDPA version rom January 2020 in shapefile format f. This is not documented, but ended up finding the WDPA version from January 2020 in gdb format on a open AWS server used by UNEP-WCM. The data is difficult to access in GDB format, so we extract it and save it in geoparquet.
 
 ```{r}
-#| eval: false
+#| eval: true
 library(wdpar)
 library(tidyverse)
 library(sf)
@@ -267,10 +267,7 @@ write_csv(GDP_raw, "GDP_PC_PPP2010_2000-2018.csv")
 ## Get pre-processed milestones
 
 ```{r}
-# Selecting tifs at root
-my_tifs <- my_files %>%
-  filter(str_ends(Key, ".tif")) %>%
-  pluck("Key")
+# Selecting tifs at ro
 
 # Generating the destination paths
 my_tifs_dest <- my_tifs %>%

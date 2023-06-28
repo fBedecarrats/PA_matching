@@ -2,8 +2,7 @@
 output: html_document
 editor_options: 
   chunk_output_type: console
-execute:
-  eval: false
+
 ---
 
 # Reproduction "as is" of the publised results {#sec-reproducion_asis}
@@ -15,7 +14,7 @@ Some code modifications are required for the code to run. These edits are not in
 
 We will use the following function that explicitly declares which modification are made in the source code.
 
-```{r}
+```{r replace_func}
 library(tidyverse)
 
 if (!stringr::str_detect(getwd(), "PA_matching")) {
@@ -37,7 +36,7 @@ replace_all <- function(pattern, replacement, file) {
 
 Mofify the paths
 
-```{r}
+```{r replace_gee}
 
 GEE_data_script <- "PA_matching_asis/001 - dl_GEE.py"
 wolf_path <- "/home/chrisgraywolf/shared/analysis/PA_matching/data_input/"
@@ -51,6 +50,7 @@ Do-not re-execute this code: fetch existing data instead.
 
 ```{r}
 #| eval: false
+
 GEE_data_script <- "PA_matching_asis/001 - dl_GEE.py"
 source_python(GEE_data_script)
 ```
@@ -93,7 +93,7 @@ Modify the script to enable it to run on another machine.
 
 The column names in the official BOTW database are now in lowercase. It was apparently in uppercase when Wolf et al. processed the data. We need to modify the reference to one column name in the script for it to run. 
 
-```{r}
+```{r replace_iucn}
 
 IUCN_data_script <- "PA_matching_asis/002 - dl_IUCN.R"
 my_wd <- paste0(getwd(), "/")
@@ -144,6 +144,7 @@ put_to_s3(from = "data_processed/rasters/elev.tif",
           to = "Replication_wolf/data_processed/rasters/elev.tif")
 ```
 ```{r}
+#| eval: false
 
 # Load the data 
 save_from_s3(from = "Replication_wolf/data_processed/species_data.csv",
@@ -168,7 +169,7 @@ We need to replace the specific path used by Wolf et al with a more generic path
 The ray package is designed to work with some virtual memory that is not present on our configuration. We need to add a mention an option to enable ray to work with physical memory.
 We also need to modify the following command `richness = results[0]`, as it correspond to a method to assign an array that is not allowed in recent numpy versions and returns an error. We therefore add `.copy()` to this command, to have `richness = results[0].copy()`, which now correspond to the correct way of proceeding with this operation in python.
 
-```{r}
+```{r replace_species}
 
 # Set target
 species_richness_script <- "PA_matching_asis/003 - species_richness.py"
@@ -230,6 +231,7 @@ put_to_s3(from = "data_processed/threatened.tif",
           to = "Replication_wolf/data_processed/threatened.tif")
 ```
 ```{r}
+#| eval: false
 
 # Fetch outputs
 # Save outputs
@@ -247,6 +249,7 @@ This steps corresponds to the file `004 - join_rasters.R`, which original conten
 
 ::: {.callout-code collapse="true"}
 ```{r}
+
 #| echo: false
 #| warning: false
 #| class-output: "sourceCode python"
@@ -260,7 +263,7 @@ The URLs for Curtis et al. data and WWF data have changed
 There is a typo on line 136: an object called `PA_dists` is called but no object exists with this name, however an object `PAs_dist` (without a final "s") was created on the previous code line
 
 
-```{r}
+```{r replace_join_rasters}
  
 join_script <- "PA_matching_asis/004 - join_rasters.R"
 my_wd <- paste0(getwd(), "/")
@@ -285,6 +288,7 @@ replace_all(pattern = "PAs_buffer = PA_dists <= 10e3",
 Gather data
 
 ```{r}
+#| eval: false
 
 # Listing files in bucket
 my_files <- get_bucket_df(bucket = "fbedecarrats",
@@ -315,6 +319,8 @@ map2(my_biomes, my_biomes_dest, save_from_s3)
 Run script
 
 ```{r run_join_script}
+#| eval: false
+
 join_script <- "PA_matching_asis/004 - join_rasters.R"
 source(join_script)
 ```
@@ -322,6 +328,7 @@ source(join_script)
 Save outputs
 
 ```{r save_join_raster_output}
+#| eval: false
 
 # Save outputs
 # List present tifs
@@ -345,6 +352,7 @@ path_in_s3 <- paste0("Replication_wolf/", to_put_s3)
 map2(to_put_s3, path_in_s3, put_to_s3)
 ```
 ```{r fetch_join_raster_output}
+#| eval: false
 
 # Listing files in bucket
 my_files <- get_bucket_df(bucket = "fbedecarrats",
@@ -396,8 +404,7 @@ Warning messages:
 ### Match pixels on covariates
 
 
-```{r}
-#| eval: false
+```{r replace_matching}
 
 matching_script <- "PA_matching_asis/005 - covariate_matching.jl"
 
@@ -509,6 +516,7 @@ julia_source(matching_script)
 
 
 ```{r save_matching_output}
+#| eval: false
 
 # Save outputs
 # List present tifs
@@ -535,7 +543,7 @@ put_to_s3("data_processed/PA_df.RDS", "Replication_wolf/data_processed/PA_df.RDS
 
 ### Merge the results
 
-```{r}
+```{r replace_merge_results}
 join_results_script <- "PA_matching_asis/006 - join_results.R"
 # Do not change working directory
 replace_all(pattern = "setwd\\(project_dir\\)",
@@ -559,6 +567,7 @@ replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_loss/data/",
 ```
 
 ```{r}
+# eval: false
 source(join_results_script)
 ```
 
@@ -566,7 +575,7 @@ source(join_results_script)
 ### Compute SVC model
 
 
-```{r}
+```{r replace_svc}
 svc_model_script <- "PA_matching_asis/007 - SVC model.R"
 replace_all(pattern = "select",
             replacement = "dplyr::select",
@@ -578,10 +587,12 @@ replace_all(pattern = '\\"main\\"',
 ```
 
 ```{r}
+#| eval: false
 source(svc_model_script)
 ```
 
 ```{r save_svc_output}
+#| eval: false
 
 # Save outputs
 # List present tifs
@@ -607,7 +618,7 @@ map2(to_put_s3, path_in_s3, put_to_s3)
 
 ### Perform country level analysis
 
-```{r}
+```{r replace_country_analysis}
 country_analysis_script <- "PA_matching_asis/007 - country level analysis.R"
 # ne_load fetches from the temporary location (which is lost if we run in 
 # different threads with `source(script)`). This ensures the data is fetched
@@ -626,7 +637,7 @@ replace_all(pattern = 'read.dbf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygon
 
 ### Produce summary figures
 
-```{r}
+```{r replace_figures}
 summary_figures_script <- "PA_matching_asis/007 - summary figures.R"
 
 replace_all(pattern = 'read_sf\\("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"\\)',
@@ -656,6 +667,8 @@ The original study reports
 > "Globally, 15.7% of forest is formally protected"
 
 ```{r}
+#| eval: false
+
 tab <- table(cover[] >= 30, PA_rast[], useNA="always")
 prop.table(tab,1) # 0.18650047
 ```
@@ -669,6 +682,8 @@ The original study reports:
 > "In absolute terms, the 18,171 PAs in our analysis had an average annual forest loss rate of ~1.53 Mha."
 
 ```{r}
+#| eval: false
+
 nrow(readRDS("data_processed/PA_df.RDS") %>% dplyr::filter(group == "main"))
 addmargins(table(matched=df$matched, cat=df$cat_simple, gp=df$group))
 
@@ -677,6 +692,8 @@ addmargins(table(matched=df$matched, cat=df$cat_simple, gp=df$group))
 In our replication, we have in the primary PA dataset we find 25850 Protected areas fitting the analysis criteria defined by the source code. Of those 18,728 could be matched protected area, covering 6,167,491 km2. Our replication finds ~1.71 Mha of deforestatoin in the 18,728 analyzed. 
 
 ```{r}
+#| eval: false
+
 average_initial <- 5293217 / 18171 # 291.3003
 additional_PAs <- 18728 - 18171 # 557
 additional_area <- 6167491 - 5293217 # 874274
@@ -690,11 +707,15 @@ This suggest that we did not get exactly the same WDPA dataset from the beginnin
 The original study reports: 
 > In our analysis, 28.7% of the PAs did not have any forest loss. Among PAs with known management category, deforestation rates were highest in nonstrict PAs in Africa (0.31% per year), Europe (0.29% per year) and South America (0.19% per year), and lowest in strict PAs in Oceania (0.02% per year)
 ```{r}
+#| eval: false
+
 mean(df$PA_loss ==  0)
 ```
 In our replication, we find that 27.9% of of the PAs did not have any forest loss.
 
 ```{r}
+#| eval: false
+
 n_no_loss_replic <- round(18728*0.279) # 5225.112
 n_no_loss_origin <- round(18171*0.287) # 5215.077
 n_no_loss_additionnal <- n_no_loss_replic - n_no_loss_origin
@@ -715,6 +736,8 @@ And in its results section:`
 > Overall, PAs reduced, but did not eliminate, deforestation; the median annual deforestation rate in control areas (0.54%; s.d. = 2.21%) was 4.97 times higher than within PAs (0.11% per year; s.d. = 2.45%) (Fig. 2). In absolute terms, the 18,171 PAs in our analysis had an average annual forest loss rate of ~1.53 Mha. In our analysis, 28.7% of the PAs did not have any forest loss. Among PAs with known management category, deforestation rates were highest in nonstrict PAs in Africa (0.31% per year), Europe (0.29% per year) and South America (0.19% per year), and lowest in strict PAs in Oceania (0.02% per year)
 
 ```{r}
+#| eval: false
+
 diff_mean <- round(100*(1-mean(inside)/mean(outside)),3) # 42.74% instead of 41.12% 
 diff_add_median <- round(100*median(outside-inside),3) # median additive difference of 0.226% vs 0.194%
 iqr_diff <- IQR(outside-inside) # 0.008525058
@@ -745,6 +768,8 @@ The original study reports:
 > We identified 9,875 PAs established between 2002 and 2017 that were suitable for inclusion in our spatiotemporal analysis. The establishment of these PAs was associated with a moderate increase in the deforestation rate (average = 0.19%; s.e.m. = 0.02%), whereas control areas saw a larger increase in the deforestation rate (average = 0.61%; s.e.m. = 0.02%) over the same time span (Extended Data Fig. 3). This overall pattern was observed for both strict and nonstrict PAs in lower and higher GDP countries (Extended Data Fig. 3).
 
 ```{r}
+#| eval: false
+
 treat_loss_before <- round(100*mean(df$PA_loss_before), 3) # 0.431
 treat_loss_after <- round(100*mean(df$PA_loss_after), 3) # 0.477
 P = df$PA_loss_after - df$PA_loss_before
@@ -767,6 +792,8 @@ Reported ratios amount to DiD, but initial levels cast doubts on parallel trends
 ### Run matching sensitivity
 
 ```{r}
+#| eval: false
+
 replace_all(pattern = "",
             replacement = "",
             file = join_results_script)

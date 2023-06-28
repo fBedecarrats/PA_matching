@@ -17,14 +17,51 @@ library(tidyverse)
 library(terra)
 library(sf)
 
+# Load both versions of the data
 lossyear_wolf <- s3read_using(FUN = rast, object = 
-                    "Replication_wolf/data_processed/rasters/lossyear.tif",
+                    "Replication_wolf/data_input/lossyear.tif",
                     bucket = "fbedecarrats", opts = list("region" = ""))
 lossyear_new <- s3read_using(FUN = rast, object = 
-                    "Replication_wolf/data_input/GFC_1_6_downscaling_to_Wolf_6933.tif",
+                    "Replication_wolf/data_input/lossyear_manual_reduce.tif",
                     bucket = "fbedecarrats", opts = list("region" = ""))
+# Generate statistics comparing both
 
 ```
+
+Re-run the analysis using manual reduction
+
+```{r}
+
+
+dir.create("PA_matching_dif_lossyear")
+file.copy(list.files("PA_matching_asis", full.names = TRUE), 
+          "PA_matching_dif_lossyear", overwrite = TRUE)
+# Listing files in bucket
+my_files <- get_bucket_df(bucket = "fbedecarrats",
+                          prefix = "Replication_wolf",
+                          region = "")
+# Select which is needed
+my_inputs <- my_files %>%
+  filter(str_detect(Key, "/data_input/")) %>%
+  filter(str_detect(Key, "/gee/", negate = TRUE),
+  filter(str_detect(Key, "/range_maps/", negate = TRUE))) %>%
+  pluck("Key")
+# generate pathes
+my_inputs_dest <- str_remove(my_inputs, "Replication_wolf/")
+# copy locally
+map2(my_inputs, my_inputs_dest, save_from_s3)
+# Replace lossyear by lossyear new
+file.remove("data_input/lossyear.tif")
+file.rename("data_input/lossyear_manual_reduce.tif", "data_input/lossyear.tif")
+# Run the following commands
+source("PA_matching_asis/004 - join_rasters.R")
+library(JuliaCall)
+julia_source("PA_matching_asis/005 - covariate_matching.jl")
+source("PA_matching_asis/006 - join_results.R"
+)
+```
+
+
 
 ## Year of deforestation corresponds to mode for coarsened polygon
 
