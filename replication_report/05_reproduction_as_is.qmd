@@ -2,7 +2,6 @@
 output: html_document
 editor_options: 
   chunk_output_type: console
-
 ---
 
 # Reproduction "as is" of the publised results {#sec-reproducion_asis}
@@ -94,7 +93,7 @@ Modify the script to enable it to run on another machine.
 The column names in the official BOTW database are now in lowercase. It was apparently in uppercase when Wolf et al. processed the data. We need to modify the reference to one column name in the script for it to run. 
 
 ```{r replace_iucn}
-
+#| eval: false
 IUCN_data_script <- "PA_matching_asis/002 - dl_IUCN.R"
 my_wd <- paste0(getwd(), "/")
 wolf_path <- "/home/chrisgraywolf/analysis_desktop/PA_matching/"
@@ -567,7 +566,8 @@ replace_all(pattern = "/home/chrisgraywolf/shared/analysis/PA_loss/data/",
 ```
 
 ```{r}
-# eval: false
+#| eval: false
+
 source(join_results_script)
 ```
 
@@ -706,6 +706,7 @@ This suggest that we did not get exactly the same WDPA dataset from the beginnin
 
 The original study reports: 
 > In our analysis, 28.7% of the PAs did not have any forest loss. Among PAs with known management category, deforestation rates were highest in nonstrict PAs in Africa (0.31% per year), Europe (0.29% per year) and South America (0.19% per year), and lowest in strict PAs in Oceania (0.02% per year)
+
 ```{r}
 #| eval: false
 
