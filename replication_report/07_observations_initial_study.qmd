@@ -39,42 +39,23 @@ my_files <- get_bucket_df(bucket = "fbedecarrats",
                           prefix = "Replication_wolf",
                           region = "")
 # Select which is needed
-my_inputs <- my_files %>%
-  filter(str_detect(Key, "/data_input/")) %>%
-  filter(str_detect(Key, "/gee/", negate = TRUE)) %>%
-  filter(str_detect(Key, "/range_maps/", negate = TRUE)) %>%
+my_processed <- my_files %>%
+  filter(str_detect(Key, "/data_processed/")) %>%
   pluck("Key")
-
-# generate pathes
-my_inputs_dest <- str_remove(my_inputs, "Replication_wolf/")
-# copy locally input files
-map2(my_inputs, my_inputs_dest, save_from_s3)
-# copy locally rasters processed before 004 - join_rasters.R
-save_from_s3(from = "Replication_wolf/data_processed/rasters/elev.tif",
-             to = "data_processed/rasters/elev.tif")
-save_from_s3(from = "Replication_wolf/data_processed/non-threatened.tif", 
-             to = "data_processed/non-threatened.tif")
-save_from_s3(from = "Replication_wolf/data_processed/threatened.tif", 
-             to = "data_processed/threatened.tif")
-save_from_s3(from = "Replication_wolf/aau3445-data-s3.tif", 
-             to = "data_input/threatened.tif")
-# Avoid re-downloading existing data
-replace_all(pattern = "system\\(paste0",
-            replacement = "# system\\(paste0",
-            file = join_script)
-
-
-
+my_processed_dest <- str_remove(my_processed, "Replication_wolf/")
+map2(my_processed, my_processed_dest, save_from_s3)
 # Replace lossyear by lossyear new
-file.remove("data_input/lossyear.tif")
-file.rename("data_input/lossyear_manual_reduce.tif", "data_input/lossyear.tif")
+file.rename("data_processed/rasters/lossyear.tif", 
+            "data_processed/rasters/lossyear_wolf.tif")
+file.rename("data_processed/rasters/lossyear_manual_reduce.tif", 
+            "data_processed/rasters/lossyear.tif")
 # Run the following commands
-source("PA_matching_asis/004 - join_rasters.R")
 library(JuliaCall)
 julia_source("PA_matching_asis/005 - covariate_matching.jl")
 source("PA_matching_asis/006 - join_results.R")
 
 ```
+
 
 ## Year of deforestation corresponds to mode for coarsened polygon
 
