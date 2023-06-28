@@ -29,32 +29,50 @@ lossyear_new <- s3read_using(FUN = rast, object =
 ```
 
 Re-run the analysis using manual reduction
-
 ```{r}
-dir.create("PA_matching_dif_lossyear")
-file.copy(list.files("PA_matching_asis", full.names = TRUE), 
-          "PA_matching_dif_lossyear", overwrite = TRUE)
-# Listing files in bucket
-my_files <- get_bucket_df(bucket = "fbedecarrats",
-                          prefix = "Replication_wolf",
-                          region = "")
-# Select which is needed
-my_processed <- my_files %>%
-  filter(str_detect(Key, "/data_processed/")) %>%
-  pluck("Key")
-my_processed_dest <- str_remove(my_processed, "Replication_wolf/")
-map2(my_processed, my_processed_dest, save_from_s3)
-# Replace lossyear by lossyear new
-file.rename("data_processed/rasters/lossyear.tif", 
-            "data_processed/rasters/lossyear_wolf.tif")
-file.rename("data_processed/rasters/lossyear_manual_reduce.tif", 
-            "data_processed/rasters/lossyear.tif")
-# Run the following commands
-library(JuliaCall)
-julia_source("PA_matching_asis/005 - covariate_matching.jl")
-source("PA_matching_asis/006 - join_results.R")
+library(raster)
+library(rgdal)
+library(gdalUtils)
+library(aws.s3)
+library(tidyverse)
 
+
+if (!stringr::str_detect(getwd(), "PA_matching")) {
+  setwd("PA_matching")
+}
+if (!stringr::str_ends(getwd(), "replication_report")) {
+  setwd("replication_report")
+}
+
+dir.create("new_input")
+dir.create("new_processed")
+dir.create("new_processed/rasters")
+
+save_from_s3(from = "Replication_wolf/data_processed/rasters/elev.tif",
+             to = "new_input/elev.tif")
+save_from_s3(from = "Replication_wolf/data_input/lossyear_clean_4326.tif",
+             to = "new_input/lossyear_clean_4326.tif")
+
+rasterOptions(maxmemory = 1e+09)
+rasterOptions(chunksize = 1e+09)
+
+elev <- raster("new_input/elev.tif")
+
+gdalwarp(srcfile = "new_input/lossyear_clean_4326.tif",
+         "new_input/lossyear_proj.vrt",
+         tr = c(1000,1000), of="VRT",
+         t_srs = "+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +ellps=WGS84 +units=m +no_defs",
+         te = extent(elev)[c(1,3,2,4)])
+
+gdal_translate("new_input/lossyear_proj.vrt",
+               "new_processed/rasters/lossyear.tif",
+               of="GTiff",
+               co=c("COMPRESS=LZW","BIGTIFF=YES"))
+
+put_to_s3(from = "new_processed/rasters/lossyear.tif",
+          to = "Replication_wolf/data_processed/rasters/lossyear_redo.tif")
 ```
+
 
 
 ## Year of deforestation corresponds to mode for coarsened polygon
