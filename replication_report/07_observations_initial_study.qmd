@@ -3,6 +3,8 @@ title: "Discussion of processing choices"
 editor: visual
 editor_options: 
   chunk_output_type: console
+execute:
+  eval: false
 ---
 
 # Discussion of possible issues with the original study {#sec-observations}
@@ -73,7 +75,49 @@ put_to_s3(from = "new_processed/rasters/lossyear.tif",
           to = "Replication_wolf/data_processed/rasters/lossyear_redo.tif")
 ```
 
+The original paper reports: 
 
+> The establishment of these PAs was associated with a moderate increase in the deforestation rate (average = 0.19%; s.e.m. = 0.02%), whereas control areas saw a larger increase in the deforestation rate (average = 0.61%; s.e.m. = 0.02%) over the same time span (Extended Data Fig. 3).
+
+Whereas we find that the establishment of PAs is associated with a lower increase (average = 0,08%; sem = 0.02%), whereas control see a larger increase of deforestation, but also in a smaller scale than reported in the previous study (0.38%; sem: 0.2%)
+
+```
+> # paper text
+> round(100*mean(df$PA_loss_before), 3)
+[1] 0.465
+> round(100*mean(df$PA_loss_after), 3)
+[1] 0.541
+> P = df$PA_loss_after - df$PA_loss_before
+> C = df$Control_loss_after - df$Control_loss_before
+> round(100*mean(P), 3)
+[1] 0.076
+> round(100*mean(C), 3)
+[1] 0.382
+> 100*sd(P)/sqrt(length(P))
+[1] 0.02009433
+> 100*sd(C)/sqrt(length(C))
+[1] 0.01534645
+> round(100*mean(df$Control_loss_before), 3)
+[1] 0.797
+> round(100*mean(df$Control_loss_after), 3)
+[1] 1.179
+> round(100*tapply(df_small$value, list(df_small$variable, df_small$Continent), mean),3)
+                South America Oceania North America Europe  Asia Africa
+Control areas           0.184   0.164         0.004  0.778 0.334  0.986
+Protected areas         0.109   0.247        -0.089  0.199 0.087  0.459
+                Lower GDP Higher GDP
+Control areas       0.330      0.393
+Protected areas     0.142      0.063
+```
+
+```{r}
+save_from_s3(from = "Replication_wolf/data_processed/data_matched_10_class.csv",
+             to = "data_processed/data_matched_10_class.csv")
+save_from_s3(from = "Replication_wolf/data_processed/data_matched.csv",
+             to = "data_processed/data_matched.csv")
+```
+
+Execute julia, execute merge results.
 
 ## Year of deforestation corresponds to mode for coarsened polygon
 
