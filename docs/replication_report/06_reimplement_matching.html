@@ -233,10 +233,16 @@ div.csl-indent {
   <li><a href="#move-external-data-to-gee-and-prepare-all-information-there" id="toc-move-external-data-to-gee-and-prepare-all-information-there" class="nav-link" data-scroll-target="#move-external-data-to-gee-and-prepare-all-information-there"><span class="toc-section-number">7.2</span>  Move external data to GEE and prepare all information there</a></li>
   </ul></li>
   <li><a href="#clip-hansen-data-with-biome-polygons" id="toc-clip-hansen-data-with-biome-polygons" class="nav-link" data-scroll-target="#clip-hansen-data-with-biome-polygons"><span class="toc-section-number">8</span>  Clip Hansen data with biome polygons</a></li>
-  <li><a href="#stack-information-as-bands-in-a-single-raster" id="toc-stack-information-as-bands-in-a-single-raster" class="nav-link" data-scroll-target="#stack-information-as-bands-in-a-single-raster"><span class="toc-section-number">9</span>  Stack information as bands in a single raster</a></li>
-  <li><a href="#recode-data" id="toc-recode-data" class="nav-link" data-scroll-target="#recode-data"><span class="toc-section-number">10</span>  Recode data</a></li>
-  <li><a href="#perform-matching" id="toc-perform-matching" class="nav-link" data-scroll-target="#perform-matching"><span class="toc-section-number">11</span>  Perform matching</a></li>
-  <li><a href="#regress-for-impact-estimation" id="toc-regress-for-impact-estimation" class="nav-link" data-scroll-target="#regress-for-impact-estimation"><span class="toc-section-number">12</span>  Regress for impact estimation</a></li>
+  <li><a href="#stack-information-as-bands-in-a-single-raster" id="toc-stack-information-as-bands-in-a-single-raster" class="nav-link" data-scroll-target="#stack-information-as-bands-in-a-single-raster"><span class="toc-section-number">9</span>  Stack information as bands in a single raster</a>
+  <ul class="collapse">
+  <li><a href="#from-raster-to-tabular" id="toc-from-raster-to-tabular" class="nav-link" data-scroll-target="#from-raster-to-tabular"><span class="toc-section-number">9.1</span>  From raster to tabular</a></li>
+  </ul></li>
+  <li><a href="#reload-gee-data" id="toc-reload-gee-data" class="nav-link" data-scroll-target="#reload-gee-data"><span class="toc-section-number">10</span>  Reload GEE data</a></li>
+  <li><a href="#perform-matching" id="toc-perform-matching" class="nav-link" data-scroll-target="#perform-matching"><span class="toc-section-number">11</span>  Perform matching</a>
+  <ul class="collapse">
+  <li><a href="#compute-deforestation-after" id="toc-compute-deforestation-after" class="nav-link" data-scroll-target="#compute-deforestation-after"><span class="toc-section-number">11.1</span>  Compute deforestation after</a></li>
+  </ul></li>
+  <li><a href="#descriptive-statistics-on-deforestation" id="toc-descriptive-statistics-on-deforestation" class="nav-link" data-scroll-target="#descriptive-statistics-on-deforestation"><span class="toc-section-number">12</span>  Descriptive statistics on deforestation</a></li>
   </ul>
 </nav>
     </div>
@@ -291,9 +297,10 @@ div.csl-indent {
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(arrow)</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyterra)</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MatchIt)</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">str_ends</span>(<span class="fu">getwd</span>(), <span class="st">"replication_report"</span>, <span class="at">negate =</span> <span class="cn">TRUE</span>)) {</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setwd</span>(<span class="st">"replication_report"</span>)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tictoc)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">str_ends</span>(<span class="fu">getwd</span>(), <span class="st">"replication_report"</span>, <span class="at">negate =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setwd</span>(<span class="st">"replication_report"</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <section id="fetch-and-prepare-data-from-other-sources-than-gee" class="level2" data-number="7.1">
@@ -350,72 +357,73 @@ div.csl-indent {
 <span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">"revamp/aois/aois.gpkg"</span>)) {</span>
 <span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Fetch biomes</span></span>
 <span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(<span class="st">"revamp/biomes"</span>)</span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">"revamp/biomes/wwf_biomes.zip"</span>)) {</span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    wwf_url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://files.worldwildlife.org/wwfcmsprod/files/"</span>, </span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"Publication/file/6kcchn7e3u_official_teow.zip"</span>)</span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(wwf_url, <span class="st">"revamp/biomes/wwf_biomes.zip"</span>)</span>
-<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unzip</span>(<span class="st">"revamp/biomes/wwf_biomes.zip"</span>, <span class="at">exdir =</span> <span class="st">"revamp/biomes"</span>)</span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Merge ecoregions with the same biome</span></span>
-<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>  biomes <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"revamp/biomes/official/wwf_terr_ecos.shp"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_make_valid</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(BIOME) <span class="sc">%&gt;%</span></span>
-<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>()</span>
-<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename according to documentation and filter</span></span>
-<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>  biomes <span class="ot">&lt;-</span> biomes <span class="sc">%&gt;%</span></span>
-<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">biome_num =</span> BIOME) <span class="sc">%&gt;%</span></span>
-<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">biome_name =</span> <span class="fu">case_when</span>(</span>
-<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Moist Broadleaf Forests"</span>,</span>
-<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Dry Broadleaf Forests"</span>,</span>
-<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Coniferous Forests"</span>,</span>
-<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">4</span> <span class="sc">~</span> <span class="st">"Temperate Broadleaf &amp; Mixed Forests"</span>,</span>
-<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">5</span> <span class="sc">~</span> <span class="st">"Temperate Conifer Forests"</span>,</span>
-<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">6</span> <span class="sc">~</span> <span class="st">"Boreal Forests/Taiga"</span>,</span>
-<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">7</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Grasslands, Savannas &amp; Shrublands"</span>,</span>
-<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">"Temperate Grasslands, Savannas &amp; Shrublands"</span>,</span>
-<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">9</span> <span class="sc">~</span> <span class="st">"Flooded Grasslands &amp; Savannas"</span>,</span>
-<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">10</span> <span class="sc">~</span> <span class="st">"Montane Grasslands &amp; Shrublands"</span>,</span>
-<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">11</span> <span class="sc">~</span> <span class="st">"Tundra"</span>,</span>
-<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">12</span> <span class="sc">~</span> <span class="st">"Mediterranean Forests, Woodlands &amp; Scrub"</span>,</span>
-<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">13</span> <span class="sc">~</span> <span class="st">"Deserts &amp; Xeric Shrublands"</span>,</span>
-<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">14</span> <span class="sc">~</span> <span class="st">"Mangroves"</span>,</span>
-<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>      <span class="at">.default =</span> <span class="st">"Unknown"</span>), <span class="at">.before =</span> geometry)</span>
-<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>  my_biomes <span class="ot">&lt;-</span> biomes <span class="sc">%&gt;%</span></span>
-<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(biome_name <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Tropical &amp; Subtropical Moist Broadleaf Forests"</span>,</span>
-<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Tropical &amp; Subtropical Dry Broadleaf Forests"</span>,</span>
-<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Tropical &amp; Subtropical Coniferous Forests"</span>,</span>
-<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Temperate Broadleaf &amp; Mixed Forests"</span>,</span>
-<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Temperate Conifer Forests"</span>,</span>
-<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Boreal Forests/Taiga"</span>,</span>
-<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Mangroves"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">biome_num =</span> <span class="fu">case_when</span>(</span>
-<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Tropical &amp; Subtropical Moist Broadleaf Forests"</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
-<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Tropical &amp; Subtropical Dry Broadleaf Forests"</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
-<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Tropical &amp; Subtropical Coniferous Forests"</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
-<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Temperate Broadleaf &amp; Mixed Forests"</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
-<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Temperate Conifer Forests"</span> <span class="sc">~</span> <span class="dv">5</span>,</span>
-<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Boreal Forests/Taiga"</span> <span class="sc">~</span> <span class="dv">6</span>,</span>
-<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Mangroves"</span> <span class="sc">~</span> <span class="dv">7</span>))</span>
-<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Areas of interest (AOIs) combine countries and biomes</span></span>
-<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a>  aois <span class="ot">&lt;-</span> <span class="fu">st_intersection</span>(countries, my_biomes) <span class="sc">%&gt;%</span></span>
-<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">area =</span> <span class="fu">st_area</span>(.)) <span class="sc">%&gt;%</span></span>
-<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(area) <span class="co"># to start with the smallest for testing</span></span>
-<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>  <span class="co"># save as geoparquet</span></span>
-<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_write</span>(aois, <span class="st">"revamp/aois/aois.gpkg"</span>) </span>
-<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a>  aois <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"revamp/aois/aois.gpkg"</span>)</span>
-<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(<span class="st">"revamp/aois"</span>)</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">"revamp/biomes/wwf_biomes.zip"</span>)) {</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    wwf_url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://files.worldwildlife.org/wwfcmsprod/files/"</span>, </span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"Publication/file/6kcchn7e3u_official_teow.zip"</span>)</span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(wwf_url, <span class="st">"revamp/biomes/wwf_biomes.zip"</span>)</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unzip</span>(<span class="st">"revamp/biomes/wwf_biomes.zip"</span>, <span class="at">exdir =</span> <span class="st">"revamp/biomes"</span>)</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Merge ecoregions with the same biome</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>  biomes <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"revamp/biomes/official/wwf_terr_ecos.shp"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_make_valid</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(BIOME) <span class="sc">%&gt;%</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>()</span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename according to documentation and filter</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>  biomes <span class="ot">&lt;-</span> biomes <span class="sc">%&gt;%</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">biome_num =</span> BIOME) <span class="sc">%&gt;%</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">biome_name =</span> <span class="fu">case_when</span>(</span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Moist Broadleaf Forests"</span>,</span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Dry Broadleaf Forests"</span>,</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Coniferous Forests"</span>,</span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">4</span> <span class="sc">~</span> <span class="st">"Temperate Broadleaf &amp; Mixed Forests"</span>,</span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">5</span> <span class="sc">~</span> <span class="st">"Temperate Conifer Forests"</span>,</span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">6</span> <span class="sc">~</span> <span class="st">"Boreal Forests/Taiga"</span>,</span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">7</span> <span class="sc">~</span> <span class="st">"Tropical &amp; Subtropical Grasslands, Savannas &amp; Shrublands"</span>,</span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">8</span> <span class="sc">~</span> <span class="st">"Temperate Grasslands, Savannas &amp; Shrublands"</span>,</span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">9</span> <span class="sc">~</span> <span class="st">"Flooded Grasslands &amp; Savannas"</span>,</span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">10</span> <span class="sc">~</span> <span class="st">"Montane Grasslands &amp; Shrublands"</span>,</span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">11</span> <span class="sc">~</span> <span class="st">"Tundra"</span>,</span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">12</span> <span class="sc">~</span> <span class="st">"Mediterranean Forests, Woodlands &amp; Scrub"</span>,</span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">13</span> <span class="sc">~</span> <span class="st">"Deserts &amp; Xeric Shrublands"</span>,</span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>      biome_num <span class="sc">==</span> <span class="dv">14</span> <span class="sc">~</span> <span class="st">"Mangroves"</span>,</span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>      <span class="at">.default =</span> <span class="st">"Unknown"</span>), <span class="at">.before =</span> geometry)</span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>  my_biomes <span class="ot">&lt;-</span> biomes <span class="sc">%&gt;%</span></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(biome_name <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Tropical &amp; Subtropical Moist Broadleaf Forests"</span>,</span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Tropical &amp; Subtropical Dry Broadleaf Forests"</span>,</span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Tropical &amp; Subtropical Coniferous Forests"</span>,</span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Temperate Broadleaf &amp; Mixed Forests"</span>,</span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Temperate Conifer Forests"</span>,</span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Boreal Forests/Taiga"</span>,</span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"Mangroves"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">biome_num =</span> <span class="fu">case_when</span>(</span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Tropical &amp; Subtropical Moist Broadleaf Forests"</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Tropical &amp; Subtropical Dry Broadleaf Forests"</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Tropical &amp; Subtropical Coniferous Forests"</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Temperate Broadleaf &amp; Mixed Forests"</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Temperate Conifer Forests"</span> <span class="sc">~</span> <span class="dv">5</span>,</span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Boreal Forests/Taiga"</span> <span class="sc">~</span> <span class="dv">6</span>,</span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a>      biome_name <span class="sc">==</span> <span class="st">"Mangroves"</span> <span class="sc">~</span> <span class="dv">7</span>))</span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Areas of interest (AOIs) combine countries and biomes</span></span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a>  aois <span class="ot">&lt;-</span> <span class="fu">st_intersection</span>(countries, my_biomes) <span class="sc">%&gt;%</span></span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">area =</span> <span class="fu">st_area</span>(.)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(area) <span class="co"># to start with the smallest for testing</span></span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a>  <span class="co"># save as geoparquet</span></span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_write</span>(aois, <span class="st">"revamp/aois/aois.gpkg"</span>) </span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a>  aois <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"revamp/aois/aois.gpkg"</span>)</span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `aois' from data source 
-  `C:\Users\fbede\Documents\Statistiques\PA_matching\replication_report\revamp\aois\aois.gpkg' 
+  `C:\Users\fbede\Documents\Statistiques\PA_matching_2023_05_clean\replication_report\revamp\aois\aois.gpkg' 
   using driver `GPKG'
 Simple feature collection with 364 features and 7 fields
 Geometry type: MULTIPOLYGON
 Dimension:     XY
 Bounding box:  xmin: -179.9994 ymin: -55.97751 xmax: 179.9992 ymax: 71.41746
-CRS:           unknown</code></pre>
+Geodetic CRS:  +proj=longlat +datum=WGS84 +no_defs</code></pre>
 </div>
 <details>
 <summary>Code</summary>
@@ -567,83 +575,115 @@ CRS:           unknown</code></pre>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># biome number, a dummy if it is a PA, or in a 10km distance of a PA, and the </span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># WPDA ID number of the PA if it is a PA. </span></span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>prepare_gee_data <span class="ot">&lt;-</span> <span class="cf">function</span>(ee_region) {</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  gfc <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"UMD/hansen/global_forest_change_2018_v1_6"</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  gfc_mask <span class="ot">&lt;-</span> gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"datamask"</span>)<span class="sc">$</span><span class="fu">eq</span>(<span class="dv">1</span>)</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  gfc_masked <span class="ot">&lt;-</span>  gfc<span class="sc">$</span><span class="fu">updateMask</span>(gfc_mask)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># GFC data</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  aoi_gfc <span class="ot">&lt;-</span> gfc_masked<span class="sc">$</span><span class="fu">clipToCollection</span>(ee_region)</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  aoi_cover <span class="ot">&lt;-</span> aoi_gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"treecover2000"</span>)<span class="sc">$</span></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mean</span>(), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  aoi_loss <span class="ot">&lt;-</span> aoi_gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"loss"</span>)<span class="sc">$</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mean</span>(), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  aoi_lossyear <span class="ot">&lt;-</span> aoi_gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"lossyear"</span>)</span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  aoi_lossyear <span class="ot">&lt;-</span> aoi_lossyear<span class="sc">$</span><span class="fu">updateMask</span>(aoi_lossyear<span class="sc">$</span><span class="fu">neq</span>(<span class="dv">0</span>))<span class="sc">$</span></span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mode</span>(<span class="at">maxRaw =</span> <span class="dv">20</span>), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">toInt</span>()</span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_cover<span class="sc">$</span><span class="fu">addBands</span>(<span class="fu">c</span>(aoi_loss, aoi_lossyear))</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># elevation # 28min</span></span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"USGS/GTOPO30"</span>)) <span class="co"># Elevation</span></span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">4</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">4</span>]]<span class="sc">$</span><span class="fu">toInt32</span>()</span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  <span class="co"># slope</span></span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(ee<span class="sc">$</span>Terrain<span class="sc">$</span><span class="fu">slope</span>(aoi_image[[<span class="dv">4</span>]]))</span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">5</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">5</span>]]<span class="sc">$</span><span class="fu">toInt</span>()</span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  <span class="co"># travel_time</span></span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"Oxford/MAP/accessibility_to_cities_2015_v1_0"</span>))</span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">6</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">6</span>]]<span class="sc">$</span><span class="fu">toInt</span>()</span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Population density</span></span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  gpw <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/"</span>,</span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>                <span class="st">"gpw_v4_population_density_adjusted_to_2015_"</span>,</span>
-<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>                <span class="st">"unwpp_country_totals_rev11_2000_30_sec"</span>)</span>
-<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(ee<span class="sc">$</span><span class="fu">Image</span>(gpw)<span class="sc">$</span></span>
-<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>                                    <span class="fu">select</span>(<span class="st">"unwpp-adjusted_population_density"</span>))</span>
-<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">7</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">7</span>]]<span class="sc">$</span><span class="fu">focal_mean</span>(<span class="at">radius =</span> <span class="fl">20e3</span>,</span>
-<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">kernelType =</span> <span class="st">"circle"</span>,</span>
-<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">units =</span> <span class="st">"meters"</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
-<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>  <span class="co"># We add countries and biomes</span></span>
-<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>  reg_country_img <span class="ot">&lt;-</span> aois_ee<span class="sc">$</span><span class="fu">filterBounds</span>(ee_region<span class="sc">$</span><span class="fu">geometry</span>())<span class="sc">$</span></span>
-<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"cntry_n"</span>), <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())</span>
-<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(reg_country_img<span class="sc">$</span><span class="fu">toInt</span>())</span>
-<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>  reg_biome_img <span class="ot">&lt;-</span> aois_ee<span class="sc">$</span><span class="fu">filterBounds</span>(ee_region<span class="sc">$</span><span class="fu">geometry</span>())<span class="sc">$</span></span>
-<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"biome_num"</span>), <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())</span>
-<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(reg_biome_img<span class="sc">$</span><span class="fu">toInt</span>())</span>
-<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>  <span class="co"># We add information on protected areas</span></span>
-<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>  wdpa_reg <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">FeatureCollection</span>(<span class="st">"WCMC/WDPA/current/polygons"</span>)<span class="sc">$</span></span>
-<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filterBounds</span>(ee_region<span class="sc">$</span><span class="fu">geometry</span>())<span class="sc">$</span></span>
-<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="st">"MARINE == 0 $$ STATUS != 'Proposed' &amp;&amp; GIS_AREA &gt;= 1"</span>)</span>
-<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>  wdpa_reg <span class="ot">&lt;-</span> wdpa_reg<span class="sc">$</span><span class="fu">map</span>(<span class="cf">function</span>(pa) {</span>
-<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(pa<span class="sc">$</span><span class="fu">set</span>(<span class="st">"PA"</span>, <span class="dv">1</span>))</span>
-<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>  })</span>
-<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>  pa_footprint <span class="ot">&lt;-</span>wdpa_reg<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"PA"</span>),</span>
-<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>                           <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>()</span>
-<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>  pa_buffer <span class="ot">&lt;-</span> pa_footprint<span class="sc">$</span><span class="fu">focal_max</span>(<span class="dv">10000</span>, <span class="st">"circle"</span>, <span class="st">"meters"</span>)</span>
-<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(<span class="fu">c</span>(pa_footprint, pa_buffer))</span>
-<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Possible improvement: recode buffer here not to include PAs (we diff later)</span></span>
-<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
-<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>    wdpa_reg<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"WDPAID"</span>),</span>
-<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>                           <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>())</span>
-<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
-<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>    wdpa_reg<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"STATUS_YR"</span>),</span>
-<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>                           <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>())</span>
-<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Deforestation drivers by Curtis et al.</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ee_region &lt;- aoi_country</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  gfc <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"UMD/hansen/global_forest_change_2018_v1_6"</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  gfc_mask <span class="ot">&lt;-</span> gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"datamask"</span>)<span class="sc">$</span><span class="fu">eq</span>(<span class="dv">1</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  gfc_masked <span class="ot">&lt;-</span>  gfc<span class="sc">$</span><span class="fu">updateMask</span>(gfc_mask)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># GFC data as initial</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  aoi_gfc <span class="ot">&lt;-</span> gfc_masked<span class="sc">$</span><span class="fu">clipToCollection</span>(ee_region)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  aoi_cover <span class="ot">&lt;-</span> aoi_gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"treecover2000"</span>)<span class="sc">$</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mean</span>(), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">multiply</span>(<span class="dv">100</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  aoi_loss <span class="ot">&lt;-</span> aoi_gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"loss"</span>)<span class="sc">$</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mean</span>(), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">multiply</span>(<span class="dv">10000</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  aoi_gain <span class="ot">&lt;-</span> aoi_gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"loss"</span>)<span class="sc">$</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mean</span>(), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">multiply</span>(<span class="dv">10000</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  aoi_lossyear <span class="ot">&lt;-</span> aoi_gfc<span class="sc">$</span><span class="fu">select</span>(<span class="st">"lossyear"</span>)</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  aoi_lossyear <span class="ot">&lt;-</span> aoi_lossyear<span class="sc">$</span><span class="fu">updateMask</span>(aoi_lossyear<span class="sc">$</span><span class="fu">neq</span>(<span class="dv">0</span>))<span class="sc">$</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mode</span>(<span class="at">maxRaw =</span> <span class="dv">20</span>), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">toInt</span>()</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_cover<span class="sc">$</span><span class="fu">addBands</span>(<span class="fu">c</span>(aoi_loss, aoi_lossyear))</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  <span class="co"># elevation </span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"USGS/GTOPO30"</span>)) <span class="co"># Elevation</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">4</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">4</span>]]<span class="sc">$</span><span class="fu">toInt32</span>()</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>  <span class="co"># slope</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(ee<span class="sc">$</span>Terrain<span class="sc">$</span><span class="fu">slope</span>(aoi_image[[<span class="dv">4</span>]]))</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">5</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">5</span>]]<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  <span class="co"># travel_time</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"Oxford/MAP/accessibility_to_cities_2015_v1_0"</span>))</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">6</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">6</span>]]<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Population density</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>  gpw <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density/"</span>,</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>                <span class="st">"gpw_v4_population_density_adjusted_to_2015_"</span>,</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>                <span class="st">"unwpp_country_totals_rev11_2000_30_sec"</span>)</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(ee<span class="sc">$</span><span class="fu">Image</span>(gpw)<span class="sc">$</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>                                    <span class="fu">select</span>(<span class="st">"unwpp-adjusted_population_density"</span>))</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>  aoi_image[[<span class="dv">7</span>]] <span class="ot">&lt;-</span> aoi_image[[<span class="dv">7</span>]]<span class="sc">$</span><span class="fu">focal_mean</span>(<span class="at">radius =</span> <span class="fl">20e3</span>,</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">kernelType =</span> <span class="st">"circle"</span>,</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">units =</span> <span class="st">"meters"</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>  <span class="co"># We add countries and biomes</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>  reg_country_img <span class="ot">&lt;-</span> aois_ee<span class="sc">$</span><span class="fu">filterBounds</span>(ee_region<span class="sc">$</span><span class="fu">geometry</span>())<span class="sc">$</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"cntry_n"</span>), <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(reg_country_img<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>  reg_biome_img <span class="ot">&lt;-</span> aois_ee<span class="sc">$</span><span class="fu">filterBounds</span>(ee_region<span class="sc">$</span><span class="fu">geometry</span>())<span class="sc">$</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"biome_num"</span>), <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(reg_biome_img<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>  <span class="co"># We add information on protected areas</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>  wdpa_reg <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">FeatureCollection</span>(<span class="st">"WCMC/WDPA/current/polygons"</span>)<span class="sc">$</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filterBounds</span>(ee_region<span class="sc">$</span><span class="fu">geometry</span>())<span class="sc">$</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(ee<span class="sc">$</span>Filter<span class="sc">$</span><span class="fu">expression</span>(</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>      <span class="st">"MARINE == '0' &amp;&amp; STATUS != 'Proposed' &amp;&amp; GIS_AREA &gt;= 1"</span>))</span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>  pa_footprint <span class="ot">&lt;-</span> wdpa_reg<span class="sc">$</span><span class="fu">map</span>(<span class="cf">function</span>(pa) {</span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(pa<span class="sc">$</span><span class="fu">set</span>(<span class="st">"PA"</span>, <span class="dv">1</span>))</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>  pa_footprint <span class="ot">&lt;-</span> pa_footprint<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"PA"</span>),</span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>  pa_buffer <span class="ot">&lt;-</span> pa_footprint<span class="sc">$</span><span class="fu">focal_max</span>(<span class="dv">10000</span>, <span class="st">"circle"</span>, <span class="st">"meters"</span>)</span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(<span class="fu">c</span>(pa_footprint, pa_buffer))</span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Possible improvement: recode buffer here not to include PAs (we diff later)</span></span>
 <span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
-<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>    ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"projects/ee-fbedecarrats/assets/drivers_curtis"</span>)<span class="sc">$</span><span class="fu">toInt</span>())</span>
-<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Forgot to add the ecoregs from WWF. Uploading them as provided by WWF</span></span>
-<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>  wwf_ecoregs <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">FeatureCollection</span>(<span class="st">"projects/ee-fbedecarrats/assets/wwf_ecoregs"</span>)</span>
-<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
-<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>    wwf_ecoregs<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"ECO_ID"</span>),</span>
-<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>                              <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>())</span>
-<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(aoi_image) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"cover"</span>, <span class="st">"loss"</span>, <span class="st">"lossyear"</span>, <span class="st">"elev"</span>, <span class="st">"slope"</span>,</span>
-<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"travel_time"</span>, <span class="st">"pop_dens"</span>, <span class="st">"country_num"</span>, <span class="st">"biome_num"</span>,</span>
-<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"is_pa"</span>, <span class="st">"is_pa_buffer"</span>, <span class="st">"wdpa_id"</span>, <span class="st">"status_year"</span>, </span>
-<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"driver"</span>, <span class="st">"ecoreg"</span>)</span>
-<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ADD CLIP /!\</span></span>
-<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">clipToCollection</span>(ee_region)</span>
-<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>    wdpa_reg<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"WDPAID"</span>),</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>                           <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>    wdpa_reg<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"STATUS_YR"</span>),</span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>                           <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Deforestation drivers by Curtis et al.</span></span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>    ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"projects/ee-fbedecarrats/assets/drivers_curtis"</span>)<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Forgot to add the ecoregs from WWF. Uploading them as provided by WWF</span></span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>  wwf_ecoregs <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">FeatureCollection</span>(<span class="st">"projects/ee-fbedecarrats/assets/wwf_ecoregs"</span>)</span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(</span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>    wwf_ecoregs<span class="sc">$</span><span class="fu">reduceToImage</span>(<span class="at">properties =</span> <span class="fu">list</span>(<span class="st">"ECO_ID"</span>),</span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a>                              <span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">first</span>())<span class="sc">$</span><span class="fu">toInt</span>())</span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(aoi_image) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"cover"</span>, <span class="st">"loss"</span>, <span class="st">"lossyear_as_wolf"</span>, <span class="st">"elev"</span>, <span class="st">"slope"</span>,</span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"travel_time"</span>, <span class="st">"pop_dens"</span>, <span class="st">"country_num"</span>, <span class="st">"biome_num"</span>,</span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"is_pa"</span>, <span class="st">"is_pa_buffer"</span>, <span class="st">"wdpa_id"</span>, <span class="st">"status_year"</span>, </span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"driver"</span>, <span class="st">"ecoreg"</span>)</span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Add annual loss and most recent data</span></span>
+<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a>  gfc2 <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">Image</span>(<span class="st">"UMD/hansen/global_forest_change_2021_v1_9"</span>)</span>
+<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a>  gfc2_mask <span class="ot">&lt;-</span> gfc2<span class="sc">$</span><span class="fu">select</span>(<span class="st">"datamask"</span>)<span class="sc">$</span><span class="fu">eq</span>(<span class="dv">1</span>)</span>
+<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a>  gfc2_masked <span class="ot">&lt;-</span>  gfc2<span class="sc">$</span><span class="fu">updateMask</span>(gfc2_mask)</span>
+<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a>  aoi_gfc2 <span class="ot">&lt;-</span> gfc2_masked<span class="sc">$</span><span class="fu">clipToCollection</span>(ee_region)</span>
+<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>  aoi_loss_2021 <span class="ot">&lt;-</span> aoi_gfc2<span class="sc">$</span><span class="fu">select</span>(<span class="st">"loss"</span>)<span class="sc">$</span></span>
+<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mean</span>(), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span></span>
+<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a>    <span class="fu">multiply</span>(<span class="dv">10000</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a>    <span class="co"># aoi_loss &lt;- aoi_gfc$select("loss")$</span></span>
+<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a>    <span class="co"># reduceResolution(reducer = ee$Reducer$mean(), bestEffort = TRUE)$</span></span>
+<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a>    <span class="co"># multiply(10000)$toInt()</span></span>
+<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(aoi_loss_2021) <span class="ot">&lt;-</span> <span class="st">"loss_2021"</span></span>
+<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(aoi_loss_2021)</span>
+<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a>  aoi_lossyear2 <span class="ot">&lt;-</span> aoi_gfc2<span class="sc">$</span><span class="fu">select</span>(<span class="st">"lossyear"</span>)</span>
+<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a>  <span class="co"># This creates an image with 1 band per year</span></span>
+<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a>  aoi_lossyear2 <span class="ot">&lt;-</span> aoi_gfc2<span class="sc">$</span><span class="fu">select</span>(<span class="st">"lossyear"</span>)<span class="sc">$</span><span class="fu">eq</span>(<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">21</span>))</span>
+<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(aoi_lossyear2) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"lossyear_"</span>, <span class="fu">c</span>(<span class="dv">2001</span><span class="sc">:</span><span class="dv">2021</span>))</span>
+<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a>  aoi_lossyear2 <span class="ot">&lt;-</span> aoi_lossyear2<span class="sc">$</span></span>
+<span id="cb10-108"><a href="#cb10-108" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduceResolution</span>(<span class="at">reducer =</span> ee<span class="sc">$</span>Reducer<span class="sc">$</span><span class="fu">mean</span>(), <span class="at">bestEffort =</span> <span class="cn">TRUE</span>)<span class="sc">$</span></span>
+<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a>    <span class="fu">multiply</span>(<span class="dv">10000</span>)<span class="sc">$</span><span class="fu">toInt</span>()</span>
+<span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">addBands</span>(aoi_lossyear2)</span>
+<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ee_print</span>(aoi_image)</span>
+<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a>  <span class="co"># ADD CLIP /!\</span></span>
+<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a>  aoi_image <span class="ot">&lt;-</span> aoi_image<span class="sc">$</span><span class="fu">clipToCollection</span>(ee_region)</span>
+<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>The previous code creates for each area of interest a raster with the following bands: cover, loss, lossyear, elev, slope, travel_time, pop_dens, PA, WDPA ID number, PA_status_yr, PA_buffer, country, biome.</p>
@@ -655,100 +695,149 @@ CRS:           unknown</code></pre>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># are within a biome of study.</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>my_countries <span class="ot">&lt;-</span> <span class="fu">unique</span>(aois<span class="sc">$</span>GID_0)</span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>country_tasks <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">country =</span> my_countries)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># each country takes between less than 1 and 32 minutes to process. </span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co"># The computations run in parallel.</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>aois_ee <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">FeatureCollection</span>(<span class="st">"projects/ee-fbedecarrats/assets/aois"</span>)</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">181</span><span class="sc">:</span><span class="fu">length</span>(my_countries)) {</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  GID <span class="ot">&lt;-</span> my_countries[i]</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">paste0</span>(GID, <span class="st">" "</span>, i, <span class="st">"/"</span>, <span class="fu">length</span>(my_countries)))</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  aoi_country <span class="ot">&lt;-</span> aois_ee<span class="sc">$</span><span class="fu">filter</span>(<span class="fu">paste0</span>(<span class="st">"GID_0 == '"</span>, GID,<span class="st">"'"</span>))</span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  aoi_extract <span class="ot">&lt;-</span> <span class="fu">prepare_gee_data</span>(aoi_country)</span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">#country_tasks$task[[i]] &lt;- </span></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  test <span class="ot">&lt;-</span> <span class="fu">ee_as_raster</span>(</span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    aoi_extract, <span class="at">via =</span> <span class="st">"drive"</span>, <span class="at">container =</span> <span class="st">"rgee_country"</span>, <span class="at">lazy =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">dsn =</span> <span class="fu">paste0</span>(<span class="st">"revamp/gee/"</span>, GID, <span class="st">".tif"</span>),</span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">skipEmptyTiles =</span> <span class="cn">TRUE</span>, <span class="at">scale =</span> <span class="dv">1000</span>,</span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">region =</span> aoi_country<span class="sc">$</span><span class="fu">geometry</span>())</span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="co"># We fetch the data once it is ready</span></span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(my_countries)) {</span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ee_utils_future_value</span>(country_tasks<span class="sc">$</span>task[[j]])</span>
-<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="co"># This downloads the tifs for 201 national territories. Now we open them and store them to </span></span>
-<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"revamp/tabular_country"</span>)</span>
-<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(my_countries)) {</span>
-<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>  country_code <span class="ot">&lt;-</span> country_tasks<span class="sc">$</span>country[k]</span>
-<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(country_code)</span>
-<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>  my_tifs <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"revamp/gee"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>                        <span class="at">pattern =</span> <span class="fu">paste0</span>(country_code, <span class="st">".*tif"</span>))</span>
-<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># There can be several tifs for 1 country, so we merge them</span></span>
-<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>  country_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
-<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (my_tif <span class="cf">in</span> my_tifs) {</span>
-<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>    my_rast <span class="ot">&lt;-</span> <span class="fu">rast</span>(my_tif)</span>
-<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>    my_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(my_rast) <span class="sc">%&gt;%</span></span>
-<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">is_pa_buffer =</span> is_pa_buffer <span class="sc">-</span> is_pa) <span class="sc">%&gt;%</span></span>
-<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(country_num <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> biome_num <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> is_pa_buffer <span class="sc">!=</span> <span class="dv">1</span>)</span>
-<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>  country_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(country_df, my_df)</span>
-<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_parquet</span>(country_df, <span class="fu">paste0</span>(<span class="st">"revamp/tabular_country/"</span>, </span>
-<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>                                   country_code, <span class="st">".parquet"</span>))</span>
-<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">c</span>(<span class="st">"my_rast"</span>, <span class="st">"my_df"</span>, <span class="st">"country_df"</span>))</span>
-<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a><span class="co"># Here we have 1 file per country. We will consolidate all data into 1 single</span></span>
-<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a><span class="co"># file.</span></span>
-<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a>df_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"revamp/tabular_country"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a>all_df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(df_files[<span class="dv">1</span>])</span>
-<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (l <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(df_files)) {</span>
-<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(l)</span>
-<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>  this_df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(df_files[l])</span>
-<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>  all_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(all_df, this_df)</span>
-<span id="cb11-56"><a href="#cb11-56" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-57"><a href="#cb11-57" aria-hidden="true" tabindex="-1"></a><span class="co"># The data occupies about 8-10 Go in memory</span></span>
-<span id="cb11-58"><a href="#cb11-58" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(all_df) <span class="co"># 62 689 720</span></span>
-<span id="cb11-59"><a href="#cb11-59" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"revamp/consolidated"</span>)</span>
-<span id="cb11-60"><a href="#cb11-60" aria-hidden="true" tabindex="-1"></a><span class="fu">write_parquet</span>(all_df, <span class="st">"revamp/consolidated/gee_data.parquet"</span>) <span class="co">#~301 Mo</span></span>
-<span id="cb11-61"><a href="#cb11-61" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(all_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"revamp/gee_mada1"</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co"># each country takes between less than 1 and 32 minutes to process. </span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># The computations run in parallel.</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>aois_ee <span class="ot">&lt;-</span> ee<span class="sc">$</span><span class="fu">FeatureCollection</span>(<span class="st">"projects/ee-fbedecarrats/assets/aois"</span>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>out_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># for (i in 201:length(my_countries)) {</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">116</span><span class="sc">:</span><span class="dv">116</span>) {</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  GID <span class="ot">&lt;-</span> my_countries[i]</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">paste0</span>(GID, <span class="st">" "</span>, i, <span class="st">"/"</span>, <span class="fu">length</span>(my_countries)))</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  aoi_country <span class="ot">&lt;-</span> aois_ee<span class="sc">$</span><span class="fu">filter</span>(<span class="fu">paste0</span>(<span class="st">"GID_0 == '"</span>, GID,<span class="st">"'"</span>))</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  aoi_extract <span class="ot">&lt;-</span> <span class="fu">prepare_gee_data</span>(aoi_country)</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  out_list[[i]] <span class="ot">&lt;-</span> <span class="fu">ee_as_raster</span>(</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    aoi_extract, <span class="at">via =</span> <span class="st">"drive"</span>, <span class="at">container =</span> <span class="st">"rgee_country_new"</span>, <span class="at">lazy =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># dsn = paste0("revamp/gee/", GID, ".tif"),</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">dsn =</span> <span class="fu">paste0</span>(<span class="st">"revamp/gee_mada1/"</span>, GID, <span class="st">".tif"</span>),</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">skipEmptyTiles =</span> <span class="cn">TRUE</span>, <span class="at">scale =</span> <span class="dv">1000</span>,</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">region =</span> aoi_country<span class="sc">$</span><span class="fu">geometry</span>())</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(out_list, <span class="st">"revamp/gee_out_list.Rdata"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>We have 211 rasters for 201 national territories. The file names are a concatenation of 3 letters indicating the country (ISO3 country code), a time-stamps of when the GEE task was launched, plus a number when the country is split in several different countries. Sometimes GEE splits a territory in 2 or 3 rasters. It is the case for Canada, Russia, USA, Fiji, China, New Zealand, Kirghistan and UMI (?). The splitting of a country in several rasters happens when the forest biome areas of the corresponding countries are disjoint and GEE apparently optimises the output file sizes this way.</p>
+<p>Each raster is in WSG-84 projection with cells of 1km2 and includes 37 bands, all including integer values:</p>
+<ul>
+<li>cover: forest cover in 2000 (Hansen 2019 data)</li>
+<li>loss: A ratio (in ten thouthands) of forest cover loss for the underlying pixels between 2001 and 2018 (Hansen 2019 data)</li>
+<li>lossyear_as_wolf: the loss year registered by Wolf, which is the mode of the lossyear for the ~1000 underlying cells in the original Hansen data (30x30m resolution)</li>
+<li>elev: mean elevation</li>
+<li>slope: slope</li>
+<li>travel_time: time travel to the nearest city</li>
+<li>pop_dens: population density</li>
+<li>country_num: an integer indicating the country (number + ISO3 list to be annexed to the data)</li>
+<li>biome_num: an integer indicating the biome according to WWF map of ecoregions</li>
+<li>ecoreg: an integer indicating the eco-region according to WWF map of ecoregions</li>
+<li>is_pa: an integer indicating if the cell overlaps with a terrestrial protected area (MARINE == 0, NB: coastal –both marine and terrestrial PAs– are excluded, following Wolf procedure) with a status different from proposed, a spatial footprint (not just points in WDPA) and an area superior to 1km2 (WDPA version as of march 2023).</li>
+<li>is_pa_buffer: is distant within a distance of 10km or less from a cell registered as PA</li>
+<li>wdpa_id: the identification number of the PA. In case that several PAs overlap, only the first one in WDPA registry order is mentionned.</li>
+<li>status_year: the year in which the PA received its current status</li>
+<li>driver: the main deforestation driver according to curtis et al</li>
+<li>loss_2021: a boolean for forest cover loss between 2001 and 2021 (Hansen 2022 data)</li>
+<li>loss_nnnn: 21 fields where nnnn is a year number between 2001 and 2021, with values corresponding to the the mean of forest cover loss for the underlying cells</li>
+</ul>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We fetch the data once it is ready</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># my_countries &lt;- "PER"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>out_list <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"revamp/gee_out_list.Rdata"</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(out_list)) {</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ee_utils_future_value</span>(out_list)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># This downloads the tifs for 201 national territories.</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Note that this process cannot be relaunched if it fails for any reason</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co"># In such case, just go to drive and download manually the tifs uploaded there</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="from-raster-to-tabular" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="from-raster-to-tabular"><span class="header-section-number">9.1</span> From raster to tabular</h2>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>my_countries <span class="ot">&lt;-</span> <span class="fu">unique</span>(aois<span class="sc">$</span>GID_0)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>country_tasks <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">country =</span> my_countries)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"revamp/tabular_country"</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># tic()</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(my_countries)) {</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  country_code <span class="ot">&lt;-</span> country_tasks<span class="sc">$</span>country[k]</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">paste</span>(country_code, k, <span class="st">"/"</span>, <span class="fu">length</span>(my_countries)))</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  my_tifs <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"revamp/gee"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">pattern =</span> <span class="fu">paste0</span>(country_code, <span class="st">".*tif"</span>))</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># There can be several tifs for 1 country, so we merge them</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  country_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (my_tif <span class="cf">in</span> my_tifs) {</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    my_rast <span class="ot">&lt;-</span> <span class="fu">rast</span>(my_tif)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    my_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(my_rast) <span class="sc">%&gt;%</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">is_pa_buffer =</span> is_pa_buffer <span class="sc">-</span> is_pa,</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>             <span class="at">status_year =</span> <span class="fu">ifelse</span>(status_year <span class="sc">==</span> <span class="dv">0</span>, <span class="cn">NA</span>, status_year),</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>             <span class="at">wdpa_id =</span> <span class="fu">ifelse</span>(wdpa_id <span class="sc">==</span> <span class="dv">0</span>, <span class="cn">NA</span>, wdpa_id)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(country_num <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> biome_num <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;</span> is_pa_buffer <span class="sc">!=</span> <span class="dv">1</span>) </span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  country_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(country_df, my_df)</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_parquet</span>(country_df, <span class="fu">paste0</span>(<span class="st">"revamp/tabular_country/"</span>, </span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>                                   country_code, <span class="st">".parquet"</span>))</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">c</span>(<span class="st">"my_rast"</span>, <span class="st">"my_df"</span>, <span class="st">"country_df"</span>))</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Here we have 1 file per country. We will consolidate all data into 1 single</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a><span class="co"># file.</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>df_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"revamp/tabular_country"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>all_df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(df_files[<span class="dv">1</span>])</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (l <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(df_files)) {</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(l)</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>  this_df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(df_files[l])</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>  all_df <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(all_df, this_df)</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(this_df)</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="co"># toc() # 1566.25 sec elapsed</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a><span class="co"># tic()</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a><span class="co"># The data occupies about 8-10 Go in memory</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(all_df) <span class="co">#  64 426 201</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"revamp/consolidated"</span>)</span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a><span class="fu">write_parquet</span>(all_df, <span class="st">"revamp/consolidated/gee_data.parquet"</span>) <span class="co">#~301 Mo</span></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a><span class="co"># toc() # 25.22 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>We can visualize one of the country data, for instance in Madagascar:</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>mdg_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"revamp/gee"</span>, <span class="at">pattern =</span> <span class="st">"MDG"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>mdg <span class="ot">&lt;-</span> <span class="fu">rast</span>(mdg_files)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>mdg <span class="sc">%&gt;%</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(loss, cover, is_pa_buffer, is_pa, country_num, biome_num) <span class="sc">%&gt;%</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cover =</span> <span class="fu">ifelse</span>(country_num <span class="sc">==</span> <span class="dv">0</span> <span class="sc">|</span> biome_num <span class="sc">==</span> <span class="dv">0</span>, <span class="cn">NA</span>, cover),</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">loss =</span> <span class="fu">ifelse</span>(country_num <span class="sc">==</span> <span class="dv">0</span> <span class="sc">|</span> biome_num <span class="sc">==</span> <span class="dv">0</span>, <span class="cn">NA</span>, loss),</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">is_pa_buffer =</span> <span class="fu">ifelse</span>(country_num <span class="sc">==</span> <span class="dv">0</span> <span class="sc">|</span> biome_num <span class="sc">==</span> <span class="dv">0</span>, <span class="cn">NA</span>, is_pa_buffer),</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">cover =</span> <span class="fu">ifelse</span>(loss <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="dv">0</span>, cover),</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">loss =</span> loss <span class="sc">*</span> <span class="dv">255</span>,</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">is_pa_buffer =</span> (is_pa_buffer <span class="sc">-</span> is_pa) <span class="sc">*</span><span class="dv">255</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(<span class="at">colorNULL =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_rgb</span>(<span class="at">colorNULL =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(<span class="fu">filter</span>(countries, GID_0 <span class="sc">==</span> <span class="st">"MDG"</span>)) <span class="sc">+</span> </span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mdg_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"revamp/gee"</span>, <span class="at">pattern =</span> <span class="st">"MDG"</span>, <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>mdg <span class="ot">&lt;-</span> <span class="fu">rast</span>(mdg_files)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>mdg_map <span class="ot">&lt;-</span> mdg <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(loss, cover, is_pa_buffer, is_pa, country_num, biome_num) <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cover =</span> <span class="fu">ifelse</span>(country_num <span class="sc">==</span> <span class="dv">0</span> <span class="sc">|</span> biome_num <span class="sc">==</span> <span class="dv">0</span>, <span class="cn">NA</span>, cover),</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">loss =</span> <span class="fu">ifelse</span>(country_num <span class="sc">==</span> <span class="dv">0</span> <span class="sc">|</span> biome_num <span class="sc">==</span> <span class="dv">0</span>, <span class="cn">NA</span>, loss),</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">is_pa_buffer =</span> <span class="fu">ifelse</span>(country_num <span class="sc">==</span> <span class="dv">0</span> <span class="sc">|</span> biome_num <span class="sc">==</span> <span class="dv">0</span>, <span class="cn">NA</span>, is_pa_buffer),</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">cover =</span> <span class="fu">ifelse</span>(loss <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="dv">0</span>, cover) <span class="sc">*</span> <span class="fl">2.55</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">loss =</span> loss <span class="sc">*</span> <span class="fl">0.0255</span>,</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">is_pa_buffer =</span> (is_pa_buffer <span class="sc">-</span> is_pa) <span class="sc">*</span><span class="dv">255</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(<span class="at">colorNULL =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_rgb</span>(<span class="at">colorNULL =</span> <span class="st">"white"</span>, <span class="at">max.value =</span> ) <span class="sc">+</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(<span class="fu">filter</span>(countries, GID_0 <span class="sc">==</span> <span class="st">"MDG"</span>)) <span class="sc">+</span> </span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_borders</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="06_reimplement_matching_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
-<p></p><figcaption class="figure-caption">Visualization of the data etracted from GEE (red=forest cover in 2000, red: forest cover loss 2001-2018, blue: PA buffer excluded from the analysis)</figcaption><p></p>
-</figure>
-</div>
-</div>
 </div>
 </section>
-<section id="recode-data" class="level1" data-number="10">
-<h1 data-number="10"><span class="header-section-number">10</span> Recode data</h1>
+</section>
+<section id="reload-gee-data" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Reload GEE data</h1>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>all_df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(<span class="st">"revamp/consolidated/gee_data.parquet"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tic()</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>all_df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(<span class="st">"revamp/consolidated/gee_data.parquet"</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>all_df <span class="ot">&lt;-</span> all_df <span class="sc">%&gt;%</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">lossyear =</span> lossyear_as_wolf) <span class="sc">%&gt;%</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rownum =</span> <span class="fu">row_number</span>(), <span class="at">.before =</span> <span class="fu">everything</span>(),</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">loss =</span> loss <span class="sc">/</span> <span class="dv">10000</span>,</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(<span class="fu">starts_with</span>(<span class="st">"lossyear_"</span>), <span class="sc">~</span> .x <span class="sc">/</span> <span class="dv">10000</span>),</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">lossyear =</span> lossyear <span class="sc">+</span> <span class="dv">2000</span>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># toc() # 18.89 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -757,36 +846,238 @@ CRS:           unknown</code></pre>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>matched_all <span class="ot">&lt;-</span> <span class="fu">matchit</span>(<span class="co"># the first line of covar is coarsened</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula =</span> is_pa <span class="sc">~</span> elev <span class="sc">+</span> slope <span class="sc">+</span> cover <span class="sc">+</span> travel_time <span class="sc">+</span> pop_dens <span class="sc">+</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    country_num <span class="sc">+</span> ecoreg <span class="sc">+</span> driver, <span class="co"># these on 2nd line remain exact</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"cem"</span>,</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># for cutpoints 0 means no coarsening, and q5 means quintiles</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">cutpoints =</span> <span class="fu">list</span>(<span class="at">elev =</span> <span class="st">"q5"</span>, <span class="at">slope =</span> <span class="st">"q5"</span>, <span class="at">cover =</span> <span class="st">"q5"</span>,</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>                   <span class="at">travel_time =</span> <span class="st">"q5"</span>, <span class="at">pop_dens =</span> <span class="st">"q5"</span>,</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">country_num =</span> <span class="dv">0</span>, <span class="at">ecoreg =</span> <span class="dv">0</span>, <span class="at">driver =</span> <span class="dv">0</span>),</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> all_df)</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">"revamp/milestones"</span>)</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="fu">write_rds</span>(matched_all, <span class="st">"revamp/milestones/matched_all.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tic()</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>matched_all <span class="ot">&lt;-</span> <span class="fu">matchit</span>(<span class="co"># the first line of covar is coarsened</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula =</span> is_pa <span class="sc">~</span> elev <span class="sc">+</span> slope <span class="sc">+</span> cover <span class="sc">+</span> travel_time <span class="sc">+</span> pop_dens <span class="sc">+</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    country_num <span class="sc">+</span> ecoreg <span class="sc">+</span> driver, <span class="co"># these on 2nd line remain exact</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"cem"</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># for cutpoints 0 means no coarsening, and q5 means quintiles</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">cutpoints =</span> <span class="fu">list</span>(<span class="at">elev =</span> <span class="st">"q5"</span>, <span class="at">slope =</span> <span class="st">"q5"</span>, <span class="at">cover =</span> <span class="st">"q5"</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">travel_time =</span> <span class="st">"q5"</span>, <span class="at">pop_dens =</span> <span class="st">"q5"</span>,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>                   <span class="at">country_num =</span> <span class="dv">0</span>, <span class="at">ecoreg =</span> <span class="dv">0</span>, <span class="at">driver =</span> <span class="dv">0</span>),</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a> <span class="co"># k2k = TRUE, # To get a 1-to-1 matching </span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> all_df)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="fu">toc</span>() <span class="co"># 346.32 sec elapsed</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co"># tic()</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>matched_data <span class="ot">&lt;-</span> <span class="fu">match.data</span>(matched_all)</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="co"># toc() # 158.37 sec elapsed</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>matched_data <span class="ot">&lt;-</span>  matched_data <span class="sc">%&gt;%</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">subclass =</span> <span class="fu">as.integer</span>(subclass))</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="fu">write_parquet</span>(matched_data, <span class="st">"revamp/consolidated/matched_data.parquet"</span>)</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="co"># matched_data &lt;- read_parquet("revamp/consolidated/matched_data.parquet")</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="co"># tic()</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>matched_data <span class="sc">%&gt;%</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(is_pa, country_num) <span class="sc">%&gt;%</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_dataset</span>(<span class="st">"revamp/consolidated/matched_data"</span>)</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list =</span> <span class="fu">c</span>(<span class="st">"matched_data"</span>, <span class="st">"matched_all"</span>, <span class="st">"all_df"</span>))</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a><span class="co"># toc() # 61.37 sec elapsed</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-</section>
-<section id="regress-for-impact-estimation" class="level1" data-number="12">
-<h1 data-number="12"><span class="header-section-number">12</span> Regress for impact estimation</h1>
+<section id="compute-deforestation-after" class="level2" data-number="11.1">
+<h2 data-number="11.1" class="anchored" data-anchor-id="compute-deforestation-after"><span class="header-section-number">11.1</span> Compute deforestation after</h2>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This is not implemented year. must be applied on matched units after allocating</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># status year of treatment to matched controls.</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>all_df <span class="ot">&lt;-</span> all_df <span class="sc">%&gt;%</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year_loss =</span> lossyear <span class="sc">+</span> <span class="dv">2000</span>,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">cover_loss =</span> cover <span class="sc">*</span> loss,</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">loss_before =</span> <span class="fu">case_when</span>(</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>           status_year <span class="sc">%in%</span> <span class="dv">2002</span><span class="sc">:</span><span class="dv">2017</span> <span class="sc">&amp;</span> year_loss <span class="sc">&lt;</span> status_year <span class="sc">~</span> cover_loss,</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">.default =</span> <span class="cn">NA</span>),</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">loss_after =</span> <span class="fu">case_when</span>(</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>           status_year <span class="sc">%in%</span> <span class="dv">2002</span><span class="sc">:</span><span class="dv">2017</span> <span class="sc">&amp;</span> year_loss <span class="sc">&gt;</span> status_year <span class="sc">~</span> cover_loss,</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>           <span class="at">.default =</span> <span class="cn">NA</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A function that computes the deforestation before and after status year for</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># protected area pixels, and before and after matched treatment status year for </span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># control pixels. Uses arrow for fast and larger-than-memory calculations</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>calc_defor_mode <span class="ot">&lt;-</span> <span class="cf">function</span>(first_year, last_year, matched_treatment,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>                                  matched_control) {</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  subset_trt <span class="ot">&lt;-</span> matched_treatment <span class="sc">%&gt;%</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(status_year <span class="sc">%in%</span> first_year<span class="sc">:</span>last_year)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  subset_ctrl <span class="ot">&lt;-</span> matched_control <span class="sc">%&gt;%</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>status_year)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  subclasses_trt <span class="ot">&lt;-</span> subset_trt <span class="sc">%&gt;%</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(subclass, status_year) <span class="sc">%&gt;%</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unique</span>()</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  defor_to_compute <span class="ot">&lt;-</span> subclasses_trt <span class="sc">%&gt;%</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">inner_join</span>(subset_ctrl, <span class="at">by =</span> <span class="st">"subclass"</span>)</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>  defor_computed <span class="ot">&lt;-</span> defor_to_compute <span class="sc">%&gt;%</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">before =</span> lossyear <span class="sc">&gt;=</span> first_year <span class="sc">&amp;</span> lossyear <span class="sc">&lt;</span> status_year,</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>           <span class="at">before =</span> <span class="fu">as.integer</span>(before), </span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>           <span class="at">after =</span> lossyear <span class="sc">&gt;</span> status_year <span class="sc">&amp;</span> lossyear <span class="sc">&lt;=</span> last_year,</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>           <span class="at">after =</span> <span class="fu">as.integer</span>(after),</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>           <span class="at">CL_b =</span> cover <span class="sc">*</span> loss <span class="sc">*</span> before,</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>           <span class="at">CL_a =</span> cover <span class="sc">*</span> loss <span class="sc">*</span> after) <span class="sc">%&gt;%</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(subclass, status_year) <span class="sc">%&gt;%</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">C =</span> <span class="fu">sum</span>(cover, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>              <span class="at">CL =</span> <span class="fu">sum</span>(cover <span class="sc">*</span> loss, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>              <span class="at">CL_b =</span> <span class="fu">sum</span>(CL_b, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>              <span class="at">CL_a =</span> <span class="fu">sum</span>(CL_a, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Y_b =</span> status_year <span class="sc">-</span> first_year,</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>           <span class="at">Y_a =</span> last_year <span class="sc">-</span> status_year,</span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>           <span class="at">loss =</span> <span class="sc">-</span> (((C <span class="sc">-</span> CL)<span class="sc">/</span>C)<span class="sc">^</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">18</span>) <span class="sc">-</span> <span class="dv">1</span>),</span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>           <span class="at">loss_before =</span> <span class="sc">-</span> (((C <span class="sc">-</span> CL_b)<span class="sc">/</span>C)<span class="sc">^</span>(<span class="dv">1</span><span class="sc">/</span>Y_b) <span class="sc">-</span> <span class="dv">1</span>),</span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>           <span class="at">loss_after =</span> <span class="sc">-</span> (((C <span class="sc">-</span> CL_a)<span class="sc">/</span>C)<span class="sc">^</span>(<span class="dv">1</span><span class="sc">/</span>Y_a) <span class="sc">-</span> <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(subclass, status_year, <span class="at">ctrl_loss =</span> loss, </span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>           <span class="at">ctrl_loss_before =</span> loss_before, <span class="at">ctrl_loss_after =</span> loss_after)</span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a>  expanded <span class="ot">&lt;-</span> subset_trt <span class="sc">%&gt;%</span></span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(defor_computed, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"subclass"</span>, <span class="st">"status_year"</span>))</span>
+<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-42"><a href="#cb17-42" aria-hidden="true" tabindex="-1"></a>  complete <span class="ot">&lt;-</span> expanded <span class="sc">%&gt;%</span></span>
+<span id="cb17-43"><a href="#cb17-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb17-44"><a href="#cb17-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">before =</span> lossyear <span class="sc">&gt;=</span> first_year <span class="sc">&amp;</span> lossyear <span class="sc">&lt;</span> status_year,</span>
+<span id="cb17-45"><a href="#cb17-45" aria-hidden="true" tabindex="-1"></a>           <span class="at">before =</span> <span class="fu">as.integer</span>(before), </span>
+<span id="cb17-46"><a href="#cb17-46" aria-hidden="true" tabindex="-1"></a>           <span class="at">after =</span> lossyear <span class="sc">&gt;</span> status_year <span class="sc">&amp;</span> lossyear <span class="sc">&lt;=</span> last_year,</span>
+<span id="cb17-47"><a href="#cb17-47" aria-hidden="true" tabindex="-1"></a>           <span class="at">after =</span> <span class="fu">as.integer</span>(after),</span>
+<span id="cb17-48"><a href="#cb17-48" aria-hidden="true" tabindex="-1"></a>           <span class="at">C =</span> cover,</span>
+<span id="cb17-49"><a href="#cb17-49" aria-hidden="true" tabindex="-1"></a>           <span class="at">CL =</span> cover <span class="sc">*</span> loss,</span>
+<span id="cb17-50"><a href="#cb17-50" aria-hidden="true" tabindex="-1"></a>           <span class="at">CL_b =</span> CL <span class="sc">*</span> before,</span>
+<span id="cb17-51"><a href="#cb17-51" aria-hidden="true" tabindex="-1"></a>           <span class="at">CL_a =</span> CL <span class="sc">*</span> after,</span>
+<span id="cb17-52"><a href="#cb17-52" aria-hidden="true" tabindex="-1"></a>           <span class="at">Y_b =</span> status_year <span class="sc">-</span> first_year,</span>
+<span id="cb17-53"><a href="#cb17-53" aria-hidden="true" tabindex="-1"></a>           <span class="at">Y_a =</span> last_year <span class="sc">-</span> status_year,</span>
+<span id="cb17-54"><a href="#cb17-54" aria-hidden="true" tabindex="-1"></a>           <span class="at">loss =</span> <span class="sc">-</span> (((C <span class="sc">-</span> CL)<span class="sc">/</span>C)<span class="sc">^</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">18</span>) <span class="sc">-</span> <span class="dv">1</span>),</span>
+<span id="cb17-55"><a href="#cb17-55" aria-hidden="true" tabindex="-1"></a>           <span class="at">loss_before =</span> <span class="sc">-</span> (((C <span class="sc">-</span> CL_b)<span class="sc">/</span>C)<span class="sc">^</span>(<span class="dv">1</span><span class="sc">/</span>Y_b) <span class="sc">-</span> <span class="dv">1</span>),</span>
+<span id="cb17-56"><a href="#cb17-56" aria-hidden="true" tabindex="-1"></a>           <span class="at">loss_after =</span> <span class="sc">-</span> (((C <span class="sc">-</span> CL_a)<span class="sc">/</span>C)<span class="sc">^</span>(<span class="dv">1</span><span class="sc">/</span>Y_a) <span class="sc">-</span> <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-57"><a href="#cb17-57" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>before, <span class="sc">-</span>after, <span class="sc">-</span>C, <span class="sc">-</span>CL, <span class="sc">-</span>CL_b, <span class="sc">-</span>CL_a, <span class="sc">-</span>Y_a, <span class="sc">-</span>Y_b) <span class="sc">%&gt;%</span></span>
+<span id="cb17-58"><a href="#cb17-58" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">trt_loss =</span> loss, </span>
+<span id="cb17-59"><a href="#cb17-59" aria-hidden="true" tabindex="-1"></a>           <span class="at">trt_loss_before =</span> loss_before, </span>
+<span id="cb17-60"><a href="#cb17-60" aria-hidden="true" tabindex="-1"></a>           <span class="at">trt_loss_after =</span> loss_after)</span>
+<span id="cb17-61"><a href="#cb17-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">collect</span>(complete))</span>
+<span id="cb17-62"><a href="#cb17-62" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-63"><a href="#cb17-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-64"><a href="#cb17-64" aria-hidden="true" tabindex="-1"></a><span class="co"># Set parameters as in the original study</span></span>
+<span id="cb17-65"><a href="#cb17-65" aria-hidden="true" tabindex="-1"></a><span class="co"># tic()</span></span>
+<span id="cb17-66"><a href="#cb17-66" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">calc_defor_mode</span>(</span>
+<span id="cb17-67"><a href="#cb17-67" aria-hidden="true" tabindex="-1"></a>  <span class="at">first_year =</span> <span class="dv">2001</span>,</span>
+<span id="cb17-68"><a href="#cb17-68" aria-hidden="true" tabindex="-1"></a>  <span class="at">last_year =</span> <span class="dv">2018</span>,</span>
+<span id="cb17-69"><a href="#cb17-69" aria-hidden="true" tabindex="-1"></a>  <span class="at">matched_treatment =</span> <span class="fu">open_dataset</span>(<span class="st">"revamp/consolidated/matched_data/is_pa=1"</span>),</span>
+<span id="cb17-70"><a href="#cb17-70" aria-hidden="true" tabindex="-1"></a>  <span class="at">matched_control  =</span> <span class="fu">open_dataset</span>(<span class="st">"revamp/consolidated/matched_data/is_pa=0"</span>))</span>
+<span id="cb17-71"><a href="#cb17-71" aria-hidden="true" tabindex="-1"></a><span class="fu">toc</span>() <span class="co"># 280.07 sec elapsed</span></span>
+<span id="cb17-72"><a href="#cb17-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-73"><a href="#cb17-73" aria-hidden="true" tabindex="-1"></a><span class="co"># Write output</span></span>
+<span id="cb17-74"><a href="#cb17-74" aria-hidden="true" tabindex="-1"></a><span class="fu">tic</span>()</span>
+<span id="cb17-75"><a href="#cb17-75" aria-hidden="true" tabindex="-1"></a><span class="fu">write_parquet</span>(df, <span class="st">"revamp/consolidated/matched_df.parquet"</span>)</span>
+<span id="cb17-76"><a href="#cb17-76" aria-hidden="true" tabindex="-1"></a><span class="fu">toc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+</section>
+<section id="descriptive-statistics-on-deforestation" class="level1" data-number="12">
+<h1 data-number="12"><span class="header-section-number">12</span> Descriptive statistics on deforestation</h1>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(<span class="st">"revamp/consolidated/matched_df.parquet"</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Nombre de PA</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>nb_pa <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"wdpa_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>()</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tic</span>()</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>comp_means <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">loss_trt =</span> <span class="fu">mean</span>(trt_loss, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_ctrl =</span> <span class="fu">mean</span>(ctrl_loss, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_before_trt =</span> <span class="fu">mean</span>(trt_loss_before, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_before_crtl =</span> <span class="fu">mean</span>(ctrl_loss_before, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_after_trt =</span> <span class="fu">mean</span>(trt_loss_after, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_after_crtl =</span> <span class="fu">mean</span>(ctrl_loss_after, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="fu">toc</span>()</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="fu">tic</span>()</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>comp_medians <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">loss_trt =</span> <span class="fu">median</span>(trt_loss, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_ctrl =</span> <span class="fu">median</span>(ctrl_loss, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_before_trt =</span> <span class="fu">median</span>(trt_loss_before, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_before_crtl =</span> <span class="fu">median</span>(ctrl_loss_before, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_after_trt =</span> <span class="fu">median</span>(trt_loss_after, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_after_crtl =</span> <span class="fu">median</span>(ctrl_loss_after, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a><span class="fu">toc</span>()</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>df <span class="sc">%&gt;%</span></span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(rownum, trt_loss, ctrl_loss) <span class="sc">%&gt;%</span></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>rownum) <span class="sc">%&gt;%</span></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="at">cols =</span> <span class="fu">vars</span>(name))</span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>df <span class="sc">%&gt;%</span></span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(rownum, trt_loss_before, ctrl_loss_before, trt_loss_after, ctrl_loss_after) <span class="sc">%&gt;%</span></span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>rownum) <span class="sc">%&gt;%</span></span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">before_after =</span> <span class="fu">ifelse</span>(name <span class="sc">==</span> <span class="st">"trt_loss_before"</span> <span class="sc">|</span> name <span class="sc">==</span> <span class="st">"ctrl_loss_before"</span>,</span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"Before"</span>, <span class="st">"After"</span>),</span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>         <span class="at">trt_ctrl =</span> <span class="fu">ifelse</span>(name <span class="sc">==</span> <span class="st">"trt_loss_before"</span> <span class="sc">|</span> name <span class="sc">==</span> <span class="st">"trt_loss_after"</span>,</span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>                           <span class="st">"Treatment"</span>, <span class="st">"Control"</span>),</span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>         <span class="at">before_after =</span> <span class="fu">as_factor</span>(before_after),</span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>         <span class="at">trt_ctrl =</span> <span class="fu">as_factor</span>(trt_ctrl)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="at">cols =</span> <span class="fu">vars</span>(trt_ctrl), <span class="at">rows =</span> <span class="fu">vars</span>(before_after))</span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute stats per PA</span></span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>PAs <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(wdpa_id) <span class="sc">%&gt;%</span></span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">loss_trt =</span> <span class="fu">mean</span>(trt_loss, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_ctrl =</span> <span class="fu">mean</span>(ctrl_loss, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_before_trt =</span> <span class="fu">mean</span>(trt_loss_before, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_before_ctrl =</span> <span class="fu">mean</span>(ctrl_loss_before, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_after_trt =</span> <span class="fu">mean</span>(trt_loss_after, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a>            <span class="at">loss_after_ctrl =</span> <span class="fu">mean</span>(ctrl_loss_after, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>PAs <span class="sc">%&gt;%</span></span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>wdpa_id) <span class="sc">%&gt;%</span></span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">group =</span> <span class="fu">ifelse</span>(<span class="fu">str_detect</span>(name, <span class="st">"trt"</span>), <span class="st">"Treatment"</span>, <span class="st">"Control"</span>),</span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>         <span class="at">period =</span> <span class="fu">case_when</span>(<span class="fu">str_detect</span>(name, <span class="st">"before"</span>) <span class="sc">~</span> <span class="st">"Before"</span>,</span>
+<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">str_detect</span>(name, <span class="st">"after"</span>) <span class="sc">~</span> <span class="st">"After"</span>,</span>
+<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a>                            <span class="at">.default =</span> <span class="st">"All"</span>),</span>
+<span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a>         <span class="at">group =</span> <span class="fu">as_factor</span>(group),</span>
+<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a>         <span class="at">period =</span> <span class="fu">as_factor</span>(period)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="at">cols =</span> <span class="fu">vars</span>(group), <span class="at">rows =</span> <span class="fu">vars</span>(period))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>df_subset <span class="ot">&lt;-</span> all_df[<span class="dv">1</span><span class="sc">:</span><span class="dv">10000</span>,]</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>calc_defor_annual <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">min_year =</span> <span class="dv">2001</span>, <span class="at">max_year =</span> <span class="dv">2018</span>) {</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> x <span class="sc">%&gt;%</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">row_id =</span> <span class="fu">row_number</span>())</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  defor <span class="ot">&lt;-</span> x <span class="sc">%&gt;%</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(row_id, status_year, <span class="fu">starts_with</span>(<span class="st">"lossyear_"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_longer</span>(<span class="sc">-</span><span class="fu">c</span>(row_id, status_year)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">loss_year =</span> <span class="fu">as.integer</span>(<span class="fu">gsub</span>(<span class="st">"lossyear_"</span>, <span class="st">""</span>, name))) <span class="sc">%&gt;%</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(loss_year <span class="sc">&gt;=</span> min_year <span class="sc">&amp;</span> loss_year <span class="sc">&lt;=</span> max_year) <span class="sc">%&gt;%</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">loss_before =</span> <span class="fu">ifelse</span>(loss_year <span class="sc">&lt;</span> status_year, value, <span class="dv">0</span>),</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">loss_after =</span> <span class="fu">ifelse</span>(loss_year <span class="sc">&gt;</span> status_year, value, <span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(row_id) <span class="sc">%&gt;%</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">loss_before_annual =</span> <span class="fu">sum</span>(loss_before, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>              <span class="at">loss_after_annual =</span> <span class="fu">sum</span>(loss_after, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">left_join</span>(x, defor, <span class="at">by =</span> <span class="fu">group_by</span>(row_id))</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(x)</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="fu">tic</span>()</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>all_df <span class="ot">&lt;-</span> <span class="fu">calc_defor_annual</span>(all_df)</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a><span class="fu">toc</span>()</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="fu">write_parquet</span>(all_df, <span class="st">"revamp/consolidated/al_df_defor.parquet"</span>)</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> df_subset <span class="sc">%&gt;%</span></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowwise</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">test =</span> <span class="fu">sum</span>(<span class="fu">c_across</span>(<span class="st">"loss_2021"</span><span class="sc">:</span><span class="fu">paste0</span>(<span class="st">"lossyear_"</span>, status_year))))</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"lossyear_"</span>, <span class="dv">2001</span><span class="sc">:</span>df_subset<span class="sc">$</span>status_year)</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>test2 <span class="ot">&lt;-</span> df_subset <span class="sc">%&gt;%</span></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ref_years =</span> <span class="fu">paste</span>(<span class="fu">paste0</span>(<span class="st">"lossyear_"</span>, <span class="dv">2001</span><span class="sc">:</span>.<span class="sc">$</span>status_year), <span class="at">collapse =</span> <span class="st">", "</span>),</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>         <span class="at">test  =</span> <span class="fu">rowSums</span>(<span class="fu">pick</span>(<span class="fu">paste0</span>(<span class="st">"lossyear_"</span>, <span class="dv">2001</span><span class="sc">:</span>.<span class="sc">$</span>status_year))),</span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>         <span class="at">.after =</span> status_year)</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>subset2 <span class="ot">&lt;-</span> all_df <span class="sc">%&gt;%</span></span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sample_n</span>(<span class="dv">10000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 
