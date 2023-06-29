@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.335">
+<meta name="generator" content="quarto-1.3.433">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -17,9 +17,10 @@ div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
   width: 0.8em;
-  margin: 0 0.8em 0.2em -1.6em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -46,43 +47,13 @@ pre.numberSource code > span > a:first-child::before
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
     padding: 0 4px; width: 4em;
-    color: #aaaaaa;
   }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
 div.sourceCode
   {   }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: #7d9029; } /* Attribute */
-code span.bn { color: #40a070; } /* BaseN */
-code span.bu { color: #008000; } /* BuiltIn */
-code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code span.ch { color: #4070a0; } /* Char */
-code span.cn { color: #880000; } /* Constant */
-code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code span.dt { color: #902000; } /* DataType */
-code span.dv { color: #40a070; } /* DecVal */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #40a070; } /* Float */
-code span.fu { color: #06287e; } /* Function */
-code span.im { color: #008000; font-weight: bold; } /* Import */
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code span.op { color: #666666; } /* Operator */
-code span.ot { color: #007020; } /* Other */
-code span.pp { color: #bc7a00; } /* Preprocessor */
-code span.sc { color: #4070a0; } /* SpecialChar */
-code span.ss { color: #bb6688; } /* SpecialString */
-code span.st { color: #4070a0; } /* String */
-code span.va { color: #19177c; } /* Variable */
-code span.vs { color: #4070a0; } /* VerbatimString */
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
 
@@ -120,7 +91,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
 }</script>
 
@@ -131,11 +103,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-    <div class="container-fluid d-flex justify-content-between">
-      <h1 class="quarto-secondary-nav-title"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Reproduction “as is” of the publised results</span></h1>
-      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
-        <i class="bi bi-chevron-right"></i>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../replication_report/05_reproduction_as_is.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Reproduction "as is" of the publised results</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
       </button>
     </div>
   </nav>
@@ -143,83 +120,93 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Replication of Wolf et al.&nbsp;(2021) “A forest loss report card for the world’s protected areas”</a> 
         <div class="sidebar-tools-main">
-    <a href="https://github.com/fBedecarrats/PA_matching" title="Source Code" class="sidebar-tool px-1"><i class="bi bi-github"></i></a>
+    <a href="https://github.com/fBedecarrats/PA_matching" rel="" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
 </div>
     </div>
       </div>
-      <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="mt-2 flex-shrink-0 align-items-center">
         <div class="sidebar-search">
         <div id="quarto-search" class="" title="Search"></div>
         </div>
-      </div>
+        </div>
     <div class="sidebar-menu-container"> 
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Summary</span></a>
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Summary</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../replication_report/02_preanalysis_plan.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Pre-analysis plan for the replication of Wolf et al.&nbsp;(2021)</span></a>
+  <a href="../replication_report/02_preanalysis_plan.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Pre-analysis plan for the replication of Wolf et al.&nbsp;(2021)</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../replication_report/03_computing_setup.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Computing environment setup</span></a>
+  <a href="../replication_report/03_computing_setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Computing environment setup</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../replication_report/04_data_preparation.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Data gathering and preparation</span></a>
+  <a href="../replication_report/04_data_preparation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Data gathering and preparation</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../replication_report/05_reproduction_as_is.html" class="sidebar-item-text sidebar-link active"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Reproduction “as is” of the publised results</span></a>
+  <a href="../replication_report/05_reproduction_as_is.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Reproduction “as is” of the publised results</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../replication_report/06_reimplement_matching.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reimplement matching</span></a>
+  <a href="../replication_report/06_reimplement_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reimplement matching</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../replication_report/07_observations_initial_study.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Discussion of processing choices</span></a>
+  <a href="../replication_report/07_observations_initial_study.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Discussion of processing choices</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../replication_report/references.html" class="sidebar-item-text sidebar-link">References</a>
+  <a href="../replication_report/references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
   </div>
 </li>
     </ul>
     </div>
 </nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#original-source-code-execution" id="toc-original-source-code-execution" class="nav-link active" data-scroll-target="#original-source-code-execution"><span class="toc-section-number">5.1</span>  Original source code execution</a>
+  <li><a href="#original-source-code-execution" id="toc-original-source-code-execution" class="nav-link active" data-scroll-target="#original-source-code-execution"><span class="header-section-number">5.1</span> Original source code execution</a>
   <ul class="collapse">
-  <li><a href="#fetch-data-from-google-earth-engine" id="toc-fetch-data-from-google-earth-engine" class="nav-link" data-scroll-target="#fetch-data-from-google-earth-engine"><span class="toc-section-number">5.1.1</span>  Fetch data from Google Earth Engine</a></li>
-  <li><a href="#fetch-species-data-from-iucn" id="toc-fetch-species-data-from-iucn" class="nav-link" data-scroll-target="#fetch-species-data-from-iucn"><span class="toc-section-number">5.1.2</span>  Fetch species data from IUCN</a></li>
-  <li><a href="#compute-species-richness" id="toc-compute-species-richness" class="nav-link" data-scroll-target="#compute-species-richness"><span class="toc-section-number">5.1.3</span>  Compute species richness</a></li>
-  <li><a href="#join-rasters" id="toc-join-rasters" class="nav-link" data-scroll-target="#join-rasters"><span class="toc-section-number">5.1.4</span>  Join rasters</a></li>
-  <li><a href="#match-pixels-on-covariates" id="toc-match-pixels-on-covariates" class="nav-link" data-scroll-target="#match-pixels-on-covariates"><span class="toc-section-number">5.1.5</span>  Match pixels on covariates</a></li>
-  <li><a href="#merge-the-results" id="toc-merge-the-results" class="nav-link" data-scroll-target="#merge-the-results"><span class="toc-section-number">5.1.6</span>  Merge the results</a></li>
-  <li><a href="#perform-country-level-analysis" id="toc-perform-country-level-analysis" class="nav-link" data-scroll-target="#perform-country-level-analysis"><span class="toc-section-number">5.1.7</span>  Perform country level analysis</a></li>
-  <li><a href="#produce-summary-figures" id="toc-produce-summary-figures" class="nav-link" data-scroll-target="#produce-summary-figures"><span class="toc-section-number">5.1.8</span>  Produce summary figures</a></li>
-  <li><a href="#compute-svc-model" id="toc-compute-svc-model" class="nav-link" data-scroll-target="#compute-svc-model"><span class="toc-section-number">5.1.9</span>  Compute SVC model</a></li>
-  <li><a href="#run-matching-sensitivity" id="toc-run-matching-sensitivity" class="nav-link" data-scroll-target="#run-matching-sensitivity"><span class="toc-section-number">5.1.10</span>  Run matching sensitivity</a></li>
+  <li><a href="#fetch-data-from-google-earth-engine" id="toc-fetch-data-from-google-earth-engine" class="nav-link" data-scroll-target="#fetch-data-from-google-earth-engine"><span class="header-section-number">5.1.1</span> Fetch data from Google Earth Engine</a></li>
+  <li><a href="#fetch-species-data-from-iucn" id="toc-fetch-species-data-from-iucn" class="nav-link" data-scroll-target="#fetch-species-data-from-iucn"><span class="header-section-number">5.1.2</span> Fetch species data from IUCN</a></li>
+  <li><a href="#compute-species-richness" id="toc-compute-species-richness" class="nav-link" data-scroll-target="#compute-species-richness"><span class="header-section-number">5.1.3</span> Compute species richness</a></li>
+  <li><a href="#join-rasters" id="toc-join-rasters" class="nav-link" data-scroll-target="#join-rasters"><span class="header-section-number">5.1.4</span> Join rasters</a></li>
+  <li><a href="#match-pixels-on-covariates" id="toc-match-pixels-on-covariates" class="nav-link" data-scroll-target="#match-pixels-on-covariates"><span class="header-section-number">5.1.5</span> Match pixels on covariates</a></li>
+  <li><a href="#merge-the-results" id="toc-merge-the-results" class="nav-link" data-scroll-target="#merge-the-results"><span class="header-section-number">5.1.6</span> Merge the results</a></li>
+  <li><a href="#compute-svc-model" id="toc-compute-svc-model" class="nav-link" data-scroll-target="#compute-svc-model"><span class="header-section-number">5.1.7</span> Compute SVC model</a></li>
+  <li><a href="#perform-country-level-analysis" id="toc-perform-country-level-analysis" class="nav-link" data-scroll-target="#perform-country-level-analysis"><span class="header-section-number">5.1.8</span> Perform country level analysis</a></li>
+  <li><a href="#produce-summary-figures" id="toc-produce-summary-figures" class="nav-link" data-scroll-target="#produce-summary-figures"><span class="header-section-number">5.1.9</span> Produce summary figures</a></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results"><span class="header-section-number">5.1.10</span> Results</a></li>
+  <li><a href="#run-matching-sensitivity" id="toc-run-matching-sensitivity" class="nav-link" data-scroll-target="#run-matching-sensitivity"><span class="header-section-number">5.1.11</span> Run matching sensitivity</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -229,7 +216,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><span id="sec-reproducion_asis" class="quarto-section-identifier d-none d-lg-block"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Reproduction “as is” of the publised results</span></span></h1>
+<h1 class="title"><span id="sec-reproducion_asis" class="quarto-section-identifier"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Reproduction “as is” of the publised results</span></span></h1>
 </div>
 
 
@@ -253,16 +240,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># A function to replace some parts of the code</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>replace_all <span class="ot">&lt;-</span> <span class="cf">function</span>(pattern, replacement, file) {</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">readLines</span>(file) <span class="sc">%&gt;%</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_replace_all</span>(pattern, replacement) <span class="sc">%&gt;%</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">writeLines</span>(file)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span>stringr<span class="sc">::</span><span class="fu">str_detect</span>(<span class="fu">getwd</span>(), <span class="st">"PA_matching"</span>)) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setwd</span>(<span class="st">"PA_matching"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span>stringr<span class="sc">::</span><span class="fu">str_ends</span>(<span class="fu">getwd</span>(), <span class="st">"replication_report"</span>)) {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setwd</span>(<span class="st">"replication_report"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># A function to replace some parts of the code</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>replace_all <span class="ot">&lt;-</span> <span class="cf">function</span>(pattern, replacement, file) {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">readLines</span>(file) <span class="sc">%&gt;%</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_replace_all</span>(pattern, replacement) <span class="sc">%&gt;%</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">writeLines</span>(file)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>The following functions are a series of utilities to save the data to a datalake (based on S3)</p>
-<p>We also re-create the file arborescence</p>
 <section id="fetch-data-from-google-earth-engine" class="level3" data-number="5.1.1">
 <h3 data-number="5.1.1" class="anchored" data-anchor-id="fetch-data-from-google-earth-engine"><span class="header-section-number">5.1.1</span> Fetch data from Google Earth Engine</h3>
 <p>Mofify the paths</p>
@@ -383,13 +374,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Fetch birds from S3</span></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">save_from_s3</span>(<span class="at">from =</span> <span class="st">"Replication_wolf/data_input/range_maps/birds_shps.zip"</span>,</span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">to =</span> <span class="st">"birds_shps.zip"</span>)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="fu">paste</span>(<span class="st">"unzip -P"</span>, my_key_zip, <span class="st">"birds_shp.zip"</span>, </span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>             <span class="st">" -d data_input/range_maps/"</span>))</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="fu">file.remove</span>(<span class="st">"birds_shps.zip"</span>)</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co"># species_data &lt;- read_csv("data_processed/species_data.csv")</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="fu">save_from_s3</span>(<span class="at">from =</span> <span class="st">"Replication_wolf/data_processed/rasters/elev.tif"</span>,</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>             <span class="at">to =</span> <span class="st">"data_processed/rasters/elev.tif"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">system</span>(<span class="fu">paste</span>(<span class="st">"unzip -P"</span>, my_key_zip, <span class="st">"birds_shps.zip"</span>))</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">file.remove</span>(<span class="st">"birds_shps.zip"</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># species_data &lt;- read_csv("data_processed/species_data.csv")</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">save_from_s3</span>(<span class="at">from =</span> <span class="st">"Replication_wolf/data_processed/rasters/elev.tif"</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">to =</span> <span class="st">"data_processed/rasters/elev.tif"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -441,12 +431,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">"/home/onyxia/work/PA_matching/replication_report"</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reticulate)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>my_envname <span class="ot">&lt;-</span> <span class="st">"replication-wolf2"</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">use_condaenv</span>(my_envname)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>species_richness_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/003 - species_richness.py"</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">source_python</span>(species_richness_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reticulate)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>my_envname <span class="ot">&lt;-</span> <span class="st">"replication-wolf"</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">use_condaenv</span>(my_envname)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>species_richness_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/003 - species_richness.py"</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">source_python</span>(species_richness_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
@@ -474,134 +463,135 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="join-rasters" class="level3" data-number="5.1.4">
 <h3 data-number="5.1.4" class="anchored" data-anchor-id="join-rasters"><span class="header-section-number">5.1.4</span> Join rasters</h3>
 <p>This steps corresponds to the file <code>004 - join_rasters.R</code>, which original content can be examined below.</p>
-<div class="callout-code callout callout-style-default no-icon callout-captioned">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-caption-container flex-fill">
-Code
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
+<div class="callout-code" data-collapse="true">
 <div class="cell">
-
-</div>
-</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| warning: false</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| class-output: "sourceCode python"</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">readLines</span>(<span class="st">"PA_matching_asis/004 - join_rasters.R"</span>), <span class="at">sep =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </div>
 <p>This script cannot be run without modification. The location of the working directory was specific to the author machine, we replace by a generic location. The script fetches data from Curtis et al [INSERT CITATION], but the URL has changed. We replace with the new URL and modify too the file name with is now all in lowercase. The URLs for Curtis et al.&nbsp;data and WWF data have changed There is a typo on line 136: an object called <code>PA_dists</code> is called but no object exists with this name, however an object <code>PAs_dist</code> (without a final “s”) was created on the previous code line</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>join_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/004 - join_rasters.R"</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>my_wd <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">getwd</span>(), <span class="st">"/"</span>)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Change the working directory location</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"/home/chrisgraywolf/shared/analysis/PA_matching/"</span>, </span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> my_wd,</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Correct the typo in the code</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"PAs_buffer = PA_dists &lt;= 10e3"</span>,</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"PAs_buffer = PAs_dist &lt;= 10e3"</span>,</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>join_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/004 - join_rasters.R"</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>my_wd <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">getwd</span>(), <span class="st">"/"</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Change the working directory location</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"/home/chrisgraywolf/shared/analysis/PA_matching/"</span>, </span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> my_wd,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">'read_sf</span><span class="sc">\\</span><span class="st">("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">'geoarrow::read_geoparquet_sf</span><span class="sc">\\</span><span class="st">("data_input/PAs/WDPA_Jan2020_polygons.parquet"</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">'PAs_tab</span><span class="sc">\\</span><span class="st">$geometry = NULL'</span>,</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">'PAs_tab = st_drop_geometry</span><span class="sc">\\</span><span class="st">(PAs_tab</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Correct the typo in the code</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"PAs_buffer = PA_dists &lt;= 10e3"</span>,</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"PAs_buffer = PAs_dist &lt;= 10e3"</span>,</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Gather data</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Listing files in bucket</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>my_files <span class="ot">&lt;-</span> <span class="fu">get_bucket_df</span>(<span class="at">bucket =</span> <span class="st">"fbedecarrats"</span>,</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">prefix =</span> <span class="st">"Replication_wolf"</span>,</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">region =</span> <span class="st">""</span>)</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Select PA shp</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>my_PAs <span class="ot">&lt;-</span> my_files <span class="sc">%&gt;%</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"/PAs/WDPA"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"Key"</span>)</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create paths in local machine</span></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>my_PAs_dest <span class="ot">&lt;-</span> my_PAs <span class="sc">%&gt;%</span></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_remove</span>(<span class="st">"Replication_wolf/"</span>)</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve the data</span></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="fu">map2</span>(my_PAs, my_PAs_dest, save_from_s3)</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Select WWF shp</span></span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>my_biomes <span class="ot">&lt;-</span> my_files <span class="sc">%&gt;%</span></span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"/official/"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"Key"</span>)</span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Create paths in local machine</span></span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>my_biomes_dest <span class="ot">&lt;-</span> my_biomes <span class="sc">%&gt;%</span></span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>   <span class="fu">str_remove</span>(<span class="st">"Replication_wolf/"</span>)</span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve the data</span></span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="fu">map2</span>(my_biomes, my_biomes_dest, save_from_s3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Listing files in bucket</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>my_files <span class="ot">&lt;-</span> <span class="fu">get_bucket_df</span>(<span class="at">bucket =</span> <span class="st">"fbedecarrats"</span>,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">prefix =</span> <span class="st">"Replication_wolf"</span>,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">region =</span> <span class="st">""</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Select PA shp</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>my_PAs <span class="ot">&lt;-</span> my_files <span class="sc">%&gt;%</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"/PAs/WDPA"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"Key"</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create paths in local machine</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>my_PAs_dest <span class="ot">&lt;-</span> my_PAs <span class="sc">%&gt;%</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_remove</span>(<span class="st">"Replication_wolf/"</span>)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve the data</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="fu">map2</span>(my_PAs, my_PAs_dest, save_from_s3)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Select WWF shp</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>my_biomes <span class="ot">&lt;-</span> my_files <span class="sc">%&gt;%</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"/official/"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"Key"</span>)</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Create paths in local machine</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>my_biomes_dest <span class="ot">&lt;-</span> my_biomes <span class="sc">%&gt;%</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>   <span class="fu">str_remove</span>(<span class="st">"Replication_wolf/"</span>)</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve the data</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="fu">map2</span>(my_biomes, my_biomes_dest, save_from_s3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Run script</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>join_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/004 - join_rasters.R"</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(join_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>join_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/004 - join_rasters.R"</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(join_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Save outputs</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save outputs</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># List present tifs</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># See which are not already in S3</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>processed_local <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"data_processed"</span>,</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>                              <span class="at">recursive =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>                              <span class="at">full.names =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_subset</span>(., <span class="st">"vrt$"</span>, <span class="at">negate =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Listing files in bucket</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>my_files <span class="ot">&lt;-</span> <span class="fu">get_bucket_df</span>(<span class="at">bucket =</span> <span class="st">"fbedecarrats"</span>,</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">prefix =</span> <span class="st">"Replication_wolf"</span>,</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>                          <span class="at">region =</span> <span class="st">""</span>)</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>processed_s3 <span class="ot">&lt;-</span> my_files <span class="sc">%&gt;%</span></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"/data_processed/"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">path =</span> <span class="fu">str_remove</span>(Key, <span class="st">"Replication_wolf/"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"path"</span>)</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>to_put_s3 <span class="ot">&lt;-</span> processed_local[<span class="sc">!</span>processed_local <span class="sc">%in%</span> processed_s3]</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>to_put_s3</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>path_in_s3 <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"Replication_wolf/"</span>, to_put_s3)</span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Put them in S3</span></span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="fu">map2</span>(to_put_s3, path_in_s3, put_to_s3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save outputs</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># List present tifs</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># See which are not already in S3</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>processed_local <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"data_processed"</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>                              <span class="at">recursive =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>                              <span class="at">full.names =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_subset</span>(., <span class="st">"vrt$"</span>, <span class="at">negate =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Listing files in bucket</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>my_files <span class="ot">&lt;-</span> <span class="fu">get_bucket_df</span>(<span class="at">bucket =</span> <span class="st">"fbedecarrats"</span>,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">prefix =</span> <span class="st">"Replication_wolf"</span>,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>                          <span class="at">region =</span> <span class="st">""</span>)</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>processed_s3 <span class="ot">&lt;-</span> my_files <span class="sc">%&gt;%</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"/data_processed/"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">path =</span> <span class="fu">str_remove</span>(Key, <span class="st">"Replication_wolf/"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"path"</span>)</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>to_put_s3 <span class="ot">&lt;-</span> processed_local[<span class="sc">!</span>processed_local <span class="sc">%in%</span> processed_s3]</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>to_put_s3</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>path_in_s3 <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"Replication_wolf/"</span>, to_put_s3)</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Put them in S3</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="fu">map2</span>(to_put_s3, path_in_s3, put_to_s3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Listing files in bucket</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>my_files <span class="ot">&lt;-</span> <span class="fu">get_bucket_df</span>(<span class="at">bucket =</span> <span class="st">"fbedecarrats"</span>,</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">prefix =</span> <span class="st">"Replication_wolf"</span>,</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">region =</span> <span class="st">""</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"keep$"</span>, <span class="at">negate =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>processed_s3 <span class="ot">&lt;-</span> my_files <span class="sc">%&gt;%</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"data_processed"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">path =</span> <span class="fu">str_remove</span>(Key, <span class="st">"Replication_wolf/"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"path"</span>)</span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>processed_local <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"data_processed"</span>,</span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">recursive =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>to_save_local <span class="ot">&lt;-</span> processed_s3[<span class="sc">!</span>processed_s3 <span class="sc">%in%</span> processed_local]</span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>to_save_local</span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(to_save_local) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>  path_s3_to_local <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"Replication_wolf/"</span>, to_save_local)</span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map2</span>(path_s3_to_local, to_save_local, save_from_s3)</span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Listing files in bucket</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>my_files <span class="ot">&lt;-</span> <span class="fu">get_bucket_df</span>(<span class="at">bucket =</span> <span class="st">"fbedecarrats"</span>,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">prefix =</span> <span class="st">"Replication_wolf"</span>,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">region =</span> <span class="st">""</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"keep$"</span>, <span class="at">negate =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>processed_s3 <span class="ot">&lt;-</span> my_files <span class="sc">%&gt;%</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"data_processed"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">path =</span> <span class="fu">str_remove</span>(Key, <span class="st">"Replication_wolf/"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"path"</span>)</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>processed_local <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"data_processed"</span>,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">recursive =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>to_save_local <span class="ot">&lt;-</span> processed_s3[<span class="sc">!</span>processed_s3 <span class="sc">%in%</span> processed_local]</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>to_save_local</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(to_save_local) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  path_s3_to_local <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"Replication_wolf/"</span>, to_save_local)</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map2</span>(path_s3_to_local, to_save_local, save_from_s3)</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Execute the code</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>join_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/004 - join_rasters.R"</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(join_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>join_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/004 - join_rasters.R"</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(join_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Note : Message bizarre suite à lignes 78-93</p>
@@ -619,45 +609,387 @@ Warning messages:
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>matching_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/005 - covariate_matching.jl"</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>my_wd <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">getwd</span>(), <span class="st">"/"</span>)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Change the working directory location</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"/home/chrisgraywolf/shared/analysis/PA_matching/"</span>, </span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> my_wd,</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Need to specify the DataFrame in csv </span></span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"CSV</span><span class="sc">\\</span><span class="st">.read</span><span class="sc">\\</span><span class="st">(</span><span class="sc">\"</span><span class="st">data_processed/PAs_tab</span><span class="sc">\\</span><span class="st">.csv</span><span class="sc">\"\\</span><span class="st">)"</span>, </span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> </span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>              <span class="st">"CSV</span><span class="sc">\\</span><span class="st">.read</span><span class="sc">\\</span><span class="st">(</span><span class="sc">\"</span><span class="st">data_processed/PAs_tab</span><span class="sc">\\</span><span class="st">.csv</span><span class="sc">\"</span><span class="st">, DataFrame</span><span class="sc">\\</span><span class="st">)"</span>,</span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>matching_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/005 - covariate_matching.jl"</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Modify the location of the working directory</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>my_wd <span class="ot">&lt;-</span><span class="fu">getwd</span>()</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co"># The way Julia has to write pathes on windows is really weird</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">str_detect</span>(<span class="fu">str_to_lower</span>(<span class="fu">Sys.getenv</span>(<span class="st">"OS"</span>)), <span class="st">"windows"</span>)) {</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Needs bunch of escape characters in the working directory</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  my_wd <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(my_wd, <span class="st">"</span><span class="sc">\\</span><span class="st">/"</span>, <span class="st">"</span><span class="sc">\\\\\\\\\\\\\\\\\\\\</span><span class="st">"</span>)</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># \U and \s mean something so these letters get chopped in the process</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  my_wd <span class="ot">&lt;-</span> <span class="fu">str_replace_all</span>(my_wd, <span class="st">"ers"</span>, <span class="st">"Users"</span>)</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Need also to specify the location of the specific tif</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"data_processed</span><span class="sc">\\</span><span class="st">/rasters</span><span class="sc">\\</span><span class="st">/cover.tif"</span>, </span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"data_processed</span><span class="sc">\\\\\\\\</span><span class="st">rasters</span><span class="sc">\\\\\\\\</span><span class="st">cover.tif"</span>,</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>} </span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Change the working directory location</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"/home/chrisgraywolf/shared/analysis/PA_matching/"</span>, </span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> my_wd,</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Need to specify the output type (DataFrame) in CSV.read command </span></span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"CSV</span><span class="sc">\\</span><span class="st">.read</span><span class="sc">\\</span><span class="st">(</span><span class="sc">\"</span><span class="st">data_processed/PAs_tab</span><span class="sc">\\</span><span class="st">.csv</span><span class="sc">\"\\</span><span class="st">)"</span>, </span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> </span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>              <span class="st">"CSV</span><span class="sc">\\</span><span class="st">.read</span><span class="sc">\\</span><span class="st">(</span><span class="sc">\"</span><span class="st">data_processed/PAs_tab</span><span class="sc">\\</span><span class="st">.csv</span><span class="sc">\"</span><span class="st">, DataFrame</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a><span class="co"># No need to load this package: not used, and throws useless warnings</span></span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"using RCall"</span>,</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">""</span>,</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Update syntax for joins: join(..., kind = inner) =&gt; innerjoin()</span></span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"out = join</span><span class="sc">\\</span><span class="st">(data_treatment,"</span>,</span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"out = leftjoin</span><span class="sc">\\</span><span class="st">(data_treatment,"</span>,</span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"on = </span><span class="sc">\\</span><span class="st">:PAs,"</span>,</span>
+<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"on = </span><span class="sc">\\</span><span class="st">:PAs</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-40"><a href="#cb22-40" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-41"><a href="#cb22-41" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"kind = </span><span class="sc">\\</span><span class="st">:left</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-42"><a href="#cb22-42" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">""</span>,</span>
+<span id="cb22-43"><a href="#cb22-43" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-44"><a href="#cb22-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-45"><a href="#cb22-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Need to add a dot before equal of in-place operations</span></span>
+<span id="cb22-46"><a href="#cb22-46" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"out</span><span class="sc">\\</span><span class="st">[</span><span class="sc">\\</span><span class="st">:,var</span><span class="sc">\\</span><span class="st">] = mean</span><span class="sc">\\</span><span class="st">(df_small</span><span class="sc">\\</span><span class="st">[</span><span class="sc">\\</span><span class="st">:,var</span><span class="sc">\\</span><span class="st">]</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-47"><a href="#cb22-47" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"out</span><span class="sc">\\</span><span class="st">[</span><span class="sc">\\</span><span class="st">:,var</span><span class="sc">\\</span><span class="st">] .= mean</span><span class="sc">\\</span><span class="st">(df_small</span><span class="sc">\\</span><span class="st">[</span><span class="sc">\\</span><span class="st">:,var</span><span class="sc">\\</span><span class="st">]</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-48"><a href="#cb22-48" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-49"><a href="#cb22-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-50"><a href="#cb22-50" aria-hidden="true" tabindex="-1"></a><span class="co"># Update joining syntax</span></span>
+<span id="cb22-51"><a href="#cb22-51" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"join(data_treatment_coarsened[!,vcat</span><span class="sc">\\</span><span class="st">(:PAs,:STATUS_YR,match</span><span class="sc">\\</span><span class="st">)], data_control_coarsened, on = match, kind = :inner)"</span>,</span>
+<span id="cb22-52"><a href="#cb22-52" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"innerjoin(data_treatment_coarsened[!, vcat</span><span class="sc">\\</span><span class="st">(:PAs, :STATUS_YR, match</span><span class="sc">\\</span><span class="st">)], data_control_coarsened, on = match</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-53"><a href="#cb22-53" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-54"><a href="#cb22-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-55"><a href="#cb22-55" aria-hidden="true" tabindex="-1"></a><span class="co"># On line 141, update inner join syntax</span></span>
+<span id="cb22-56"><a href="#cb22-56" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"join</span><span class="sc">\\</span><span class="st">(data_treatment_coarsened"</span>,</span>
+<span id="cb22-57"><a href="#cb22-57" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"innerjoin</span><span class="sc">\\</span><span class="st">(data_treatment_coarsened"</span>,</span>
+<span id="cb22-58"><a href="#cb22-58" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-59"><a href="#cb22-59" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">", kind = </span><span class="sc">\\</span><span class="st">:inner</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-60"><a href="#cb22-60" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-61"><a href="#cb22-61" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-62"><a href="#cb22-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-63"><a href="#cb22-63" aria-hidden="true" tabindex="-1"></a><span class="co"># Update the by() syntax =&gt; combine(groupby())</span></span>
+<span id="cb22-64"><a href="#cb22-64" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">'by</span><span class="sc">\\</span><span class="st">(df, setdiff</span><span class="sc">\\</span><span class="st">(names</span><span class="sc">\\</span><span class="st">(df</span><span class="sc">\\</span><span class="st">), </span><span class="sc">\\</span><span class="st">["treatment"</span><span class="sc">\\</span><span class="st">]</span><span class="sc">\\</span><span class="st">)</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb22-65"><a href="#cb22-65" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">'combine</span><span class="sc">\\</span><span class="st">(groupby</span><span class="sc">\\</span><span class="st">(df, setdiff</span><span class="sc">\\</span><span class="st">(names</span><span class="sc">\\</span><span class="st">(df</span><span class="sc">\\</span><span class="st">), </span><span class="sc">\\</span><span class="st">["treatment"</span><span class="sc">\\</span><span class="st">]</span><span class="sc">\\</span><span class="st">)</span><span class="sc">\\</span><span class="st">)</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb22-66"><a href="#cb22-66" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-67"><a href="#cb22-67" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"by</span><span class="sc">\\</span><span class="st">(data_treatment, </span><span class="sc">\\</span><span class="st">:PAs</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-68"><a href="#cb22-68" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"combine</span><span class="sc">\\</span><span class="st">(groupby</span><span class="sc">\\</span><span class="st">(data_treatment, </span><span class="sc">\\</span><span class="st">:PAs</span><span class="sc">\\</span><span class="st">)</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-69"><a href="#cb22-69" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-70"><a href="#cb22-70" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"by</span><span class="sc">\\</span><span class="st">(data_matched, </span><span class="sc">\\</span><span class="st">:PAs</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-71"><a href="#cb22-71" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"combine</span><span class="sc">\\</span><span class="st">(groupby</span><span class="sc">\\</span><span class="st">(data_matched, </span><span class="sc">\\</span><span class="st">:PAs</span><span class="sc">\\</span><span class="st">)</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-72"><a href="#cb22-72" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-73"><a href="#cb22-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-74"><a href="#cb22-74" aria-hidden="true" tabindex="-1"></a><span class="co"># Adjust DataFrame syntax and dot in front of equal for in-place operation</span></span>
+<span id="cb22-75"><a href="#cb22-75" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">(df</span><span class="sc">\\</span><span class="st">[n</span><span class="sc">\\</span><span class="st">] = NaN</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-76"><a href="#cb22-76" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">(df</span><span class="sc">\\</span><span class="st">[</span><span class="sc">\\</span><span class="st">:, n</span><span class="sc">\\</span><span class="st">] .= NaN</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-77"><a href="#cb22-77" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-78"><a href="#cb22-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-79"><a href="#cb22-79" aria-hidden="true" tabindex="-1"></a><span class="co"># This also has to be updated to follow DataFrame syntax</span></span>
+<span id="cb22-80"><a href="#cb22-80" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"mean</span><span class="sc">\\</span><span class="st">(convert</span><span class="sc">\\</span><span class="st">(Array,df_small</span><span class="sc">\\</span><span class="st">[</span><span class="sc">\\</span><span class="st">:,cont_vars</span><span class="sc">\\</span><span class="st">]</span><span class="sc">\\</span><span class="st">), dims=1</span><span class="sc">\\</span><span class="st">)</span><span class="sc">\\</span><span class="st">[1,</span><span class="sc">\\</span><span class="st">:</span><span class="sc">\\</span><span class="st">]"</span>,</span>
+<span id="cb22-81"><a href="#cb22-81" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"</span><span class="sc">\\</span><span class="st">[mean</span><span class="sc">\\</span><span class="st">(col</span><span class="sc">\\</span><span class="st">) for col = eachcol</span><span class="sc">\\</span><span class="st">(df_small</span><span class="sc">\\</span><span class="st">[</span><span class="sc">\\</span><span class="st">:,cont_vars</span><span class="sc">\\</span><span class="st">]</span><span class="sc">\\</span><span class="st">), row=1</span><span class="sc">\\</span><span class="st">]"</span>,</span>
+<span id="cb22-82"><a href="#cb22-82" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-83"><a href="#cb22-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-84"><a href="#cb22-84" aria-hidden="true" tabindex="-1"></a><span class="co"># Uncomment the lines launching the generation of the main results</span></span>
+<span id="cb22-85"><a href="#cb22-85" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"#data_matched"</span>,</span>
+<span id="cb22-86"><a href="#cb22-86" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"data_matched"</span>,</span>
+<span id="cb22-87"><a href="#cb22-87" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-88"><a href="#cb22-88" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"#CSV.write"</span>,</span>
+<span id="cb22-89"><a href="#cb22-89" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"CSV.write"</span>,</span>
+<span id="cb22-90"><a href="#cb22-90" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span>
+<span id="cb22-91"><a href="#cb22-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-92"><a href="#cb22-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-93"><a href="#cb22-93" aria-hidden="true" tabindex="-1"></a>n_cores <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>()</span>
+<span id="cb22-94"><a href="#cb22-94" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"addprocs</span><span class="sc">\\</span><span class="st">(12</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb22-95"><a href="#cb22-95" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="fu">paste0</span>(<span class="st">"addprocs</span><span class="sc">\\</span><span class="st">("</span>, n_cores <span class="sc">-</span> <span class="dv">1</span>, <span class="st">"</span><span class="sc">\\</span><span class="st">)"</span>),</span>
+<span id="cb22-96"><a href="#cb22-96" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> matching_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(JuliaCall)</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="fu">julia_source</span>(matching_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(JuliaCall)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">julia_source</span>(matching_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save outputs</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co"># List present tifs</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co"># See which are not already in S3</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>processed_local <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"data_processed"</span>,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>                              <span class="at">recursive =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>                              <span class="at">full.names =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_subset</span>(., <span class="st">"vrt$"</span>, <span class="at">negate =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Listing files in bucket</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>my_files <span class="ot">&lt;-</span> <span class="fu">get_bucket_df</span>(<span class="at">bucket =</span> <span class="st">"fbedecarrats"</span>,</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">prefix =</span> <span class="st">"Replication_wolf"</span>,</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>                          <span class="at">region =</span> <span class="st">""</span>)</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>processed_s3 <span class="ot">&lt;-</span> my_files <span class="sc">%&gt;%</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"/data_processed/"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">path =</span> <span class="fu">str_remove</span>(Key, <span class="st">"Replication_wolf/"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"path"</span>)</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>to_put_s3 <span class="ot">&lt;-</span> processed_local[<span class="sc">!</span>processed_local <span class="sc">%in%</span> processed_s3]</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>to_put_s3</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>path_in_s3 <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"Replication_wolf/"</span>, to_put_s3)</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Put them in S3</span></span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a><span class="fu">map2</span>(to_put_s3, path_in_s3, put_to_s3)</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a><span class="fu">put_to_s3</span>(<span class="st">"data_processed/PA_df.RDS"</span>, <span class="st">"Replication_wolf/data_processed/PA_df.RDS"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
 <section id="merge-the-results" class="level3" data-number="5.1.6">
 <h3 data-number="5.1.6" class="anchored" data-anchor-id="merge-the-results"><span class="header-section-number">5.1.6</span> Merge the results</h3>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>join_results_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/006 - join_results.R"</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Do not change working directory</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"setwd</span><span class="sc">\\</span><span class="st">(project_dir</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"# setwd</span><span class="sc">\\</span><span class="st">(project_dir</span><span class="sc">\\</span><span class="st">)"</span>,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_results_script)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">'read_sf</span><span class="sc">\\</span><span class="st">("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">'geoarrow::read_geoparquet_sf</span><span class="sc">\\</span><span class="st">("data_input/PAs/WDPA_Jan2020_polygons.parquet"</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_results_script)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">'wb</span><span class="sc">\\</span><span class="st">(indicator="NY.GDP.PCAP.KD", startdate=2000, enddate=2018</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">'read_csv</span><span class="sc">\\</span><span class="st">("GDP_PC_PPP2010_2000-2018.csv"</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_results_script)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Legacy regions in country_codes: https://vincentarelbundock.github.io/countrycode/reference/codelist.html</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">'"region"'</span>,</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">'"region23"'</span>,</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_results_script)</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"/home/chrisgraywolf/shared/analysis/PA_loss/data/"</span>,</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"PA_matching_asis/"</span>,</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_results_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(join_results_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
 </section>
-<section id="perform-country-level-analysis" class="level3" data-number="5.1.7">
-<h3 data-number="5.1.7" class="anchored" data-anchor-id="perform-country-level-analysis"><span class="header-section-number">5.1.7</span> Perform country level analysis</h3>
+<section id="compute-svc-model" class="level3" data-number="5.1.7">
+<h3 data-number="5.1.7" class="anchored" data-anchor-id="compute-svc-model"><span class="header-section-number">5.1.7</span> Compute SVC model</h3>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>svc_model_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/007 - SVC model.R"</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"select"</span>,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"dplyr::select"</span>,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> svc_model_script)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">'</span><span class="sc">\\</span><span class="st">"main</span><span class="sc">\\</span><span class="st">"'</span>,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">'</span><span class="sc">\\</span><span class="st">"change</span><span class="sc">\\</span><span class="st">"'</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> svc_model_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(svc_model_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save outputs</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="co"># List present tifs</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="co"># See which are not already in S3</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>processed_local <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">"output"</span>,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>                              <span class="at">recursive =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>                              <span class="at">full.names =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_subset</span>(., <span class="st">"vrt$"</span>, <span class="at">negate =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Listing files in bucket</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>my_files <span class="ot">&lt;-</span> <span class="fu">get_bucket_df</span>(<span class="at">bucket =</span> <span class="st">"fbedecarrats"</span>,</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">prefix =</span> <span class="st">"Replication_wolf"</span>,</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>                          <span class="at">region =</span> <span class="st">""</span>)</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>processed_s3 <span class="ot">&lt;-</span> my_files <span class="sc">%&gt;%</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(Key, <span class="st">"/output/"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">path =</span> <span class="fu">str_remove</span>(Key, <span class="st">"Replication_wolf/"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">"path"</span>)</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>to_put_s3 <span class="ot">&lt;-</span> processed_local[<span class="sc">!</span>processed_local <span class="sc">%in%</span> processed_s3]</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>to_put_s3</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>path_in_s3 <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"Replication_wolf/"</span>, to_put_s3)</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Put them in S3</span></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a><span class="fu">map2</span>(to_put_s3, path_in_s3, put_to_s3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
 </section>
-<section id="produce-summary-figures" class="level3" data-number="5.1.8">
-<h3 data-number="5.1.8" class="anchored" data-anchor-id="produce-summary-figures"><span class="header-section-number">5.1.8</span> Produce summary figures</h3>
+<section id="perform-country-level-analysis" class="level3" data-number="5.1.8">
+<h3 data-number="5.1.8" class="anchored" data-anchor-id="perform-country-level-analysis"><span class="header-section-number">5.1.8</span> Perform country level analysis</h3>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>country_analysis_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/007 - country level analysis.R"</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ne_load fetches from the temporary location (which is lost if we run in </span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co"># different threads with `source(script)`). This ensures the data is fetched</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"ne_load"</span>,</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"ne_download"</span>,</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> country_analysis_script)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">'read.dbf</span><span class="sc">\\</span><span class="st">("data_input/PAs/WDPA_Jan2020-shapefile-polygons.dbf", as.is=TRUE</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">'arrow::read_parquet</span><span class="sc">\\</span><span class="st">("data_input/PAs/WDPA_Jan2020_polygons.parquet", col_select = -Shape</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> country_analysis_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
 </section>
-<section id="compute-svc-model" class="level3" data-number="5.1.9">
-<h3 data-number="5.1.9" class="anchored" data-anchor-id="compute-svc-model"><span class="header-section-number">5.1.9</span> Compute SVC model</h3>
+<section id="produce-summary-figures" class="level3" data-number="5.1.9">
+<h3 data-number="5.1.9" class="anchored" data-anchor-id="produce-summary-figures"><span class="header-section-number">5.1.9</span> Produce summary figures</h3>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>summary_figures_script <span class="ot">&lt;-</span> <span class="st">"PA_matching_asis/007 - summary figures.R"</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">'read_sf</span><span class="sc">\\</span><span class="st">("data_input/PAs/WDPA_Jan2020-shapefile-polygons.shp"</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">'geoarrow::read_geoparquet_sf</span><span class="sc">\\</span><span class="st">("data_input/PAs/WDPA_Jan2020_polygons.parquet"</span><span class="sc">\\</span><span class="st">)'</span>,</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> summary_figures_script)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"ne_load"</span>,</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"ne_download"</span>,</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> summary_figures_script)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">"select"</span>,</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">"dplyr::select"</span>,</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> summary_figures_script)</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">'54030'</span>,</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">'"ESRI:54030"'</span>,</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> summary_figures_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
 </section>
-<section id="run-matching-sensitivity" class="level3" data-number="5.1.10">
-<h3 data-number="5.1.10" class="anchored" data-anchor-id="run-matching-sensitivity"><span class="header-section-number">5.1.10</span> Run matching sensitivity</h3>
+<section id="results" class="level3" data-number="5.1.10">
+<h3 data-number="5.1.10" class="anchored" data-anchor-id="results"><span class="header-section-number">5.1.10</span> Results</h3>
+<p>In this section, we reproduce a series of outputs generated in the code of the script <code>007 - summary figures.R</code> that correspond to the main results reported in the original study. We find moderate differences in descriptive statistics and negligible ones on the outcomes on conservations.</p>
+<section id="conservation-extent" class="level4" data-number="5.1.10.1">
+<h4 data-number="5.1.10.1" class="anchored" data-anchor-id="conservation-extent"><span class="header-section-number">5.1.10.1</span> Conservation extent</h4>
+<p>The original study reports &gt; “Globally, 15.7% of forest is formally protected”</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>tab <span class="ot">&lt;-</span> <span class="fu">table</span>(cover[] <span class="sc">&gt;=</span> <span class="dv">30</span>, PA_rast[], <span class="at">useNA=</span><span class="st">"always"</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(tab,<span class="dv">1</span>) <span class="co"># 0.18650047</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>We find that 18.7% of the forest is formally protected. This raises the questions about whether the authors of the original study used the same version of WDPA or biome extent than the ones we had access to for the replication, although we fetched it from the same sources. We will try to better under</p>
+</section>
+<section id="pa-characteristics" class="level4" data-number="5.1.10.2">
+<h4 data-number="5.1.10.2" class="anchored" data-anchor-id="pa-characteristics"><span class="header-section-number">5.1.10.2</span> PA characteristics</h4>
+<p>The original study reports: &gt; “Prior to matching with control areas, our primary PA dataset contained 25,348 PAs. However, 7,177 (28.3%) of these PAs could not be matched with any unprotected pixels having similar matching-covariate values. Consequently, after applying coarsened exact matching to identify control areas, our final dataset contained 18,171 PAs, with a total area of 5,293,217 km2 (Fig. 1 and Extended Data Fig. 1).” &gt; “In absolute terms, the 18,171 PAs in our analysis had an average annual forest loss rate of ~1.53 Mha.”</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(<span class="fu">readRDS</span>(<span class="st">"data_processed/PA_df.RDS"</span>) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(group <span class="sc">==</span> <span class="st">"main"</span>))</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="fu">addmargins</span>(<span class="fu">table</span>(<span class="at">matched=</span>df<span class="sc">$</span>matched, <span class="at">cat=</span>df<span class="sc">$</span>cat_simple, <span class="at">gp=</span>df<span class="sc">$</span>group))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>In our replication, we have in the primary PA dataset we find 25850 Protected areas fitting the analysis criteria defined by the source code. Of those 18,728 could be matched protected area, covering 6,167,491 km2. Our replication finds ~1.71 Mha of deforestatoin in the 18,728 analyzed.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>average_initial <span class="ot">&lt;-</span> <span class="dv">5293217</span> <span class="sc">/</span> <span class="dv">18171</span> <span class="co"># 291.3003</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>additional_PAs <span class="ot">&lt;-</span> <span class="dv">18728</span> <span class="sc">-</span> <span class="dv">18171</span> <span class="co"># 557</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>additional_area <span class="ot">&lt;-</span> <span class="dv">6167491</span> <span class="sc">-</span> <span class="dv">5293217</span> <span class="co"># 874274</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>average_additional <span class="ot">&lt;-</span> additional_area <span class="sc">/</span> additional_PAs <span class="co"># 1569.612</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>This suggest that we did not get exactly the same WDPA dataset from the beginning, although the one we used (WDPA_Jan2020_Public) is the one referred to in the source code (WDPA_Jan2020-shapefile-polygons.shp), and mentionned in the bibliography of the original study (reference 59 is: “The World Database on Protected Areas (WDPA) (IUCN and UNEP-WCMC, accessed 1 January 2020)”). We have 557 additional PAs in our replication, corresponding to 874,274 km2. According to the relative number and areas, we deduce that these 557 additionnal PAs have an average are of 1569 km2, compared to an average of 291 km2 for the PAs reported. We conclude that the additional PAs tend to be larger than the ones used in the original dataset, but we are not able to identify them as the data used for the original study have not been published.</p>
+</section>
+<section id="pas-without-loss" class="level4" data-number="5.1.10.3">
+<h4 data-number="5.1.10.3" class="anchored" data-anchor-id="pas-without-loss"><span class="header-section-number">5.1.10.3</span> PAs without loss</h4>
+<p>The original study reports: &gt; In our analysis, 28.7% of the PAs did not have any forest loss. Among PAs with known management category, deforestation rates were highest in nonstrict PAs in Africa (0.31% per year), Europe (0.29% per year) and South America (0.19% per year), and lowest in strict PAs in Oceania (0.02% per year)</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(df<span class="sc">$</span>PA_loss <span class="sc">==</span>  <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>In our replication, we find that 27.9% of of the PAs did not have any forest loss.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>n_no_loss_replic <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">18728</span><span class="sc">*</span><span class="fl">0.279</span>) <span class="co"># 5225.112</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>n_no_loss_origin <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">18171</span><span class="sc">*</span><span class="fl">0.287</span>) <span class="co"># 5215.077</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>n_no_loss_additionnal <span class="ot">&lt;-</span> n_no_loss_replic <span class="sc">-</span> n_no_loss_origin</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>n_no_loss_additionnal <span class="sc">/</span> additional_PAs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>In absolute terms, this means that the original study found that 5215 PAs had no forest loss, which corresponds to a 28.7% of 18,171 PAs, while the replication finds 5225 PAs without forest loss (28.7% of PAs with no forest loss), which corresponds to a 27.9% of 18,728 PAs. This means that, of the 557 additionnal PAs included in the replication, only 10 had no forest loss (1.8%).</p>
+<p>We can also reproduce figure 2: <img src="output/loss_hist_bw.png" class="img-fluid" alt="Fig. 2: Deforestation rate distributions"></p>
+</section>
+<section id="conservation-impact-before-2001" class="level4" data-number="5.1.10.4">
+<h4 data-number="5.1.10.4" class="anchored" data-anchor-id="conservation-impact-before-2001"><span class="header-section-number">5.1.10.4</span> Conservation impact: before 2001</h4>
+<p>The original study reports in its abstract: &gt; <strong>Overall, protected areas did not eliminate deforestation, but reduced deforestation rates by 41%.</strong></p>
+<p>And in its results section:` &gt; Overall, PAs reduced, but did not eliminate, deforestation; the median annual deforestation rate in control areas (0.54%; s.d. = 2.21%) was 4.97 times higher than within PAs (0.11% per year; s.d. = 2.45%) (Fig. 2). In absolute terms, the 18,171 PAs in our analysis had an average annual forest loss rate of ~1.53 Mha. In our analysis, 28.7% of the PAs did not have any forest loss. Among PAs with known management category, deforestation rates were highest in nonstrict PAs in Africa (0.31% per year), Europe (0.29% per year) and South America (0.19% per year), and lowest in strict PAs in Oceania (0.02% per year)</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>diff_mean <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span><span class="fu">mean</span>(inside)<span class="sc">/</span><span class="fu">mean</span>(outside)),<span class="dv">3</span>) <span class="co"># 42.74% instead of 41.12% </span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>diff_add_median <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span><span class="sc">*</span><span class="fu">median</span>(outside<span class="sc">-</span>inside),<span class="dv">3</span>) <span class="co"># median additive difference of 0.226% vs 0.194%</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>iqr_diff <span class="ot">&lt;-</span> <span class="fu">IQR</span>(outside<span class="sc">-</span>inside) <span class="co"># 0.008525058</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>out_median <span class="ot">&lt;-</span> <span class="fu">median</span>(outside) <span class="co"># 0.005685758 -&gt; 0.57% instead of 0.54%</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>out_sd <span class="ot">&lt;-</span> <span class="fu">sd</span>(outside) <span class="co"># 0.02531807 instead of 2.21%</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>in_median <span class="ot">&lt;-</span> <span class="fu">median</span>(inside) <span class="co"># 0.00116665 almost identical to 0.11% per year</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>in_ds <span class="ot">&lt;-</span> <span class="fu">sd</span>(inside) <span class="co"># 0.02413182 vs. 2.45%</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>diff_median <span class="ot">&lt;-</span> <span class="fu">median</span>(outside)<span class="sc">/</span><span class="fu">median</span>(inside) <span class="co"># 4.873577</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>annual_area_deforest <span class="ot">&lt;-</span> (<span class="dv">100</span><span class="sc">*</span><span class="fu">sum</span>(df<span class="sc">$</span>GIS_AREA <span class="sc">*</span> df<span class="sc">$</span>cover_loss<span class="sc">/</span><span class="dv">100</span>)<span class="sc">/</span><span class="dv">18</span>)<span class="sc">/</span><span class="fl">1e6</span> <span class="co"># 1.71)/ instead of 1.53</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>defor_by_status_continent <span class="ot">&lt;-</span> tab[<span class="fu">order</span>(tab<span class="sc">$</span>value, <span class="at">decreasing=</span><span class="cn">TRUE</span>),]</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Africa Nonstrict 0.30544782</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Europe Nonstrict 0.24789509</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a><span class="co"># South America Nonstrict 0.20705785</span></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="co"># ...</span></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Oceania    Strict 0.03195096</span></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Oceania Nonstrict 0.03166633</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>The results of the comparisons are very close in relative terms. In absolute term the difference is 11.8% higher: 1.71 Mha in annual loss instead of 1.53.</p>
+<p>We reproduce the Figure 3:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="output/loss_box_no_unk.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Fig. 3: Forest loss in and around PAs</figcaption>
+</figure>
+</div>
+</section>
+<section id="conservation-impact-2002-2017" class="level4" data-number="5.1.10.5">
+<h4 data-number="5.1.10.5" class="anchored" data-anchor-id="conservation-impact-2002-2017"><span class="header-section-number">5.1.10.5</span> Conservation impact 2002-2017</h4>
+<p>The original study reports: &gt; We identified 9,875 PAs established between 2002 and 2017 that were suitable for inclusion in our spatiotemporal analysis. The establishment of these PAs was associated with a moderate increase in the deforestation rate (average = 0.19%; s.e.m. = 0.02%), whereas control areas saw a larger increase in the deforestation rate (average = 0.61%; s.e.m. = 0.02%) over the same time span (Extended Data Fig. 3). This overall pattern was observed for both strict and nonstrict PAs in lower and higher GDP countries (Extended Data Fig. 3).</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>treat_loss_before <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span><span class="sc">*</span><span class="fu">mean</span>(df<span class="sc">$</span>PA_loss_before), <span class="dv">3</span>) <span class="co"># 0.431</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>treat_loss_after <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span><span class="sc">*</span><span class="fu">mean</span>(df<span class="sc">$</span>PA_loss_after), <span class="dv">3</span>) <span class="co"># 0.477</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>P <span class="ot">=</span> df<span class="sc">$</span>PA_loss_after <span class="sc">-</span> df<span class="sc">$</span>PA_loss_before</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>C <span class="ot">=</span> df<span class="sc">$</span>Control_loss_after <span class="sc">-</span> df<span class="sc">$</span>Control_loss_before</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>reduc_treat <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span><span class="sc">*</span><span class="fu">mean</span>(P), <span class="dv">3</span>)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>reduc_cont <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span><span class="sc">*</span><span class="fu">mean</span>(C), <span class="dv">3</span>)</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>reduc_treat_sd <span class="dv">100</span><span class="sc">*</span><span class="fu">sd</span>(P)<span class="sc">/</span><span class="fu">sqrt</span>(<span class="fu">length</span>(P))</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>reduc_cont_sd <span class="ot">&lt;-</span>  <span class="dv">100</span><span class="sc">*</span><span class="fu">sd</span>(C)<span class="sc">/</span><span class="fu">sqrt</span>(<span class="fu">length</span>(C))</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>cont_loss_brefore <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span><span class="sc">*</span><span class="fu">mean</span>(df<span class="sc">$</span>Control_loss_before), <span class="dv">3</span>) <span class="co"># 0.751</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>cont_loss_after <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span><span class="sc">*</span><span class="fu">mean</span>(df<span class="sc">$</span>Control_loss_after), <span class="dv">3</span>) <span class="co"># 1.032</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>contin_diff <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">100</span><span class="sc">*</span><span class="fu">tapply</span>(df_small<span class="sc">$</span>value, <span class="fu">list</span>(df_small<span class="sc">$</span>variable, df_small<span class="sc">$</span>Continent), mean),<span class="dv">3</span>)</span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a><span class="co">#                 South America Oceania North America Europe  Asia Africa</span></span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Control areas           0.084   0.065        -0.014  0.597 0.273  0.818</span></span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Protected areas         0.133   0.214        -0.125  0.154 0.130  0.293</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Check difference of averages before! Reported ratios amount to DiD, but initial levels cast doubts on parallel trends, etc.</p>
+</section>
+</section>
+<section id="run-matching-sensitivity" class="level3" data-number="5.1.11">
+<h3 data-number="5.1.11" class="anchored" data-anchor-id="run-matching-sensitivity"><span class="header-section-number">5.1.11</span> Run matching sensitivity</h3>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">replace_all</span>(<span class="at">pattern =</span> <span class="st">""</span>,</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">replacement =</span> <span class="st">""</span>,</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">file =</span> join_results_script)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
 
 
 </section>
@@ -691,9 +1023,23 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     icon: icon
   };
   anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
   const clipboard = new window.ClipboardJS('.code-copy-button', {
-    target: function(trigger) {
-      return trigger.previousElementSibling;
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
     }
   });
   clipboard.on('success', function(e) {
@@ -758,6 +1104,92 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       return note.innerHTML;
     });
   }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
   const findCites = (el) => {
     const parentEl = el.parentElement;
     if (parentEl) {
