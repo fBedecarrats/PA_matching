@@ -101,6 +101,7 @@ if (file.exists("revamp/countries/countries.rds")) {
 if (!file.exists("revamp/aois/aois.gpkg")) {
   # Fetch biomes
   dir.create("revamp/biomes")
+  dir.create("revamp/aois")
   if (!file.exists("revamp/biomes/wwf_biomes.zip")) {
     wwf_url <- paste0("https://files.worldwildlife.org/wwfcmsprod/files/", 
                       "Publication/file/6kcchn7e3u_official_teow.zip")
@@ -399,8 +400,6 @@ prepare_gee_data <- function(ee_region) {
   aoi_image <- aoi_image$clipToCollection(ee_region)
 }
 
-
-
 ```
 
 The previous code creates for each area of interest a raster with the following bands: cover, loss, lossyear, elev, slope, travel_time, pop_dens, PA, WDPA ID number, PA_status_yr, PA_buffer, country, biome.
@@ -474,6 +473,7 @@ for (j in 1:length(out_list)) {
 ## From raster to tabular
 
 ```{r}
+#| eval: false
 my_countries <- unique(aois$GID_0)
 country_tasks <- tibble(country = my_countries)
 dir.create("revamp/tabular_country")
@@ -527,16 +527,16 @@ We can visualize one of the country data, for instance in Madagascar:
 
 mdg_files <- list.files(path = "revamp/gee", pattern = "MDG", full.names = TRUE)
 mdg <- rast(mdg_files)
-mdg %>%
+mdg_map <- mdg %>%
   select(loss, cover, is_pa_buffer, is_pa, country_num, biome_num) %>%
   mutate(cover = ifelse(country_num == 0 | biome_num == 0, NA, cover),
          loss = ifelse(country_num == 0 | biome_num == 0, NA, loss),
          is_pa_buffer = ifelse(country_num == 0 | biome_num == 0, NA, is_pa_buffer),
-         cover = ifelse(loss > 0, 0, cover),
-         loss = loss * 255,
+         cover = ifelse(loss > 0, 0, cover) * 2.55,
+         loss = loss * 0.0255,
          is_pa_buffer = (is_pa_buffer - is_pa) *255) %>%
   tm_shape(colorNULL = "white") +
-  tm_rgb(colorNULL = "white") +
+  tm_rgb(colorNULL = "white", max.value = ) +
   tm_shape(filter(countries, GID_0 == "MDG")) + 
   tm_borders()
 ```
@@ -544,6 +544,8 @@ mdg %>%
 # Reload GEE data
 
 ```{r}
+#| eval: false
+
 # tic()
 all_df <- read_parquet("revamp/consolidated/gee_data.parquet")
 
@@ -559,6 +561,8 @@ all_df <- all_df %>%
 # Perform matching
 
 ```{r}
+#| eval: false
+
 # tic()
 matched_all <- matchit(# the first line of covar is coarsened
   formula = is_pa ~ elev + slope + cover + travel_time + pop_dens +
@@ -591,6 +595,8 @@ rm(list = c("matched_data", "matched_all", "all_df"))
 ## Compute deforestation after
 
 ```{r}
+#| eval: false
+
 # A function that computes the deforestation before and after status year for
 # protected area pixels, and before and after matched treatment status year for 
 # control pixels. Uses arrow for fast and larger-than-memory calculations
@@ -672,6 +678,8 @@ toc()
 # Descriptive statistics on deforestation
 
 ```{r}
+#| eval: false
+
 df <- read_parquet("revamp/consolidated/matched_df.parquet")
 
 # Nombre de PA
@@ -745,6 +753,8 @@ PAs %>%
 ```
 
 ```{r}
+#| eval: false
+
 df_subset <- all_df[1:10000,]
 
 calc_defor_annual <- function(x, min_year = 2001, max_year = 2018) {
