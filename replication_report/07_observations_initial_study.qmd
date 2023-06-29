@@ -111,6 +111,7 @@ Protected areas     0.142      0.063
 ```
 
 ```{r}
+
 save_from_s3(from = "Replication_wolf/data_processed/data_matched_10_class.csv",
              to = "data_processed/data_matched_10_class.csv")
 save_from_s3(from = "Replication_wolf/data_processed/data_matched.csv",
