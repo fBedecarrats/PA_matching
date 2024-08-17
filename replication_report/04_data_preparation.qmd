@@ -8,7 +8,7 @@ editor_options:
 
 The replication of this study requires a careful data management. The input data only represents a volume of 25.5 GB and it has to be transformed once or twice before the statistical analysis. First, a folder structure must be created before running the original study source code.
 
-```{r wet_wd}
+```{r set_wd}
 if (!stringr::str_detect(getwd(), "PA_matching")) {
   setwd("PA_matching")
 }
@@ -221,7 +221,7 @@ if (!file.exists("data_input/PAs/WDPA_Jan2020_polygons.parquet")) {
   wdpa2020_poly <- read_sf(
     dsn = "data_input/PAs/WDPA_Jan2020_Public/WDPA_Jan2020_Public.gdb",
     layer = "WDPA_poly_Jan2020")
-  write_geoparquet(wdpa2020_poly, "data_input/PAs/WDPA_Jan2020_polygons.parquet")
+  geoarrow::write_parquet(wdpa2020_poly, "data_input/PAs/WDPA_Jan2020_polygons.parquet")
 }
 put_to_s3("data_input/PAs/WDPA_Jan2020_polygons.parquet",
           "Replication_wolf/data_input/PAs/WDPA_Jan2020_polygons.parquet")
